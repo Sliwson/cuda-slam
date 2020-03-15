@@ -7,7 +7,6 @@
 namespace Common
 {
 	using Point_f = Point<float>;
-	
+
 	void LibraryTest();
-	std::vector<Point_f> GetRandomPointCloud(Point_f corner, Point_f size, int count);
 }
