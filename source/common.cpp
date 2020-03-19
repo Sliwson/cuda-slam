@@ -63,20 +63,25 @@ namespace Common
 		return std::accumulate(cloud.begin(), cloud.end(), Point_f::Zero()) / (float)cloud.size();
 	}
 
-	bool TestTransform(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, const glm::mat4& matrix)
+	float GetError(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, const glm::mat4& matrix)
 	{
-		if (cloudBefore.size() != cloudAfter.size())
-			return false;
-
+		float diffSum = 0.0f;
+		// We assume clouds are the same size but if error is significant, you might want to check it
 		for (int i = 0; i < cloudBefore.size(); i++)
 		{
 			const auto transformed = TransformPoint(cloudBefore[i], matrix);
 			const auto diff = cloudAfter[i] - transformed;
-			if (std::abs(diff.Length()) > TEST_EPS)
-				return false;
+			diffSum += (diff.Length() * diff.Length());
 		}
 
-		return true;
+		return diffSum / cloudBefore.size();
+	}
+
+	bool TestTransform(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, const glm::mat4& matrix)
+	{
+		if (cloudBefore.size() != cloudAfter.size())
+			return false;
+		return GetError(cloudBefore, cloudAfter, matrix) <= TEST_EPS;
 	}
 	
 	void LibraryTest()
