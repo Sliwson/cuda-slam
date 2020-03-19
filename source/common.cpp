@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <algorithm>
+#include <numeric>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/glm.hpp>
 #include "common.h"
@@ -57,6 +58,11 @@ namespace Common
 		return clone;
 	}
 
+	Point_f GetCenterOfMass(const std::vector<Point_f> & cloud)
+	{
+		return std::accumulate(cloud.begin(), cloud.end(), Point_f::Zero()) / (float)cloud.size();
+	}
+
 	bool TestTransform(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, const glm::mat4& matrix)
 	{
 		if (cloudBefore.size() != cloudAfter.size())
@@ -88,5 +94,33 @@ namespace Common
 			printf("Library test [OK]\n");
 		else
 			printf("Library test [FAIL]\n");
+	}
+
+	void MassCenterTest()
+	{
+		srand(333);
+		const Point_f corner = { -1, -1, -1 };
+		const Point_f size = { 2, 2, 2 };
+
+		float x = 0.0f;
+		float y = 0.0f;
+		float z = 0.0f;
+
+		const auto cloud = GetRandomPointCloud(corner, size, 1000);
+		for (int i = 0; i < cloud.size(); i++)
+		{
+			x += cloud[i].x;
+			y += cloud[i].y;
+			z += cloud[i].z;
+		}
+		x /= cloud.size();
+		y /= cloud.size();
+		z /= cloud.size();
+
+		Point_f center = GetCenterOfMass(cloud);
+		if(center == Point_f(x,y,z))
+			printf("Center of mass test [OK]\n");
+		else
+			printf("Center of mass test [FAIL]\n");
 	}
 }
