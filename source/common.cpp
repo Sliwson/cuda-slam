@@ -84,7 +84,7 @@ namespace Common
 		return std::accumulate(cloud.begin(), cloud.end(), Point_f::Zero()) / (float)cloud.size();
 	}
 
-	float GetError(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, const glm::mat4& matrix)
+	float GetMeanSquaredError(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, const glm::mat4& matrix)
 	{
 		float diffSum = 0.0f;
 		// We assume clouds are the same size but if error is significant, you might want to check it
@@ -102,7 +102,7 @@ namespace Common
 	{
 		if (cloudBefore.size() != cloudAfter.size())
 			return false;
-		return GetError(cloudBefore, cloudAfter, matrix) <= TEST_EPS;
+		return GetMeanSquaredError(cloudBefore, cloudAfter, matrix) <= TEST_EPS;
 	}
 
 	bool TestTransformWithPermutation(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, const std::vector<int>& permutation, const glm::mat4& matrix)
@@ -151,34 +151,5 @@ namespace Common
 			printf("Library test [OK]\n");
 		else
 			printf("Library test [FAIL]\n");
-	}
-
-	// This bascially tests if accumulate is correct - probably we can remove it
-	void MassCenterTest()
-	{
-		srand(333);
-		const Point_f corner = { -1, -1, -1 };
-		const Point_f size = { 2, 2, 2 };
-
-		float x = 0.0f;
-		float y = 0.0f;
-		float z = 0.0f;
-
-		const auto cloud = GetRandomPointCloud(corner, size, 1000);
-		for (int i = 0; i < cloud.size(); i++)
-		{
-			x += cloud[i].x;
-			y += cloud[i].y;
-			z += cloud[i].z;
-		}
-		x /= cloud.size();
-		y /= cloud.size();
-		z /= cloud.size();
-
-		Point_f center = GetCenterOfMass(cloud);
-		if(center == Point_f(x,y,z))
-			printf("Center of mass test [OK]\n");
-		else
-			printf("Center of mass test [FAIL]\n");
 	}
 }

@@ -17,5 +17,4 @@ namespace Common
 	using Point_f = Point<float>;
 
 	void LibraryTest();
-	void MassCenterTest();
 }
