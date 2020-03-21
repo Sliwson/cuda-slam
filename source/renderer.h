@@ -8,7 +8,6 @@
 #include <vector>
 
 #include "shader.h"
-#include "camera.h"
 
 namespace Common
 {
@@ -18,6 +17,8 @@ namespace Common
 		const char* fragmentShaderPath = "source/shaders/fragmentshader.frag";
 	}
 
+	class Camera;
+	enum class ShaderType;
 
 	class Renderer
 	{
@@ -27,6 +28,9 @@ namespace Common
 		~Renderer();
 
 
+
+
+		static Renderer* FindInstance(GLFWwindow* window);
 		//callbacks
 		static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 		static void processInput(GLFWwindow* window);
@@ -35,13 +39,15 @@ namespace Common
 		static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 
 
+		int InitWindow();
 	private:
 		
 
-		int InitWindow();
-		void SetShader();
+		
+		void SetShader(ShaderType type);
+		void SetCamera(glm::vec3 position);
 
-		static std::vector<GLFWwindow*> active_windows;
+		static std::vector<Renderer*> renderers;
 
 		Shader shader;
 		Camera* camera;
@@ -51,6 +57,15 @@ namespace Common
 		//window size
 		int width;
 		int height;
+
+		//frames
+		double deltaTime;
+		double lastFrame;
+
+		//mouse
+		float lastX;
+		float lastY;
+		bool firstMouse;
 
 	};
 }

@@ -14,10 +14,11 @@
 
 #include <vector>
 #include "point.h"
+#include "renderer.h"
 
 namespace Common
 {
 	using Point_f = Point<float>;
 
-	void LibraryTest();
+	void LibraryTest();	
 }
