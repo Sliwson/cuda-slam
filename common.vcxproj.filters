@@ -4,10 +4,13 @@
     <ClCompile Include="source\common.cpp" />
     <ClCompile Include="source\loader.cpp" />
     <ClCompile Include="source\camera.cpp">
-      <Filter>Camera</Filter>
+      <Filter>GUI\Camera</Filter>
     </ClCompile>
     <ClCompile Include="source\moveablecamera.cpp">
-      <Filter>Camera</Filter>
+      <Filter>GUI\Camera</Filter>
+    </ClCompile>
+    <ClCompile Include="source\shader.cpp">
+      <Filter>GUI\Shaders</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -15,15 +18,38 @@
     <ClInclude Include="source\point.h" />
     <ClInclude Include="source\common.h" />
     <ClInclude Include="source\camera.h">
-      <Filter>Camera</Filter>
+      <Filter>GUI\Camera</Filter>
     </ClInclude>
     <ClInclude Include="source\moveablecamera.h">
-      <Filter>Camera</Filter>
+      <Filter>GUI\Camera</Filter>
+    </ClInclude>
+    <ClInclude Include="source\shader.h">
+      <Filter>GUI\Shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="source\shaders\renderer.h">
+      <Filter>GUI\Renderer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="Camera">
+    <Filter Include="GUI">
+      <UniqueIdentifier>{22d24f08-29f6-4608-9758-6e5c74f8a28a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GUI\Shaders">
+      <UniqueIdentifier>{32b1b8ad-4fd1-4112-b2b5-1b14738dd091}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GUI\Camera">
       <UniqueIdentifier>{da0f6c4b-81ef-4761-bfbb-96d603d4de15}</UniqueIdentifier>
     </Filter>
+    <Filter Include="GUI\Renderer">
+      <UniqueIdentifier>{2b4e80d3-6822-49a5-86ab-b2daf48ab7e5}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="source\shaders\vertexshader.vert">
+      <Filter>GUI\Shaders</Filter>
+    </None>
+    <None Include="source\shaders\fragmentshader.frag">
+      <Filter>GUI\Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>
