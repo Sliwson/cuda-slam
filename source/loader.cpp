@@ -49,10 +49,10 @@ namespace Common
 
 	std::vector<Point_f> AssimpCloudLoader::ProcessMesh(aiMesh* mesh, const aiScene* scene)
 	{
-		std::vector<Point_f> cloud;
+		std::vector<Point_f> cloud(mesh->mNumVertices);
 
 		for (unsigned int i = 0; i < mesh->mNumVertices; i++)
-			cloud.push_back({ mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z });
+			cloud[i] = { mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z };
 
 		return cloud;
 	}
