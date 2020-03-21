@@ -1,36 +1,35 @@
 #include "shaderfactory.h"
-#include "shader.h"
 
 namespace Common
 {
-    namespace shaderPath
-    {
-        const char* vertexShaderPath = "source/shaders/vertexshader.vert";
-        const char* fragmentShaderPath = "source/shaders/fragmentshader.frag";
-    }
+	namespace shaderPath
+	{
+		const char* vertexShaderPath = "source/shaders/vertexshader.vert";
+		const char* fragmentShaderPath = "source/shaders/fragmentshader.frag";
+	}
 
-    ShaderFactory::ShaderFactory() :
-        simpleModel(shaderPath::vertexShaderPath, shaderPath::fragmentShaderPath)
-    {
+	ShaderFactory::ShaderFactory() :
+		simpleModel(shaderPath::vertexShaderPath, shaderPath::fragmentShaderPath)
+	{
 
-    }
+	}
 
-    ShaderFactory& ShaderFactory::getInstance()
-    {
-        static ShaderFactory instance;
+	ShaderFactory& ShaderFactory::getInstance()
+	{
+		static ShaderFactory instance;
 
-        return instance;
-    }
+		return instance;
+	}
 
-    Shader& ShaderFactory::getShader(ShaderType type)
-    {
-        switch (type)
-        {
-        case ShaderType::simpleModel:
-            return simpleModel;
-        default:
-            break;
-        }
-        return simpleModel;
-    }
+	Shader& ShaderFactory::getShader(ShaderType type)
+	{
+		switch (type)
+		{
+		case ShaderType::simpleModel:
+			return simpleModel;
+		default:
+			break;
+		}
+		return simpleModel;
+	}
 }

@@ -11,12 +11,6 @@
 
 namespace Common
 {
-	namespace ShaderPath
-	{
-		const char* vertexShaderPath = "source/shaders/vertexshader.vert";
-		const char* fragmentShaderPath = "source/shaders/fragmentshader.frag";
-	}
-
 	class Camera;
 	enum class ShaderType;
 
