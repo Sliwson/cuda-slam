@@ -9,6 +9,7 @@ namespace Common
 {
 	Shader::Shader(const char* vertexPath, const char* fragmentPath)
 	{
+		std::cout << "Shader Constructor" << std::endl;
 		// 1. retrieve the vertex/fragment source code from filePath
 		std::string vertexCode;
 		std::string fragmentCode;
@@ -32,6 +33,8 @@ namespace Common
 			// convert stream into string
 			vertexCode = vShaderStream.str();
 			fragmentCode = fShaderStream.str();
+
+			std::cout << vertexCode;
 		}
 		catch (std::ifstream::failure e)
 		{

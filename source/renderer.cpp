@@ -4,14 +4,16 @@
 
 namespace Common
 {
+	std::vector<Renderer*> Renderer::renderers;
+
 	namespace ShaderPath
 	{
 		const char* vertexShaderPath = "source/shaders/vertexshader.vert";
 		const char* fragmentShaderPath = "source/shaders/fragmentshader.frag";
 	}
 
-	Renderer::Renderer() :
-		shader(ShaderFactory::getInstance().getShader(ShaderType::simpleModel))
+	Renderer::Renderer()// :
+		//shader(ShaderFactory::getInstance().getShader(ShaderType::simpleModel))
 	{
 		SetCamera(glm::vec3(4.0f, 2.0f, 0.0f));
 
@@ -210,11 +212,11 @@ namespace Common
 	}
 
 
-	void Renderer::SetShader(ShaderType type)
+	/*void Renderer::SetShader(ShaderType type)
 	{
 		ShaderFactory& sf = ShaderFactory::getInstance();
 		shader = sf.getShader(type);
-	}
+	}*/
 
 	void Renderer::SetCamera(glm::vec3 position)
 	{

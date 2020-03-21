@@ -38,12 +38,12 @@ namespace Common
 		
 
 		
-		void SetShader(ShaderType type);
+		//void SetShader(ShaderType type);
 		void SetCamera(glm::vec3 position);
 
 		static std::vector<Renderer*> renderers;
 
-		Shader shader;
+		//Shader shader;
 		Camera* camera;
 
 		GLFWwindow* window;
