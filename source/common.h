@@ -4,8 +4,11 @@
 
 #ifdef _DEBUG
 	#pragma comment (lib, "assimp-vc142-mtd")
+	#pragma comment (lib, "glfw3")
+
 #else
 	#pragma comment (lib, "assimp-vc142-mt")
+	#pragma comment (lib, "glfw3")
 #endif
 
 
