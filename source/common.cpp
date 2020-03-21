@@ -74,7 +74,7 @@ namespace Common
 	{
 		std::vector<Point_f> permutedCloud(input.size());
 		for (int i = 0; i < input.size(); i++)
-			permutedCloud[i] = input[permutation[i]];
+			permutedCloud[permutation[i]] = input[i];
 
 		return permutedCloud;
 	}
@@ -124,32 +124,54 @@ namespace Common
 		return permutation;
 	}
 
+	std::vector<int> GetNaivePermutationVector(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter)
+	{
+		int size = cloudBefore.size();
+		std::vector<int> resultPermutation(size);
+		std::vector<float> bestLength(size, std::numeric_limits<float>::max());
+
+		for (int i = 0; i < size; i++)
+		{
+			for (int j = 0; j < size; j++)
+			{
+				float length = (cloudAfter[j] - cloudBefore[i]).LengthSquared();
+
+				if (length < bestLength[i])
+				{
+					bestLength[i] = length;
+					resultPermutation[i] = j;
+				}
+			}
+		}
+
+		return resultPermutation;
+	}
+
 	void LibraryTest()
 	{
 		srand(666);
 		const Point_f corner = { -1, -1, -1 };
 		const Point_f size = { 2, 2, 2 };
 
-		//const auto cloud = GetRandomPointCloud(corner, size, cloudSize);
-		const auto cloud = LoadCloud("data/bunny.obj");
+		const auto cloud = GetRandomPointCloud(corner, size, 1500);
+		//const auto cloud = LoadCloud("data/bunny.obj");
 		int cloudSize = cloud.size();
 
-		const auto transform = GetRandomTransformMatrix({ -1, -1, -1 }, { 1, 1, 1 }, glm::radians(45.f));
+		const auto transform = GetRandomTransformMatrix({ -0.01, -0.01, -0.01 }, { 0.01, 0.01, 0.01}, glm::radians(5.f));
 		const auto permutation = GetRandomPermutationVector(cloudSize);
 		const auto permutedCloud = ApplyPermutation(cloud, permutation);
 		const auto transformedCloud = GetTransformedCloud(cloud, transform);
 		const auto transformedPermutedCloud = GetTransformedCloud(permutedCloud, transform);
 		
-		const auto calculatedPermutation = /* calculations here */ permutation;
+		const auto calculatedPermutation = GetNaivePermutationVector(cloud, transformedPermutedCloud);
 
 		const auto resultOrdered = TestTransformOrdered(cloud, transformedCloud, transform);
 		const auto resultUnordered = TestTransformWithPermutation(cloud, transformedPermutedCloud, permutation, transform);
 		const auto resultPermutation = TestPermutation(permutation, calculatedPermutation);
 
 
-		if (resultOrdered && resultUnordered && resultPermutation)
-			printf("Library test [OK]\n");
-		else
-			printf("Library test [FAIL]\n");
+		printf("Ordered cloud test [%s]\n", resultOrdered ? "OK" : "FAIL");
+		printf("Unordered cloud test [%s]\n", resultUnordered ? "OK" : "FAIL");
+		printf("Permutation find test [%s]\n", resultPermutation ? "OK" : "FAIL");
 	}
 }
