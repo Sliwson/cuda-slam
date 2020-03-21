@@ -14,12 +14,16 @@
     <ClCompile Include="source\camera.cpp" />
     <ClCompile Include="source\common.cpp" />
     <ClCompile Include="source\loader.cpp" />
+    <ClCompile Include="source\moveablecamera.cpp" />
+    <ClCompile Include="source\shader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\camera.h" />
     <ClInclude Include="source\loader.h" />
+    <ClInclude Include="source\moveablecamera.h" />
     <ClInclude Include="source\point.h" />
     <ClInclude Include="source\common.h" />
+    <ClInclude Include="source\shader.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
