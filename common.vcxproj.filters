@@ -12,6 +12,12 @@
     <ClCompile Include="source\shader.cpp">
       <Filter>GUI\Shaders</Filter>
     </ClCompile>
+    <ClCompile Include="source\renderer.cpp">
+      <Filter>GUI\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="source\shaderfactory.cpp">
+      <Filter>GUI\Shaders</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\loader.h" />
@@ -26,8 +32,11 @@
     <ClInclude Include="source\shader.h">
       <Filter>GUI\Shaders</Filter>
     </ClInclude>
-    <ClInclude Include="source\shaders\renderer.h">
+    <ClInclude Include="source\renderer.h">
       <Filter>GUI\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="source\shaderfactory.h">
+      <Filter>GUI\Shaders</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
