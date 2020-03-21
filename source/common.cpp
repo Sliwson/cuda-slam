@@ -4,7 +4,9 @@
 #include <random>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/glm.hpp>
+
 #include "common.h"
+#include "loader.h"
 
 namespace Common 
 {
@@ -32,6 +34,15 @@ namespace Common
 			const glm::vec3 result = matrix * glm::vec4(glm::vec3(in), 1.0f);
 			return Point_f(result);
 		}
+	}
+
+	std::vector<Point_f> LoadCloud(const std::string& path)
+	{
+		AssimpCloudLoader loader(path);
+		if (loader.GetCloudCount() > 0)
+			return loader.GetCloud(0);
+		else
+			return std::vector<Point_f>();
 	}
 
 	std::vector<Point_f> GetRandomPointCloud(const Point_f& corner, const Point_f& size, int count)
@@ -106,11 +117,13 @@ namespace Common
 	void LibraryTest()
 	{
 		srand(666);
-		const int cloudSize = 1000;
 		const Point_f corner = { -1, -1, -1 };
 		const Point_f size = { 2, 2, 2 };
 
-		const auto cloud = GetRandomPointCloud(corner, size, cloudSize);
+		//const auto cloud = GetRandomPointCloud(corner, size, cloudSize);
+		const auto cloud = LoadCloud("data/bunny.obj");
+		int cloudSize = cloud.size();
+
 		const auto transform = GetRandomTransformMatrix({ -1, -1, -1 }, { 1, 1, 1 }, glm::radians(45.f));
 		const auto permutation = GetRandomPermutationVector(cloudSize);
 		const auto permutedCloud = ApplyPermutation(cloud, permutation);
