@@ -18,14 +18,12 @@
     <ClCompile Include="source\shaderfactory.cpp">
       <Filter>GUI\Shaders</Filter>
     </ClCompile>
+    <ClCompile Include="source\glad.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\loader.h" />
     <ClInclude Include="source\point.h" />
     <ClInclude Include="source\common.h" />
-    <ClInclude Include="source\camera.h">
-      <Filter>GUI\Camera</Filter>
-    </ClInclude>
     <ClInclude Include="source\moveablecamera.h">
       <Filter>GUI\Camera</Filter>
     </ClInclude>
@@ -37,6 +35,9 @@
     </ClInclude>
     <ClInclude Include="source\shaderfactory.h">
       <Filter>GUI\Shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="source\camera.h">
+      <Filter>GUI\Camera</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

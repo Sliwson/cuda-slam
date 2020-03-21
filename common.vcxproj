@@ -13,6 +13,7 @@
   <ItemGroup>
     <ClCompile Include="source\camera.cpp" />
     <ClCompile Include="source\common.cpp" />
+    <ClCompile Include="source\glad.c" />
     <ClCompile Include="source\loader.cpp" />
     <ClCompile Include="source\moveablecamera.cpp" />
     <ClCompile Include="source\renderer.cpp" />
