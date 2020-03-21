@@ -11,10 +11,12 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="camera.cpp" />
     <ClCompile Include="source\common.cpp" />
     <ClCompile Include="source\loader.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="camera.h" />
     <ClInclude Include="source\loader.h" />
     <ClInclude Include="source\point.h" />
     <ClInclude Include="source\common.h" />
