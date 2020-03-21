@@ -1,6 +1,14 @@
 #pragma once
 
-#define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
+#define WIN32_LEAN_AND_MEAN
+
+#ifdef _DEBUG
+	#pragma comment (lib, "assimp-vc142-mtd")
+#else
+	#pragma comment (lib, "assimp-vc142-mt")
+#endif
+
+
 #include <vector>
 #include "point.h"
 

@@ -1,8 +1,12 @@
 #include <stdio.h>
 #include <algorithm>
+#include <numeric>
+#include <random>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/glm.hpp>
+
 #include "common.h"
+#include "loader.h"
 
 namespace Common 
 {
@@ -32,6 +36,15 @@ namespace Common
 		}
 	}
 
+	std::vector<Point_f> LoadCloud(const std::string& path)
+	{
+		AssimpCloudLoader loader(path);
+		if (loader.GetCloudCount() > 0)
+			return loader.GetCloud(0);
+		else
+			return std::vector<Point_f>();
+	}
+
 	std::vector<Point_f> GetRandomPointCloud(const Point_f& corner, const Point_f& size, int count)
 	{
 		std::vector<Point_f> result;
@@ -56,8 +69,17 @@ namespace Common
 		std::transform(clone.begin(), clone.end(), clone.begin(), [&](Point_f p) { return TransformPoint(p, matrix); });
 		return clone;
 	}
+	
+	std::vector<Point_f> ApplyPermutation(const std::vector<Point_f>& input, const std::vector<int>& permutation)
+	{
+		std::vector<Point_f> permutedCloud(input.size());
+		for (int i = 0; i < input.size(); i++)
+			permutedCloud[i] = input[permutation[i]];
 
-	bool TestTransform(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, const glm::mat4& matrix)
+		return permutedCloud;
+	}
+
+	bool TestTransformOrdered(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, const glm::mat4& matrix)
 	{
 		if (cloudBefore.size() != cloudAfter.size())
 			return false;
@@ -72,19 +94,50 @@ namespace Common
 
 		return true;
 	}
-	
+
+	bool TestTransformWithPermutation(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, const std::vector<int>& permutation, const glm::mat4& matrix)
+	{
+		const auto permutedCloudBefore = ApplyPermutation(cloudBefore, permutation);
+		return TestTransformOrdered(permutedCloudBefore, cloudAfter, matrix);
+	}
+
+	bool TestPermutation(const std::vector<int>& expected, const std::vector<int>& actual)
+	{
+		return actual == expected;
+	}
+
+	std::vector<int> GetRandomPermutationVector(int size)
+	{
+		std::vector<int> permutation(size);
+		std::iota(permutation.begin(), permutation.end(), 0);
+		std::shuffle(permutation.begin(), permutation.end(), std::mt19937{ std::random_device{}() });
+		return permutation;
+	}
+
 	void LibraryTest()
 	{
 		srand(666);
 		const Point_f corner = { -1, -1, -1 };
 		const Point_f size = { 2, 2, 2 };
 
-		const auto cloud = GetRandomPointCloud(corner, size, 1000);
-		const auto transform = GetRandomTransformMatrix({ -1, -1, -1 }, { 1, 1, 1 }, glm::radians(45.f));
-		const auto transformedCloud = GetTransformedCloud(cloud, transform);
-		const auto result = TestTransform(cloud, transformedCloud, transform);
+		//const auto cloud = GetRandomPointCloud(corner, size, cloudSize);
+		const auto cloud = LoadCloud("data/bunny.obj");
+		int cloudSize = cloud.size();
 
-		if (result)
+		const auto transform = GetRandomTransformMatrix({ -1, -1, -1 }, { 1, 1, 1 }, glm::radians(45.f));
+		const auto permutation = GetRandomPermutationVector(cloudSize);
+		const auto permutedCloud = ApplyPermutation(cloud, permutation);
+		const auto transformedCloud = GetTransformedCloud(cloud, transform);
+		const auto transformedPermutedCloud = GetTransformedCloud(permutedCloud, transform);
+		
+		const auto calculatedPermutation = /* calculations here */ permutation;
+
+		const auto resultOrdered = TestTransformOrdered(cloud, transformedCloud, transform);
+		const auto resultUnordered = TestTransformWithPermutation(cloud, transformedPermutedCloud, permutation, transform);
+		const auto resultPermutation = TestPermutation(permutation, calculatedPermutation);
+
+
+		if (resultOrdered && resultUnordered && resultPermutation)
 			printf("Library test [OK]\n");
 		else
 			printf("Library test [FAIL]\n");
