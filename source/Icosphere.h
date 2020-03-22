@@ -1,49 +1,35 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Icosahedron.h
-// =============
-// Polyhedron with 12 vertices, 30 edges and 20 faces (triangles) for OpenGL
-// If the radius is r, then the length of edge is (r / sin(2pi/5)).
-//
-// Vertices of icosahedron are constructed with spherical coords by aligning
-// the north pole to (0,0,r) and the south pole to (0,0,-r). Other 10 vertices
-// are computed by rotating 72 degree along y-axis at the elevation angle
-// +/- 26.565 (=arctan(1/2)).
-//
-// The unwrapped (paper model) of icosahedron and texture map looks like;
-// (S,0)  3S  5S  7S  9S
-//    /\  /\  /\  /\  /\      : 1st row (5 triangles)       //
-//   /__\/__\/__\/__\/__\                                   //
-// T \  /\  /\  /\  /\  /\    : 2nd row (10 triangles)      //
-//    \/__\/__\/__\/__\/__\                                 //
-// 2T  \  /\  /\  /\  /\  /   : 3rd row (5 triangles)       //
-//      \/  \/  \/  \/  \/                                  //
-//      2S  4S  6S  8S  (10S,3T)
-// where S = 186/2048 = 0.0908203
-//       T = 322/1024 = 0.3144531
-// If a texture size is 2048x1024, S=186, T=322
+// Icosphere.h
+// ===========
+// Polyhedron subdividing icosahedron (20 tris) by N-times iteration
+// The icosphere with N=1 (default) has 80 triangles by subdividing a triangle
+// of icosahedron into 4 triangles. If N=0, it is identical to icosahedron.
 //
 //  AUTHOR: Song Ho Ahn (song.ahn@gmail.com)
-// CREATED: 2018-07-17
-// UPDATED: 2019-12-29
+// CREATED: 2018-07-23
+// UPDATED: 2019-12-28
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef GEOMETRY_ICOSAHEDRON_H
-#define GEOMETRY_ICOSAHEDRON_H
+#ifndef GEOMETRY_ICOSPHERE_H
+#define GEOMETRY_ICOSPHERE_H
 
 #include <vector>
+#include <map>
 
-class Icosahedron
+class Icosphere
 {
 public:
     // ctor/dtor
-    Icosahedron(float radius=1.0f);
-    ~Icosahedron() {}
+    Icosphere(float radius=1.0f, int subdivision=1, bool smooth=false);
+    ~Icosphere() {}
 
     // getters/setters
     float getRadius() const                 { return radius; }
     void setRadius(float radius);
-    float getEdgeLength() const             { return edgeLength; }
-    void setEdgeLength(float edge);
+    int getSubdivision() const              { return subdivision; }
+    void setSubdivision(int subdivision);
+    bool getSmooth() const                  { return smooth; }
+    void setSmooth(bool smooth);
 
     // for vertex data
     unsigned int getVertexCount() const     { return (unsigned int)vertices.size() / 3; }
@@ -83,27 +69,43 @@ protected:
 
 private:
     // static functions
-    static void computeFaceNormal(float v1[3], float v2[3], float v3[3], float n[3]);
+    static void computeFaceNormal(const float v1[3], const float v2[3], const float v3[3], float normal[3]);
+    static void computeVertexNormal(const float v[3], float normal[3]);
+    static float computeScaleForLength(const float v[3], float length);
+    static void computeHalfVertex(const float v1[3], const float v2[3], float length, float newV[3]);
+    static void computeHalfTexCoord(const float t1[2], const float t2[2], float newT[2]);
+    static bool isSharedTexCoord(const float t[2]);
+    static bool isOnLineSegment(const float a[2], const float b[2], const float c[2]);
 
     // member functions
     void updateRadius();
-    std::vector<float> computeVertices();
-    void buildVertices();
+    std::vector<float> computeIcosahedronVertices();
+    void buildVerticesFlat();
+    void buildVerticesSmooth();
+    void subdivideVerticesFlat();
+    void subdivideVerticesSmooth();
     void buildInterleavedVertices();
-    void addVertices(float v1[3], float v2[3], float v3[3]);
-    void addNormals(float n1[3], float n2[3], float n3[3]);
-    void addTexCoords(float t1[2], float t2[2], float t3[2]);
+    void addVertex(float x, float y, float z);
+    void addVertices(const float v1[3], const float v2[3], const float v3[3]);
+    void addNormal(float nx, float ny, float nz);
+    void addNormals(const float n1[3], const float n2[3], const float n3[3]);
+    void addTexCoord(float s, float t);
+    void addTexCoords(const float t1[2], const float t2[2], const float t3[2]);
     void addIndices(unsigned int i1, unsigned int i2, unsigned int i3);
-    void addLineIndices(unsigned int indexFrom);
+    void addSubLineIndices(unsigned int i1, unsigned int i2, unsigned int i3,
+                           unsigned int i4, unsigned int i5, unsigned int i6);
+    unsigned int addSubVertexAttribs(const float v[3], const float n[3], const float t[2]);
 
     // memeber vars
     float radius;                           // circumscribed radius
-    float edgeLength;
+    int subdivision;
+    bool smooth;
     std::vector<float> vertices;
     std::vector<float> normals;
     std::vector<float> texCoords;
     std::vector<unsigned int> indices;
     std::vector<unsigned int> lineIndices;
+    std::map<std::pair<float, float>, unsigned int> sharedIndices;   // indices of shared vertices, key is tex coord (s,t)
 
     // interleaved
     std::vector<float> interleavedVertices;

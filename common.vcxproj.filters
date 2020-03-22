@@ -19,7 +19,7 @@
       <Filter>GUI\Shaders</Filter>
     </ClCompile>
     <ClCompile Include="source\glad.c" />
-    <ClCompile Include="source\Icosahedron.cpp">
+    <ClCompile Include="source\Icosphere.cpp">
       <Filter>GUI\Sphere</Filter>
     </ClCompile>
   </ItemGroup>
@@ -45,7 +45,7 @@
     <ClInclude Include="source\shadertype.h">
       <Filter>GUI\Shaders</Filter>
     </ClInclude>
-    <ClInclude Include="source\Icosahedron.h">
+    <ClInclude Include="source\Icosphere.h">
       <Filter>GUI\Sphere</Filter>
     </ClInclude>
   </ItemGroup>
