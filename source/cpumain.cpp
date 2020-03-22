@@ -16,7 +16,7 @@ int main()
 	for (int i = 0; i < size; i++)
 	{
 		origin_points[i] = Common::Point_f(i, 0, 0);
-		result_points[i] = Common::Point_f(0, i, 0);
+		result_points[i] = Common::Point_f(0, 100*i, 0);
 		cpu_points[i] = Common::Point_f(i, -i, i);
 		gpu_points[i] = Common::Point_f(0, 0, i);
 	}

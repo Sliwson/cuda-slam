@@ -21,8 +21,6 @@ namespace Common
 	Renderer::Renderer(ShaderType shaderType, std::vector<Point_f> origin_points, std::vector<Point_f> result_points, std::vector<Point_f> cpu_points, std::vector<Point_f> gpu_points) :
 		shaderType(shaderType), origin_points(origin_points), result_points(result_points), cpu_points(cpu_points), gpu_points(gpu_points)
 	{
-		
-
 		width = 1280;
 		height = 720;
 
@@ -433,6 +431,8 @@ namespace Common
 			max_range = defaultScale / 2.0f;
 
 		float scale = defaultScale / (2.0f * max_range);
+		
+		pointSize /= scale;
 
 		glm::vec3 middleVector = glm::vec3(middle[0], middle[1], middle[2]);
 
