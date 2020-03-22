@@ -17,7 +17,7 @@
 #ifdef __APPLE__
 #include <OpenGL/gl.h>
 #else
-#include <GL/gl.h>
+#include <glad/glad.h>
 #endif
 
 #include <iostream>
@@ -96,26 +96,25 @@ void Icosphere::printSelf() const
 }
 
 
-
 ///////////////////////////////////////////////////////////////////////////////
 // draw a icosphere in VertexArray mode
 // OpenGL RC must be set before calling it
 ///////////////////////////////////////////////////////////////////////////////
 void Icosphere::draw() const
 {
-    // interleaved array
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glEnableClientState(GL_NORMAL_ARRAY);
-    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-    glVertexPointer(3, GL_FLOAT, interleavedStride, &interleavedVertices[0]);
-    glNormalPointer(GL_FLOAT, interleavedStride, &interleavedVertices[3]);
-    glTexCoordPointer(2, GL_FLOAT, interleavedStride, &interleavedVertices[6]);
+    //// interleaved array
+    //glEnableClientState(GL_VERTEX_ARRAY);
+    //glEnableClientState(GL_NORMAL_ARRAY);
+    //glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+    //glVertexPointer(3, GL_FLOAT, interleavedStride, &interleavedVertices[0]);
+    //glNormalPointer(GL_FLOAT, interleavedStride, &interleavedVertices[3]);
+    //glTexCoordPointer(2, GL_FLOAT, interleavedStride, &interleavedVertices[6]);
 
-    glDrawElements(GL_TRIANGLES, (unsigned int)indices.size(), GL_UNSIGNED_INT, indices.data());
+    //glDrawElements(GL_TRIANGLES, (unsigned int)indices.size(), GL_UNSIGNED_INT, indices.data());
 
-    glDisableClientState(GL_VERTEX_ARRAY);
-    glDisableClientState(GL_NORMAL_ARRAY);
-    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+    //glDisableClientState(GL_VERTEX_ARRAY);
+    //glDisableClientState(GL_NORMAL_ARRAY);
+    //glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 }
 
 
@@ -126,21 +125,21 @@ void Icosphere::draw() const
 ///////////////////////////////////////////////////////////////////////////////
 void Icosphere::drawLines(const float lineColor[4]) const
 {
-    // set line colour
-    glColor4fv(lineColor);
-    glMaterialfv(GL_FRONT, GL_DIFFUSE,   lineColor);
+    //// set line colour
+    //glColor4fv(lineColor);
+    //glMaterialfv(GL_FRONT, GL_DIFFUSE,   lineColor);
 
-    // draw lines with VA
-    glDisable(GL_LIGHTING);
-    glDisable(GL_TEXTURE_2D);
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glVertexPointer(3, GL_FLOAT, 0, vertices.data());
+    //// draw lines with VA
+    //glDisable(GL_LIGHTING);
+    //glDisable(GL_TEXTURE_2D);
+    //glEnableClientState(GL_VERTEX_ARRAY);
+    //glVertexPointer(3, GL_FLOAT, 0, vertices.data());
 
-    glDrawElements(GL_LINES, (unsigned int)lineIndices.size(), GL_UNSIGNED_INT, lineIndices.data());
+    //glDrawElements(GL_LINES, (unsigned int)lineIndices.size(), GL_UNSIGNED_INT, lineIndices.data());
 
-    glDisableClientState(GL_VERTEX_ARRAY);
-    glEnable(GL_LIGHTING);
-    glEnable(GL_TEXTURE_2D);
+    //glDisableClientState(GL_VERTEX_ARRAY);
+    //glEnable(GL_LIGHTING);
+    //glEnable(GL_TEXTURE_2D);
 }
 
 

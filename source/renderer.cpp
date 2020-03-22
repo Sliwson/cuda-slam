@@ -1,13 +1,16 @@
+#include <glm/gtc/matrix_transform.hpp>
+
 #include "common.h"
 #include "moveablecamera.h"
 #include "shaderfactory.h"
 #include "shadertype.h"
+#include "Icosphere.h"
 
 
 
 namespace Common
 {
-	std::vector<Renderer*> Renderer::renderers;
+	std::vector<Renderer*> Renderer::renderers;	
 
 	namespace ShaderPath
 	{
@@ -18,7 +21,7 @@ namespace Common
 	Renderer::Renderer(ShaderType shaderType, std::vector<Point_f> origin_points, std::vector<Point_f> result_points, std::vector<Point_f> cpu_points, std::vector<Point_f> gpu_points) :
 		shaderType(shaderType), origin_points(origin_points), result_points(result_points), cpu_points(cpu_points), gpu_points(gpu_points)
 	{
-		SetCamera(glm::vec3(4.0f, 0.0f, 0.0f));
+		
 
 		width = 1280;
 		height = 720;
@@ -30,11 +33,23 @@ namespace Common
 		lastY = height / 2.0f;
 		firstMouse = true;
 
-		pointSize = 1.0f;
+		pointSize = 0.3f;
+		defaultScale = 10.0f;
+
+		SetCamera(glm::vec3(1.5f * defaultScale, 0.0f, 0.0f));
 
 		modelMatrix = glm::mat4(1.0f);
+		normalMatrix = glm::mat3(glm::transpose(glm::inverse(modelMatrix)));
 
 		renderers.push_back(this);
+
+
+		Icosphere sphere(pointSize, 3, true);
+
+		vertices = sphere.getInterleavedVerticesVector();
+		indices = sphere.getIndicesVector();
+
+		SetModelMatrixToData();
 	}
 
 	Renderer::~Renderer()
@@ -48,11 +63,12 @@ namespace Common
 				break;
 			}
 		}
-		for (unsigned int i = 0; i < 4; i++)
-		{
-			glDeleteVertexArrays(1, &VAO[i]);
-			glDeleteBuffers(1, &VBO[i]);
-		}
+
+		glDeleteVertexArrays(verticesVectorsCount, VAO);
+		glDeleteBuffers(1, &VBO);
+		glDeleteBuffers(1, &EBO);
+		glDeleteBuffers(verticesVectorsCount, instanceVBO);
+		
 	}
 
 	Renderer* Renderer::FindInstance(GLFWwindow* window)
@@ -102,12 +118,14 @@ namespace Common
 		if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
 			renderer->camera->ProcessKeyboard(CameraMovement::DOWN, renderer->deltaTime);
 		if (glfwGetKey(window, GLFW_KEY_RIGHT_BRACKET) == GLFW_PRESS)
-			renderer->pointSize += 0.1f;
+		{
+			renderer->pointSize += 0.01f;
+		}
 		if (glfwGetKey(window, GLFW_KEY_LEFT_BRACKET) == GLFW_PRESS)
 		{
-			renderer->pointSize -= 0.1f;
-			if (renderer->pointSize < 0.0f)
-				renderer->pointSize = 0.0f;
+			renderer->pointSize -= 0.01f;
+			if (renderer->pointSize < 0.01f)
+				renderer->pointSize = 0.01f;
 		}
 	}
 
@@ -205,6 +223,7 @@ namespace Common
 		glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 		glfwSetCursorPosCallback(window, mouse_callback);
 		glfwSetKeyCallback(window, key_callback);
+		glfwSetScrollCallback(window, scroll_callback);
 
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
@@ -220,33 +239,56 @@ namespace Common
 		}
 
 		glEnable(GL_DEPTH_TEST);
-		glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
 		return 0;
 	}
 
 	void Renderer::SetBuffers()
 	{
-		for (unsigned int i = 0; i < 4; i++)
+
+		// create buffers/arrays
+		glGenVertexArrays(verticesVectorsCount, VAO);
+		glGenBuffers(1, &VBO);
+		glGenBuffers(1, &EBO);
+		glGenBuffers(verticesVectorsCount, instanceVBO);
+
+
+		//set data for VBO and EBO
+		glBindBuffer(GL_ARRAY_BUFFER, VBO);
+		glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), &vertices[0], GL_STATIC_DRAW);
+
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
+
+		for (unsigned int i = 0; i < verticesVectorsCount; i++)
 		{
-			std::vector<Point_f>& vertices = GetVector(i);
-			// create buffers/arrays
-			glGenVertexArrays(1, &VAO[i]);
-			glGenBuffers(1, &VBO[i]);
+			std::vector<Point_f>& vector = GetVector(i);
+			glBindBuffer(GL_ARRAY_BUFFER, instanceVBO[i]);
+			glBufferData(GL_ARRAY_BUFFER, vector.size() * sizeof(Point_f), &vector[0], GL_STATIC_DRAW);
+			glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 			glBindVertexArray(VAO[i]);
-			// load data into vertex buffers
-			glBindBuffer(GL_ARRAY_BUFFER, VBO[i]);
-
-			glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Point_f), &vertices[0], GL_STATIC_DRAW);
+			
+			//bind vbo and ebo
+			glBindBuffer(GL_ARRAY_BUFFER, VBO);
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 
 			// set the vertex attribute pointers
 			// vertex Positions
 			glEnableVertexAttribArray(0);
-			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Point_f), (void*)0);
+			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8*sizeof(float), (void*)0);
+			// vertex normals
+			glEnableVertexAttribArray(1);
+			glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8*sizeof(float), (void*)(3 * sizeof(float)));
+			//vertex offset using instancing
+			glEnableVertexAttribArray(2);
+			glBindBuffer(GL_ARRAY_BUFFER, instanceVBO[i]);
+			glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Point_f), (void*)0);
+			glBindBuffer(GL_ARRAY_BUFFER, 0);
+			glVertexAttribDivisor(2, 1);
 
 			glBindVertexArray(0);
-		}
+		}				
 	}
 
 	void Renderer::MainLoop()
@@ -288,18 +330,26 @@ namespace Common
 		shader->setMat4("projection", camera->GetProjectionMatrix(width, height));
 		shader->setMat4("view", camera->GetViewMatrix());
 		shader->setMat4("model", modelMatrix);
+		shader->setMat3("NormalMatrix", normalMatrix);
+
+		shader->setFloat("PointSize", pointSize);
 
 		shader->setVec3("viewPos", camera->GetPosition());
 
-		shader->setFloat("pointRadius", pointSize);
-		//shader->setFloat("pointScale", height / tanf(glm::radians(camera->GetFov() * 0.5f)));
+		shader->setVec3("lightDirection", glm::vec3(-0.2f, -1.0f, -0.3f));
+		shader->setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
 
-		for (unsigned int i = 0; i < 4; i++)
+		
+
+
+		for (unsigned int i = 0; i < verticesVectorsCount; i++)
 		{
-			shader->setVec3("color", GetColor(i));
-			std::vector<Point_f>& vertices = GetVector(i);
+			std::vector<Point_f>& vector = GetVector(i);
+
+			shader->setVec3("objectColor", GetColor(i));
+
 			glBindVertexArray(VAO[i]);
-			glDrawArrays(GL_POINTS, 0, vertices.size());
+			glDrawElementsInstanced(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0, vector.size());
 			glBindVertexArray(0);
 		}
 		
@@ -327,7 +377,7 @@ namespace Common
 		switch (index)
 		{
 		case 0://origin
-			return glm::vec3(0.0f, 0.0f, 0.0f);
+			return glm::vec3(0.8f, 0.8f, 0.8f);
 		case 1://result
 			return glm::vec3(0.0f, 0.0f, 1.0f);
 		case 2://cpu
@@ -335,8 +385,61 @@ namespace Common
 		case 3://gpu
 			return glm::vec3(0.0f, 1.0f, 0.0f);
 		default:
-			return glm::vec3(0.0f, 0.0f, 0.0f);
+			return glm::vec3(0.8f, 0.8f, 0.8f);
 		}
+	}
+
+	void Renderer::SetModelMatrixToData()
+	{
+		if (result_points.size() == 0)
+			return;
+
+		float max[3];
+		float min[3];
+
+		max[0] = result_points[0].x;
+		max[1] = result_points[0].y;
+		max[2] = result_points[0].z;
+		min[0] = result_points[0].x;
+		min[1] = result_points[0].y;
+		min[2] = result_points[0].z;
+
+		for (unsigned int i = 1; i < result_points.size(); i++)
+		{
+			if (result_points[i].x > max[0])
+				max[0] = result_points[i].x;
+			if (result_points[i].y > max[1])
+				max[1] = result_points[i].y;
+			if (result_points[i].z > max[2])
+				max[2] = result_points[i].z;
+			if (result_points[i].x < min[0])
+				min[0] = result_points[i].x;
+			if (result_points[i].y < min[1])
+				min[1] = result_points[i].y;
+			if (result_points[i].z < min[2])
+				min[2] = result_points[i].z;
+		}
+
+		float middle[3];
+		float max_range = 0.0f;
+		for (int i = 0; i < 3; i++)
+		{
+			middle[i] = (max[i] + min[i]) / 2.0f;
+			if (middle[i] > max_range)
+				max_range = middle[i];
+		}
+
+		if (max_range < 1e-4)
+			max_range = defaultScale / 2.0f;
+
+		float scale = defaultScale / (2.0f * max_range);
+
+		glm::vec3 middleVector = glm::vec3(middle[0], middle[1], middle[2]);
+
+		modelMatrix = glm::scale(modelMatrix, glm::vec3(scale));
+		modelMatrix = glm::translate(modelMatrix, -middleVector);
+
+		SetModelMatrix(modelMatrix);
 	}
 
 
@@ -349,6 +452,17 @@ namespace Common
 	void Renderer::SetCamera(glm::vec3 position)
 	{
 		camera = std::make_unique<MoveableCamera>(position);
+	}
+
+	glm::mat4 Renderer::GetModelMatrix()
+	{
+		return modelMatrix;
+	}
+
+	void Renderer::SetModelMatrix(glm::mat4 model)
+	{
+		modelMatrix = model;
+		normalMatrix = glm::mat3(glm::transpose(glm::inverse(model)));
 	}
 	
 	

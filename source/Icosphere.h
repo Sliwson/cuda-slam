@@ -51,6 +51,9 @@ public:
     const unsigned int* getIndices() const  { return indices.data(); }
     const unsigned int* getLineIndices() const  { return lineIndices.data(); }
 
+    std::vector<float> getInterleavedVerticesVector() { return interleavedVertices; }
+    std::vector<unsigned int> getIndicesVector() { return indices; }
+
     // for interleaved vertices: V/N/T
     unsigned int getInterleavedVertexCount() const  { return getVertexCount(); }    // # of vertices
     unsigned int getInterleavedVertexSize() const   { return (unsigned int)interleavedVertices.size() * sizeof(float); }    // # of bytes

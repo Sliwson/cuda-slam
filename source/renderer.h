@@ -12,6 +12,8 @@
 
 namespace Common
 {
+	constexpr unsigned int verticesVectorsCount = 4;
+
 	class Camera;
 	enum class ShaderType;
 
@@ -45,10 +47,12 @@ namespace Common
 		std::vector<Point_f>& GetVector(int index);
 		glm::vec3 GetColor(int index);
 
-		
+		void SetModelMatrixToData();
 		
 		void SetShader();
 		void SetCamera(glm::vec3 position);
+		glm::mat4 GetModelMatrix();
+		void SetModelMatrix(glm::mat4 model);
 
 		static std::vector<Renderer*> renderers;
 
@@ -75,6 +79,8 @@ namespace Common
 
 		//point size
 		float pointSize;
+		//scale
+		float defaultScale;
 
 		//data
 		std::vector<Point_f> origin_points;
@@ -83,10 +89,18 @@ namespace Common
 		std::vector<Point_f> gpu_points;
 
 		//render data
-		unsigned int VAO[4];
-		unsigned int VBO[4];
+		unsigned int VAO[verticesVectorsCount];
+		unsigned int VBO;
+		unsigned int EBO;
+		unsigned int instanceVBO[verticesVectorsCount];
 
 		//model matrix
 		glm::mat4 modelMatrix;
+		glm::mat3 normalMatrix;
+
+		//sphere
+		//vertices 3*float - position | 3*float - normals | 2*float - texture
+		std::vector<float> vertices;
+		std::vector<unsigned int> indices;
 	};
 }
