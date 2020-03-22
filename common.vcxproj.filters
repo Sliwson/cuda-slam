@@ -39,6 +39,9 @@
     <ClInclude Include="source\camera.h">
       <Filter>GUI\Camera</Filter>
     </ClInclude>
+    <ClInclude Include="source\shadertype.h">
+      <Filter>GUI\Shaders</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="GUI">

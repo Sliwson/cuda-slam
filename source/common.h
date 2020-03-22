@@ -15,6 +15,7 @@
 #include <vector>
 #include "point.h"
 #include "renderer.h"
+#include "shadertype.h"
 
 namespace Common
 {

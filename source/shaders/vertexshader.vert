@@ -5,7 +5,18 @@ uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
 
+uniform vec3 viewPos;
+
+uniform float pointRadius;
+
+
 void main()
 {
-    gl_Position = projection * view * model * vec4(aPos, 1.0);
+    vec4 pointInWorld = model * vec4(aPos, 1.0f); 
+    gl_Position = projection * view * pointInWorld;
+
+
+    float dist = length(viewPos - vec3(pointInWorld));
+
+    gl_PointSize = pointRadius*100 / dist;
 }

@@ -1,13 +1,12 @@
 #pragma once
 
+#include <memory>
+
 #include "shader.h"
 
 namespace Common
 {
-    enum class ShaderType
-    {
-        simpleModel
-    };
+    enum class ShaderType;
 
     class ShaderFactory
     {
@@ -22,9 +21,9 @@ namespace Common
         void operator=(ShaderFactory const&) = delete;
 
     private:
-        Shader simpleModel;
+        std::shared_ptr<Shader> simpleModel;
 
     public:
-        Shader& getShader(ShaderType type);
+        std::shared_ptr<Shader> getShader(ShaderType type);
     };
 }

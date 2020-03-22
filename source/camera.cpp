@@ -45,6 +45,11 @@ namespace Common
         return Front;
     }
 
+	float Camera::GetFov()
+	{
+		return fov;
+	}
+
     // Returns projection matrix
     glm::mat4 Camera::GetProjectionMatrix(float width, float height)
     {

@@ -1,4 +1,5 @@
 #include "shaderfactory.h"
+#include "shadertype.h"
 
 namespace Common
 {
@@ -8,10 +9,9 @@ namespace Common
 		const char* fragmentShaderPath = "source/shaders/fragmentshader.frag";
 	}
 
-	ShaderFactory::ShaderFactory() :
-		simpleModel(shaderPath::vertexShaderPath, shaderPath::fragmentShaderPath)
+	ShaderFactory::ShaderFactory()
 	{
-
+		simpleModel = std::make_shared<Shader>(shaderPath::vertexShaderPath, shaderPath::fragmentShaderPath);
 	}
 
 	ShaderFactory& ShaderFactory::getInstance()
@@ -21,7 +21,7 @@ namespace Common
 		return instance;
 	}
 
-	Shader& ShaderFactory::getShader(ShaderType type)
+	std::shared_ptr<Shader> ShaderFactory::getShader(ShaderType type)
 	{
 		switch (type)
 		{

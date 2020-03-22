@@ -61,6 +61,7 @@ namespace Common
 
         glm::vec3 GetPosition();
         glm::vec3 GetFront();
+        float GetFov();;
 
         // Returns projection matrix
         glm::mat4 GetProjectionMatrix(float width, float height);
