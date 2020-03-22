@@ -24,6 +24,10 @@ namespace Common
 		constexpr T Length() const {
 			return std::sqrt(x * x + y * y + z * z);
 		}
+
+		constexpr T LengthSquared() const {
+			return x * x + y * y + z * z;
+		}
 		
 		constexpr static Point<T> Zero() {
 			return Point<T>(); 
