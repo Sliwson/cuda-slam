@@ -226,7 +226,7 @@ namespace Common
 		return transformationMatrix;
 	}
 
-	glm::mat4 GetTransformationMatrix(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, int *iterations, float *error)
+	glm::mat4 GetTransformationMatrix(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, int *iterations, float *error, int maxIterations = -1)
 	{
 		glm::mat4 transformationMatrix(1.0f);
 		glm::mat4 prevTransformationMatrix(1.0f);
@@ -241,13 +241,13 @@ namespace Common
 			closestPoints = GetClosestPointPair(transformedCloud, cloudAfter);
 			transformationMatrix = LeastSquaresSVD(closestPoints.first, closestPoints.second);
 			*error = GetMeanSquaredError(cloudBefore, closestPoints.second, transformationMatrix);
-			//if (*error > prevError)
-			//{
-			//	*error = prevError;
-			//	return prevTransformationMatrix;
-			//}
+			if (*error > prevError && maxIterations == -1)
+			{
+				*error = prevError;
+				return prevTransformationMatrix;
+			}
 			(*iterations)++;
-			if(*iterations > 15)
+			if(*iterations > maxIterations && maxIterations != -1)
 				return transformationMatrix;
 		} while (*error > TEST_EPS);
 
@@ -274,14 +274,8 @@ namespace Common
 		const auto transformedPermutedCloud = GetTransformedCloud(permutedCloud, transform);
 		
 		const auto calculatedPermutation = InversePermutation(GetClosestPointIndexes(cloud, transformedPermutedCloud));
-		
-		printf("ICP Test:\n");
-		for (int i = 0; i < 4; i++)
-		{
-			printf("%3f\t%3f\t%3f\t%3f\n", transform[0][i], transform[1][i], transform[2][i], transform[3][i]);
-		}
-		printf("\n");
-		const auto icpCalculatedTransform = GetTransformationMatrix(cloud, transformedPermutedCloud, &iterations, &error);
+		const auto icpCalculatedTransform1 = GetTransformationMatrix(cloud, transformedPermutedCloud, &iterations, &error);
+		const auto icpCalculatedTransform2 = GetTransformationMatrix(cloud, transformedPermutedCloud, &iterations, &error, 5);
 
 		const auto resultOrdered = TestTransformOrdered(cloud, transformedCloud, transform);
 		const auto resultUnordered = TestTransformWithPermutation(cloud, transformedPermutedCloud, permutation, transform);
@@ -291,16 +285,5 @@ namespace Common
 		printf("Unordered cloud test [%s]\n", resultUnordered ? "OK" : "FAIL");
 		printf("Permutation find test [%s]\n", resultPermutation ? "OK" : "FAIL");
 		printf("ICP test (%d iterations) error = %g\n", iterations, error);
-		//printf("ICP Test:\n");
-		//for (int i = 0; i < 4; i++)
-		//{
-		//	printf("%3f\t%3f\t%3f\t%3f\n", transform[0][i], transform[1][i], transform[2][i], transform[3][i]);
-		//}
-		//printf("\n");
-		//for (int i = 0; i < 4; i++)
-		//{
-		//	printf("%3f\t%3f\t%3f\t%3f\n", icpCalculatedTransform[0][i], icpCalculatedTransform[1][i], icpCalculatedTransform[2][i], icpCalculatedTransform[3][i]);
-		//}
-
 	}
 }
