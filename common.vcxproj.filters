@@ -19,6 +19,9 @@
       <Filter>GUI\Shaders</Filter>
     </ClCompile>
     <ClCompile Include="source\glad.c" />
+    <ClCompile Include="source\Icosahedron.cpp">
+      <Filter>GUI\Sphere</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\loader.h" />
@@ -42,6 +45,9 @@
     <ClInclude Include="source\shadertype.h">
       <Filter>GUI\Shaders</Filter>
     </ClInclude>
+    <ClInclude Include="source\Icosahedron.h">
+      <Filter>GUI\Sphere</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="GUI">
@@ -55,6 +61,9 @@
     </Filter>
     <Filter Include="GUI\Renderer">
       <UniqueIdentifier>{2b4e80d3-6822-49a5-86ab-b2daf48ab7e5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GUI\Sphere">
+      <UniqueIdentifier>{aed031b0-fc6c-44a1-b0a6-5f60b7354f9d}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
