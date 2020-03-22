@@ -74,7 +74,7 @@ namespace Common
 	{
 		std::vector<Point_f> permutedCloud(input.size());
 		for (int i = 0; i < input.size(); i++)
-			permutedCloud[permutation[i]] = input[i];
+			permutedCloud[i] = input[permutation[i]];
 
 		return permutedCloud;
 	}
@@ -124,7 +124,7 @@ namespace Common
 		return permutation;
 	}
 
-	std::vector<int> GetNaivePermutationVector(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter)
+	std::vector<int> GetClosestPointIndexes(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter)
 	{
 		int size = cloudBefore.size();
 		std::vector<int> resultPermutation(size);
@@ -147,6 +147,48 @@ namespace Common
 		return resultPermutation;
 	}
 
+	std::vector<int> InversePermutation(const std::vector<int>& permutation)
+	{
+		auto inversedPermutation = std::vector<int>(permutation.size());
+		for (int i = 0; i < permutation.size(); i++)
+		{
+			inversedPermutation[permutation[i]] = i;
+		}
+
+		return inversedPermutation;
+	}
+
+	std::vector<std::pair<Point_f, Point_f>>GetClosestPointPairs(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter)
+	{
+		auto result = std::vector<std::pair<Point_f, Point_f>>(cloudBefore.size());
+		auto permutation = GetClosestPointIndexes(cloudBefore, cloudAfter);
+
+		for (int i = 0; i < cloudBefore.size(); i++)
+			result[i] = std::make_pair(cloudBefore[i], cloudAfter[permutation[i]]);
+
+		return result;
+	}
+
+	glm::mat4 GetTransformationMatrix(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter)
+	{
+		glm::mat4 transformationMatrix(1.0f);
+
+		// TODO: Stop condition
+		while (true)
+		{
+			auto transformedCloud = GetTransformedCloud(cloudBefore, transformationMatrix);
+			auto closestPoints = GetClosestPointPairs(transformedCloud, cloudAfter);
+			transformationMatrix = LeastSquaresSVD(transformationMatrix);
+		}
+
+		return transformationMatrix;
+	}
+
+	glm::mat4 LeastSquaresSVD(const glm::mat4 &transformationMatrix)
+	{
+		return transformationMatrix;
+	}
+
 	void LibraryTest()
 	{
 		srand(666);
@@ -163,7 +205,7 @@ namespace Common
 		const auto transformedCloud = GetTransformedCloud(cloud, transform);
 		const auto transformedPermutedCloud = GetTransformedCloud(permutedCloud, transform);
 		
-		const auto calculatedPermutation = GetNaivePermutationVector(cloud, transformedPermutedCloud);
+		const auto calculatedPermutation = InversePermutation(GetClosestPointIndexes(cloud, transformedPermutedCloud));
 
 		const auto resultOrdered = TestTransformOrdered(cloud, transformedCloud, transform);
 		const auto resultUnordered = TestTransformWithPermutation(cloud, transformedPermutedCloud, permutation, transform);
@@ -173,5 +215,9 @@ namespace Common
 		printf("Ordered cloud test [%s]\n", resultOrdered ? "OK" : "FAIL");
 		printf("Unordered cloud test [%s]\n", resultUnordered ? "OK" : "FAIL");
 		printf("Permutation find test [%s]\n", resultPermutation ? "OK" : "FAIL");
+	
+	
+		GetTransformationMatrix(cloud, transformedPermutedCloud);
+	
 	}
 }
