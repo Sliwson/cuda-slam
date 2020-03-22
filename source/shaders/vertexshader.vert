@@ -13,11 +13,12 @@ uniform mat4 projection;
 uniform mat3 NormalMatrix;
 
 uniform float PointSize;
+uniform float PointScale;
 
 void main()
 {
     //FragPos = vec3(model * vec4(aPos, 1.0));
-    FragPos = vec3(model * vec4(PointSize * aPos + aOffset, 1.0));
+    FragPos = vec3(model * vec4(PointSize / PointScale * aPos + aOffset, 1.0));
     Normal = NormalMatrix * aNormal;
     
     gl_Position = projection * view * vec4(FragPos, 1.0);

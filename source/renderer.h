@@ -79,6 +79,7 @@ namespace Common
 
 		//point size
 		float pointSize;
+		float pointScale;
 		//scale
 		float defaultScale;
 

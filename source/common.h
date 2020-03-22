@@ -21,5 +21,6 @@ namespace Common
 {
 	using Point_f = Point<float>;
 
-	void LibraryTest();	
+	void LibraryTest();
+	std::vector<Point_f> LoadCloud(const std::string& path);
 }

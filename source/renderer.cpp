@@ -1,4 +1,5 @@
 #include <glm/gtc/matrix_transform.hpp>
+#include <string>
 
 #include "common.h"
 #include "moveablecamera.h"
@@ -32,6 +33,7 @@ namespace Common
 		firstMouse = true;
 
 		pointSize = 0.3f;
+		pointScale = 1.0f;
 		defaultScale = 10.0f;
 
 		SetCamera(glm::vec3(1.5f * defaultScale, 0.0f, 0.0f));
@@ -42,7 +44,7 @@ namespace Common
 		renderers.push_back(this);
 
 
-		Icosphere sphere(pointSize, 3, true);
+		Icosphere sphere(pointSize, 1, false);
 
 		vertices = sphere.getInterleavedVerticesVector();
 		indices = sphere.getIndicesVector();
@@ -291,6 +293,10 @@ namespace Common
 
 	void Renderer::MainLoop()
 	{
+		double previousTime = glfwGetTime();
+		int frameCount = 0;
+		std::string s = "";
+
 		// render loop
 		// -----------
 		while (!glfwWindowShouldClose(window))
@@ -299,6 +305,17 @@ namespace Common
 			double currentFrame = glfwGetTime();
 			deltaTime = currentFrame - lastFrame;
 			lastFrame = currentFrame;
+			frameCount++;
+			if (currentFrame - previousTime >= 1.0)
+			{
+				s.append("Window Name Placeholder [FPS:");
+				s.append(std::to_string((int)frameCount));
+				s.append("]");
+				glfwSetWindowTitle(window, s.c_str());
+				s.clear();
+				frameCount = 0;
+				previousTime = currentFrame;
+			}
 			// input
 			// -----
 			processInput(window);
@@ -331,6 +348,7 @@ namespace Common
 		shader->setMat3("NormalMatrix", normalMatrix);
 
 		shader->setFloat("PointSize", pointSize);
+		shader->setFloat("PointScale", pointScale);
 
 		shader->setVec3("viewPos", camera->GetPosition());
 
@@ -345,6 +363,17 @@ namespace Common
 			std::vector<Point_f>& vector = GetVector(i);
 
 			shader->setVec3("objectColor", GetColor(i));
+
+			glm::mat4 tmp = modelMatrix;
+
+			//modelMatrix = glm::translate(modelMatrix, glm::vec3(i, i, i));
+			modelMatrix = glm::rotate(modelMatrix, (float)i, glm::vec3(0.5f, 0.5f, 0.5f));
+
+			SetModelMatrix(modelMatrix);
+			shader->setMat4("model", modelMatrix);
+			shader->setMat3("NormalMatrix", normalMatrix);
+
+			SetModelMatrix(tmp);
 
 			glBindVertexArray(VAO[i]);
 			glDrawElementsInstanced(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0, vector.size());
@@ -430,13 +459,12 @@ namespace Common
 		if (max_range < 1e-4)
 			max_range = defaultScale / 2.0f;
 
-		float scale = defaultScale / (2.0f * max_range);
+		pointScale = defaultScale / (2.0f * max_range);
 		
-		pointSize /= scale;
 
 		glm::vec3 middleVector = glm::vec3(middle[0], middle[1], middle[2]);
 
-		modelMatrix = glm::scale(modelMatrix, glm::vec3(scale));
+		modelMatrix = glm::scale(modelMatrix, glm::vec3(pointScale));
 		modelMatrix = glm::translate(modelMatrix, -middleVector);
 
 		SetModelMatrix(modelMatrix);
