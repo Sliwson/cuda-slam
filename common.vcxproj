@@ -11,13 +11,31 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="source\camera.cpp" />
     <ClCompile Include="source\common.cpp" />
+    <ClCompile Include="source\glad.c" />
+    <ClCompile Include="source\Icosphere.cpp" />
     <ClCompile Include="source\loader.cpp" />
+    <ClCompile Include="source\moveablecamera.cpp" />
+    <ClCompile Include="source\renderer.cpp" />
+    <ClCompile Include="source\shader.cpp" />
+    <ClCompile Include="source\shaderfactory.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="source\camera.h" />
+    <ClInclude Include="source\Icosphere.h" />
     <ClInclude Include="source\loader.h" />
+    <ClInclude Include="source\moveablecamera.h" />
     <ClInclude Include="source\point.h" />
     <ClInclude Include="source\common.h" />
+    <ClInclude Include="source\renderer.h" />
+    <ClInclude Include="source\shader.h" />
+    <ClInclude Include="source\shaderfactory.h" />
+    <ClInclude Include="source\shadertype.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="source\shaders\fragmentshader.frag" />
+    <None Include="source\shaders\vertexshader.vert" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

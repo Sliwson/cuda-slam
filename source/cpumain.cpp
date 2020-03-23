@@ -1,5 +1,5 @@
-#include "common.h"
 #include <stdio.h>
+#include "common.h"
 
 int main()
 {
