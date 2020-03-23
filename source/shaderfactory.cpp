@@ -3,15 +3,15 @@
 
 namespace Common
 {
-	namespace shaderPath
-	{
-		const char* vertexShaderPath = "source/shaders/vertexshader.vert";
-		const char* fragmentShaderPath = "source/shaders/fragmentshader.frag";
-	}
-
 	ShaderFactory::ShaderFactory()
 	{
-		simpleModel = std::make_shared<Shader>(shaderPath::vertexShaderPath, shaderPath::fragmentShaderPath);
+		const char* SimpleModelVertexShaderSource =
+#include "shaders/vertexshader.vert"
+			;
+		const char* SimpleModelFragmentShaderSource =
+#include "shaders/fragmentshader.frag"
+			;
+		simpleModel = std::make_shared<Shader>(SimpleModelVertexShaderSource, SimpleModelFragmentShaderSource);
 	}
 
 	ShaderFactory& ShaderFactory::getInstance()
@@ -25,7 +25,7 @@ namespace Common
 	{
 		switch (type)
 		{
-		case ShaderType::simpleModel:
+		case ShaderType::SimpleModel:
 			return simpleModel;
 		default:
 			break;

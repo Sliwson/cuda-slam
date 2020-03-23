@@ -30,7 +30,7 @@ int main()
 	}	
 
 	Common::Renderer renderer(
-		Common::ShaderType::simpleModel,
+		Common::ShaderType::SimpleModel,
 		cloud,
 		cloud,
 		cloud,

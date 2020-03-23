@@ -4,7 +4,7 @@ namespace Common
 {
     enum class ShaderType
     {
-        simpleModel
+        SimpleModel
     };
 
 }
