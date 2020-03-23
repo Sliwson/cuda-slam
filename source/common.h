@@ -2,13 +2,12 @@
 
 #define WIN32_LEAN_AND_MEAN
 
+#pragma comment (lib, "glfw3")
+
 #ifdef _DEBUG
 	#pragma comment (lib, "assimp-vc142-mtd")
-	#pragma comment (lib, "glfw3")
-
 #else
 	#pragma comment (lib, "assimp-vc142-mt")
-	#pragma comment (lib, "glfw3")
 #endif
 
 

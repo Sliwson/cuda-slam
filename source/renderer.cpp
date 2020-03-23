@@ -7,11 +7,9 @@
 #include "shadertype.h"
 #include "Icosphere.h"
 
-
-
 namespace Common
 {
-	std::vector<Renderer*> Renderer::renderers;	
+	std::vector<Renderer*> Renderer::renderers;
 
 	namespace ShaderPath
 	{
@@ -43,7 +41,6 @@ namespace Common
 
 		renderers.push_back(this);
 
-
 		Icosphere sphere(pointSize, 1, true);
 
 		vertices = sphere.getInterleavedVerticesVector();
@@ -54,41 +51,18 @@ namespace Common
 
 	Renderer::~Renderer()
 	{
-		std::vector<Renderer*>::iterator it;
-		for (it = renderers.begin(); it != renderers.end(); it++)
-		{
-			if ((*it) == this)
-			{
-				renderers.erase(it);
-				break;
-			}
-		}
+		renderers.erase(std::remove_if(renderers.begin(), renderers.end(), [&](Renderer* renderer) {return renderer == this; }));
 
 		glDeleteVertexArrays(verticesVectorsCount, VAO);
 		glDeleteBuffers(1, &VBO);
 		glDeleteBuffers(1, &EBO);
 		glDeleteBuffers(verticesVectorsCount, instanceVBO);
-		
-	}
-
-	Renderer* Renderer::FindInstance(GLFWwindow* window)
-	{
-		for (Renderer* renderer : renderers)
-		{
-			if (renderer->window == window)
-			{
-				return renderer;
-			}
-		}
-		return nullptr;
 	}
 
 	void Renderer::framebuffer_size_callback(GLFWwindow* window, int width, int height)
 	{
 		Renderer* renderer = Renderer::FindInstance(window);
-		if (renderer == nullptr)
-			return;
-		if (renderer->camera == nullptr)
+		if (IsRendererCreated(renderer) == false)
 			return;
 
 		glViewport(0, 0, width, height);
@@ -100,9 +74,7 @@ namespace Common
 	void Renderer::processInput(GLFWwindow* window)
 	{
 		Renderer* renderer = Renderer::FindInstance(window);
-		if (renderer == nullptr)
-			return;
-		if (renderer->camera == nullptr)
+		if (IsRendererCreated(renderer) == false)
 			return;
 
 		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
@@ -132,7 +104,7 @@ namespace Common
 	void Renderer::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 	{
 		Renderer* renderer = Renderer::FindInstance(window);
-		if (renderer == nullptr)
+		if (IsRendererCreated(renderer) == false)
 			return;
 
 		if (action == GLFW_PRESS)
@@ -151,9 +123,7 @@ namespace Common
 	void Renderer::mouse_callback(GLFWwindow* window, double xpos, double ypos)
 	{
 		Renderer* renderer = Renderer::FindInstance(window);
-		if (renderer == nullptr)
-			return;
-		if (renderer->camera == nullptr)
+		if (IsRendererCreated(renderer) == false)
 			return;
 
 		if (renderer->firstMouse)
@@ -175,9 +145,7 @@ namespace Common
 	void Renderer::scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 	{
 		Renderer* renderer = Renderer::FindInstance(window);
-		if (renderer == nullptr)
-			return;
-		if (renderer->camera == nullptr)
+		if (IsRendererCreated(renderer) == false)
 			return;
 
 		renderer->camera->ProcessMouseScroll(yoffset);
@@ -191,6 +159,26 @@ namespace Common
 		MainLoop();
 	}
 
+	Renderer* Renderer::FindInstance(GLFWwindow* window)
+	{
+		for (Renderer* renderer : renderers)
+		{
+			if (renderer->window == window)
+			{
+				return renderer;
+			}
+		}
+		return nullptr;
+	}
+
+	bool Renderer::IsRendererCreated(Renderer* renderer)
+	{
+		if (renderer == nullptr)
+			return false;
+		if (renderer->camera == nullptr)
+			return false;
+		return true;
+	}
 
 	int Renderer::InitWindow()
 	{
@@ -229,7 +217,6 @@ namespace Common
 
 		glfwSwapInterval(1);
 
-
 		// glad: load all OpenGL function pointers
 		// ---------------------------------------
 		if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
@@ -245,13 +232,11 @@ namespace Common
 
 	void Renderer::SetBuffers()
 	{
-
 		// create buffers/arrays
 		glGenVertexArrays(verticesVectorsCount, VAO);
 		glGenBuffers(1, &VBO);
 		glGenBuffers(1, &EBO);
 		glGenBuffers(verticesVectorsCount, instanceVBO);
-
 
 		//set data for VBO and EBO
 		glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -268,7 +253,7 @@ namespace Common
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 			glBindVertexArray(VAO[i]);
-			
+
 			//bind vbo and ebo
 			glBindBuffer(GL_ARRAY_BUFFER, VBO);
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
@@ -276,10 +261,10 @@ namespace Common
 			// set the vertex attribute pointers
 			// vertex Positions
 			glEnableVertexAttribArray(0);
-			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8*sizeof(float), (void*)0);
+			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
 			// vertex normals
 			glEnableVertexAttribArray(1);
-			glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8*sizeof(float), (void*)(3 * sizeof(float)));
+			glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
 			//vertex offset using instancing
 			glEnableVertexAttribArray(2);
 			glBindBuffer(GL_ARRAY_BUFFER, instanceVBO[i]);
@@ -288,7 +273,7 @@ namespace Common
 			glVertexAttribDivisor(2, 1);
 
 			glBindVertexArray(0);
-		}				
+		}
 	}
 
 	void Renderer::MainLoop()
@@ -355,9 +340,6 @@ namespace Common
 		shader->setVec3("lightDirection", glm::vec3(-0.2f, -1.0f, -0.3f));
 		shader->setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
 
-		
-
-
 		for (unsigned int i = 0; i < verticesVectorsCount; i++)
 		{
 			std::vector<Point_f>& vector = GetVector(i);
@@ -379,7 +361,6 @@ namespace Common
 			glDrawElementsInstanced(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0, vector.size());
 			glBindVertexArray(0);
 		}
-		
 	}
 
 	std::vector<Point_f>& Renderer::GetVector(int index)
@@ -460,7 +441,6 @@ namespace Common
 			max_range = defaultScale / 2.0f;
 
 		pointScale = defaultScale / (2.0f * max_range);
-		
 
 		glm::vec3 middleVector = glm::vec3(middle[0], middle[1], middle[2]);
 
@@ -469,7 +449,6 @@ namespace Common
 
 		SetModelMatrix(modelMatrix);
 	}
-
 
 	void Renderer::SetShader()
 	{
@@ -492,7 +471,4 @@ namespace Common
 		modelMatrix = model;
 		normalMatrix = glm::mat3(glm::transpose(glm::inverse(model)));
 	}
-	
-	
-
 }

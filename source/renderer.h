@@ -26,8 +26,6 @@ namespace Common
 
 		~Renderer();
 
-
-		static Renderer* FindInstance(GLFWwindow* window);
 		//callbacks
 		static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 		static void processInput(GLFWwindow* window);
@@ -36,8 +34,10 @@ namespace Common
 		static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 
 		void Show();
-		
 	private:
+		static Renderer* FindInstance(GLFWwindow* window);
+		static bool IsRendererCreated(Renderer* renderer);
+		
 		int InitWindow();
 		void SetBuffers();
 
@@ -48,7 +48,7 @@ namespace Common
 		glm::vec3 GetColor(int index);
 
 		void SetModelMatrixToData();
-		
+
 		void SetShader();
 		void SetCamera(glm::vec3 position);
 		glm::mat4 GetModelMatrix();
