@@ -264,7 +264,7 @@ namespace Common
 		cloud.resize(3000);
 		int cloudSize = cloud.size();
 
-		const auto transform = GetRandomTransformMatrix({ 0.f, 0.f, 0.f }, { 0.1, 0.1, 0.1 }, glm::radians(0.f));
+		const auto transform = glm::translate(glm::mat4(1.f), { 1.f, 1.f, 0.f }); //GetRandomTransformMatrix({ 0.f, 0.f, 0.f }, { 0.1, 0.1, 0.1 }, glm::radians(0.f));
 		const auto permutation = GetRandomPermutationVector(cloudSize);
 		const auto permutedCloud = ApplyPermutation(cloud, permutation);
 		const auto transformedCloud = GetTransformedCloud(cloud, transform);
