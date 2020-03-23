@@ -1,6 +1,7 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include <Eigen/Dense>
 
 namespace Common
 {
@@ -62,5 +63,11 @@ namespace Common
 	template<class T>
 	constexpr bool operator==(const Point<T>& p1, const Point<T>& p2) {
 		return p1.x == p2.x && p1.y == p2.y && p1.z == p2.z;
+	}
+
+	template<class T = float>
+	constexpr Point<T> operator*(const Eigen::Matrix3f& matrix, const Point<T>& p1) {
+		Eigen::Vector3f eigenResult = matrix * Eigen::Vector3f(p1.x, p1.y, p1.z);
+		return Point<T>(eigenResult(0), eigenResult(1), eigenResult(2));
 	}
 }
