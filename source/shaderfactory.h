@@ -6,24 +6,21 @@
 
 namespace Common
 {
-    enum class ShaderType;
+	enum class ShaderType;
 
-    class ShaderFactory
-    {
-    public:
-        static ShaderFactory& getInstance();
+	class ShaderFactory
+	{
+	public:
+		static ShaderFactory& getInstance();
 
-    private:
-        ShaderFactory();
+		std::shared_ptr<Shader> getShader(ShaderType type);
 
-    public:
-        ShaderFactory(ShaderFactory const&) = delete;
-        void operator=(ShaderFactory const&) = delete;
+		ShaderFactory(ShaderFactory const&) = delete;
+		void operator=(ShaderFactory const&) = delete;
 
-    private:
-        std::shared_ptr<Shader> simpleModel;
+	private:
+		ShaderFactory();
 
-    public:
-        std::shared_ptr<Shader> getShader(ShaderType type);
-    };
+		std::shared_ptr<Shader> simpleModel;
+	};
 }
