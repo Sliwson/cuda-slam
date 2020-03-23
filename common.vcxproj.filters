@@ -18,9 +18,11 @@
     <ClCompile Include="source\shaderfactory.cpp">
       <Filter>GUI\Shaders</Filter>
     </ClCompile>
-    <ClCompile Include="source\glad.c" />
     <ClCompile Include="source\Icosphere.cpp">
       <Filter>GUI\Sphere</Filter>
+    </ClCompile>
+    <ClCompile Include="source\glad.c">
+      <Filter>GUI</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -48,6 +50,7 @@
     <ClInclude Include="source\Icosphere.h">
       <Filter>GUI\Sphere</Filter>
     </ClInclude>
+    <ClInclude Include="source\_common.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="GUI">

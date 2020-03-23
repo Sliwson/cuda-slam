@@ -1,5 +1,4 @@
 #include "loader.h"
-#include <filesystem>
 
 namespace Common
 {

@@ -1,9 +1,3 @@
-#include <stdio.h>
-#include <algorithm>
-#include <numeric>
-#include <random>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/glm.hpp>
 #include <Eigen/Dense>
 
 #include "common.h"
@@ -127,7 +121,7 @@ namespace Common
 
 	std::vector<int> GetClosestPointIndexes(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter)
 	{
-		int size = cloudBefore.size();
+		const auto size = cloudBefore.size();
 		std::vector<int> resultPermutation(size);
 		std::vector<float> bestLength(size, std::numeric_limits<float>::max());
 
@@ -265,9 +259,9 @@ namespace Common
 		//const auto cloud = GetRandomPointCloud(corner, size, 3000);
 		auto cloud = LoadCloud("data/bunny.obj");
 		cloud.resize(4000);
-		int cloudSize = cloud.size();
+		const auto cloudSize = static_cast<int>(cloud.size());
 
-		const auto transform = GetRandomTransformMatrix({ -0.01, -0.01, -0.01 }, { 0.01, 0.01, 0.01}, glm::radians(5.f));
+		const auto transform = GetRandomTransformMatrix({ -0.01f, -0.01f, -0.01f }, { 0.01f, 0.01f, 0.01f }, glm::radians(5.f));
 		const auto permutation = GetRandomPermutationVector(cloudSize);
 		const auto permutedCloud = ApplyPermutation(cloud, permutation);
 		const auto transformedCloud = GetTransformedCloud(cloud, transform);
