@@ -226,6 +226,8 @@ namespace Common
 		glm::mat4 prevTransformationMatrix(1.0f);
 		std::pair<std::vector<Point_f>, std::vector<Point_f>> closestPoints;
 		float prevError;
+		*iterations = 0;
+		*error = 1.0f;
 
 		do
 		{
@@ -241,7 +243,7 @@ namespace Common
 				return prevTransformationMatrix;
 			}
 			(*iterations)++;
-			if(*iterations > maxIterations && maxIterations != -1)
+			if(*iterations >= maxIterations && maxIterations != -1)
 				return transformationMatrix;
 		} while (*error > TEST_EPS);
 
@@ -258,18 +260,19 @@ namespace Common
 
 		//const auto cloud = GetRandomPointCloud(corner, size, 3000);
 		auto cloud = LoadCloud("data/bunny.obj");
-		cloud.resize(4000);
-		const auto cloudSize = static_cast<int>(cloud.size());
 
-		const auto transform = GetRandomTransformMatrix({ -0.01f, -0.01f, -0.01f }, { 0.01f, 0.01f, 0.01f }, glm::radians(5.f));
+		cloud.resize(3000);
+		int cloudSize = cloud.size();
+
+		const auto transform = GetRandomTransformMatrix({ 0.f, 0.f, 0.f }, { 0.1, 0.1, 0.1 }, glm::radians(0.f));
 		const auto permutation = GetRandomPermutationVector(cloudSize);
 		const auto permutedCloud = ApplyPermutation(cloud, permutation);
 		const auto transformedCloud = GetTransformedCloud(cloud, transform);
 		const auto transformedPermutedCloud = GetTransformedCloud(permutedCloud, transform);
-		
+
 		const auto calculatedPermutation = InversePermutation(GetClosestPointIndexes(cloud, transformedPermutedCloud));
-		const auto icpCalculatedTransform1 = GetTransformationMatrix(cloud, transformedPermutedCloud, &iterations, &error);
-		const auto icpCalculatedTransform2 = GetTransformationMatrix(cloud, transformedPermutedCloud, &iterations, &error, 5);
+		const auto icpCalculatedTransform1 = GetTransformationMatrix(cloud, transformedPermutedCloud, &iterations, &error, 10);
+		const auto icpCalculatedTransform2 = GetTransformationMatrix(cloud, transformedPermutedCloud, &iterations, &error);
 
 		const auto resultOrdered = TestTransformOrdered(cloud, transformedCloud, transform);
 		const auto resultUnordered = TestTransformWithPermutation(cloud, transformedPermutedCloud, permutation, transform);
@@ -279,5 +282,16 @@ namespace Common
 		printf("Unordered cloud test [%s]\n", resultUnordered ? "OK" : "FAIL");
 		printf("Permutation find test [%s]\n", resultPermutation ? "OK" : "FAIL");
 		printf("ICP test (%d iterations) error = %g\n", iterations, error);
+
+
+		Common::Renderer renderer(
+			Common::ShaderType::SimpleModel,
+			cloud, //grey
+			transformedCloud, //blue
+			GetTransformedCloud(cloud, icpCalculatedTransform2), //red
+			//GetTransformedCloud(cloud, icpCalculatedTransform1)); //green
+			std::vector<Point_f>(1));
+
+		renderer.Show();
 	}
 }
