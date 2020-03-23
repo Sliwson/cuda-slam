@@ -44,7 +44,7 @@ namespace Common
 		renderers.push_back(this);
 
 
-		Icosphere sphere(pointSize, 1, false);
+		Icosphere sphere(pointSize, 1, true);
 
 		vertices = sphere.getInterleavedVerticesVector();
 		indices = sphere.getIndicesVector();

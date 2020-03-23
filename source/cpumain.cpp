@@ -15,6 +15,11 @@ int main()
 	std::vector<Common::Point_f> result_points(size);
 	std::vector<Common::Point_f> cpu_points(size);
 	std::vector<Common::Point_f> gpu_points(size);
+	std::vector<Common::Point_f> empty_points(1);
+
+	//empty_points.push_back(Common::Point_f::Zero());
+
+	//empty_points.push_back
 
 	for (int i = 0; i < size; i++)
 	{

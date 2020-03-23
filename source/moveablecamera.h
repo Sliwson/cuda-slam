@@ -4,19 +4,8 @@
 
 namespace Common
 {
-
 	class MoveableCamera : public Camera
 	{
-	protected:
-		// Euler Angles
-		float Yaw;
-		float Pitch;
-		// Camera options
-		float MovementSpeed;
-		float MouseSensitivity;
-
-		// Calculates the front vector from the Camera's (updated) Euler Angles
-		virtual void updateCameraVectors() override;
 	public:
 		// Constructor with vectors
 		MoveableCamera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 worldUp = glm::vec3(0.0f, 1.0f, 0.0f), float yaw = CameraConsts::YAW, float pitch = CameraConsts::PITCH);
@@ -28,5 +17,16 @@ namespace Common
 
 		// Processes input received from a mouse input system. Expects the offset value in both the x and y direction.
 		virtual void ProcessMouseMovement(float xoffset, float yoffset, GLboolean constrainPitch = true) override;
+	protected:
+		// Calculates the front vector from the Camera's (updated) Euler Angles
+		virtual void updateCameraVectors() override;
+
+		// Euler Angles
+		float Yaw;
+		float Pitch;
+
+		// Camera options
+		float MovementSpeed;
+		float MouseSensitivity;
 	};
 }
