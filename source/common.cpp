@@ -1,9 +1,3 @@
-#include <stdio.h>
-#include <algorithm>
-#include <numeric>
-#include <random>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/glm.hpp>
 #include <Eigen/Dense>
 
 #include "common.h"
@@ -127,7 +121,7 @@ namespace Common
 
 	std::vector<int> GetClosestPointIndexes(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter)
 	{
-		int size = cloudBefore.size();
+		const auto size = cloudBefore.size();
 		std::vector<int> resultPermutation(size);
 		std::vector<float> bestLength(size, std::numeric_limits<float>::max());
 
@@ -193,7 +187,7 @@ namespace Common
 		return result;
 	}
 
-	glm::mat4 LeastSquaresSVD(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& orderedCloudAfter)
+	glm::mat4 LeastSquaresSVD(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& orderedCloudAfter, const Point_f& cBefore, const Point_f& cAfter)
 	{
 		auto transformationMatrix = glm::mat4();
 		auto alignedBefore = GetAlignedCloud(cloudBefore);
@@ -203,13 +197,16 @@ namespace Common
 
 		// Official documentation says thin U and thin V are enough for us, not gonna argue
 		// But maybe it is not enough, delete flags then
-		Eigen::JacobiSVD svd(matrix, Eigen::ComputeThinU | Eigen::ComputeThinV);
+		Eigen::JacobiSVD svd(matrix, Eigen::ComputeFullU | Eigen::ComputeFullV);
 
 		Eigen::Matrix3f vMatrix = svd.matrixV();
 		Eigen::Matrix3f uMatrix = svd.matrixU();
 
-		Eigen::Matrix3f rotation = vMatrix * uMatrix.transpose();
-		Point_f translation = GetCenterOfMass(orderedCloudAfter) - rotation * GetCenterOfMass(cloudBefore);
+		Eigen::Matrix3f uv = uMatrix * vMatrix.transpose();
+		auto diag = Eigen::DiagonalMatrix<float, 3>(1, 1, uv.determinant());
+		auto rotation = uMatrix * diag * vMatrix.transpose();
+
+		Point_f translation = cAfter - rotation * cBefore;
 
 		// TODO: Do something with interaction between glm and eigen
 		for (int i = 0; i < 3; i++)
@@ -229,27 +226,27 @@ namespace Common
 	glm::mat4 GetTransformationMatrix(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, int *iterations, float *error, int maxIterations = -1)
 	{
 		glm::mat4 transformationMatrix(1.0f);
-		glm::mat4 prevTransformationMatrix(1.0f);
 		std::pair<std::vector<Point_f>, std::vector<Point_f>> closestPoints;
-		float prevError;
+		*iterations = 0;
+		*error = 1.0f;
 
 		do
 		{
-			prevError = *error;
-			prevTransformationMatrix = transformationMatrix;
 			auto transformedCloud = GetTransformedCloud(cloudBefore, transformationMatrix);
 			closestPoints = GetClosestPointPair(transformedCloud, cloudAfter);
-			transformationMatrix = LeastSquaresSVD(closestPoints.first, closestPoints.second);
+
+			auto centroidBefore = GetCenterOfMass(transformedCloud);
+			auto centroidAfter = GetCenterOfMass(cloudAfter);
+			
+			transformationMatrix = LeastSquaresSVD(closestPoints.first, closestPoints.second, centroidBefore, centroidAfter);
+			transformedCloud = GetTransformedCloud(cloudBefore, transformationMatrix);
+			closestPoints = GetClosestPointPair(transformedCloud, cloudAfter);
+
 			*error = GetMeanSquaredError(cloudBefore, closestPoints.second, transformationMatrix);
-			if (*error > prevError && maxIterations == -1)
-			{
-				*error = prevError;
-				return prevTransformationMatrix;
-			}
+			printf("Iteration: %d, MSE: %f\n", *iterations, *error);
 			(*iterations)++;
-			if(*iterations > maxIterations && maxIterations != -1)
-				return transformationMatrix;
-		} while (*error > TEST_EPS);
+
+		} while (*error > TEST_EPS && *iterations <= maxIterations);
 
 		return transformationMatrix;
 	}
@@ -264,18 +261,20 @@ namespace Common
 
 		//const auto cloud = GetRandomPointCloud(corner, size, 3000);
 		auto cloud = LoadCloud("data/bunny.obj");
-		cloud.resize(4000);
+
+		std::transform(cloud.begin(), cloud.end(), cloud.begin(), [](const Point_f& point) { return Point_f { point.x * 100.f, point.y * 100.f, point.z * 100.f }; });
+		cloud.resize(3000);
 		int cloudSize = cloud.size();
 
-		const auto transform = GetRandomTransformMatrix({ -0.01, -0.01, -0.01 }, { 0.01, 0.01, 0.01}, glm::radians(5.f));
+		const auto transform = glm::translate(glm::mat4(1.f), { 1.f, 1.f, 0.f }); //GetRandomTransformMatrix({ 0.f, 0.f, 0.f }, { 0.1, 0.1, 0.1 }, glm::radians(0.f));
 		const auto permutation = GetRandomPermutationVector(cloudSize);
 		const auto permutedCloud = ApplyPermutation(cloud, permutation);
 		const auto transformedCloud = GetTransformedCloud(cloud, transform);
 		const auto transformedPermutedCloud = GetTransformedCloud(permutedCloud, transform);
-		
+
 		const auto calculatedPermutation = InversePermutation(GetClosestPointIndexes(cloud, transformedPermutedCloud));
-		const auto icpCalculatedTransform1 = GetTransformationMatrix(cloud, transformedPermutedCloud, &iterations, &error);
-		const auto icpCalculatedTransform2 = GetTransformationMatrix(cloud, transformedPermutedCloud, &iterations, &error, 5);
+		const auto icpCalculatedTransform1 = GetTransformationMatrix(cloud, transformedPermutedCloud, &iterations, &error, 4);
+		//const auto icpCalculatedTransform2 = GetTransformationMatrix(cloud, transformedPermutedCloud, &iterations, &error);
 
 		const auto resultOrdered = TestTransformOrdered(cloud, transformedCloud, transform);
 		const auto resultUnordered = TestTransformWithPermutation(cloud, transformedPermutedCloud, permutation, transform);
@@ -285,5 +284,16 @@ namespace Common
 		printf("Unordered cloud test [%s]\n", resultUnordered ? "OK" : "FAIL");
 		printf("Permutation find test [%s]\n", resultPermutation ? "OK" : "FAIL");
 		printf("ICP test (%d iterations) error = %g\n", iterations, error);
+
+
+		Common::Renderer renderer(
+			Common::ShaderType::SimpleModel,
+			cloud, //grey
+			transformedCloud, //blue
+			GetTransformedCloud(cloud, icpCalculatedTransform1), //red
+			//GetTransformedCloud(cloud, icpCalculatedTransform1)); //green
+			std::vector<Point_f>(1));
+
+		renderer.Show();
 	}
 }

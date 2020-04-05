@@ -3,9 +3,8 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
-#include <vector>
 
-#include "common.h"
+#include "_common.h"
 
 namespace Common
 {
@@ -14,7 +13,7 @@ namespace Common
 	public:
 		AssimpCloudLoader(std::string const& path);
 		std::vector<Point_f> GetCloud(int idx) const { return clouds[idx]; }
-		int GetCloudCount() const { return clouds.size(); }
+		int GetCloudCount() const { return static_cast<int>(clouds.size()); }
 
 	private:
 

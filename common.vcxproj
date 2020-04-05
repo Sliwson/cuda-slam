@@ -32,6 +32,7 @@
     <ClInclude Include="source\shader.h" />
     <ClInclude Include="source\shaderfactory.h" />
     <ClInclude Include="source\shadertype.h" />
+    <ClInclude Include="source\_common.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="source\shaders\fragmentshader.frag" />
