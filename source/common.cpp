@@ -52,7 +52,7 @@ namespace Common
 	glm::mat4 GetRandomTransformMatrix(const Point_f& translationMin, const Point_f& translationMax, float rotationRange)
 	{
 		const auto rotation = glm::rotate(glm::mat4(1.0f),
-			GetRandomFloat(0, rotationRange),
+			rotationRange,//GetRandomFloat(0, rotationRange),
 			glm::vec3(GetRandomPoint(Point_f::Zero(), Point_f::One())));
 
 		return glm::translate(rotation, glm::vec3(GetRandomPoint(translationMin, translationMax)));
@@ -140,10 +140,40 @@ namespace Common
 		return inversedPermutation;
 	}
 
-	std::pair<std::vector<Point_f>, std::vector<Point_f>>GetClosestPointPair(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter)
+	std::pair<std::vector<Point_f>, std::vector<Point_f>>GetCorrespondingPoints(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, float maxDistanceSquared)
 	{
+		std::vector<Point_f> correspondingFromCloudBefore(cloudBefore.size());
+		std::vector<Point_f> correspondingFromCloudAfter(cloudBefore.size());
+		int correspondingCount = 0;
 
-		return std::make_pair(cloudBefore, cloudAfter);
+		for (int i = 0; i < cloudBefore.size(); i++)
+		{
+			int closestIndex = -1;
+			int closestDistance = 0;
+
+			for (int j = 0; j < cloudAfter.size(); j++)
+			{
+				float distance = (cloudAfter[j] - cloudBefore[i]).LengthSquared();
+
+				if (distance < closestDistance || closestIndex == -1)
+				{
+					closestDistance = distance;
+					closestIndex = j;
+				}
+			}
+			if (closestDistance < maxDistanceSquared && closestIndex >= 0)
+			{
+				correspondingFromCloudBefore[correspondingCount] = cloudBefore[i];
+				correspondingFromCloudAfter[correspondingCount] = cloudAfter[closestIndex];
+
+				correspondingCount++;
+			}
+		}
+
+		correspondingFromCloudBefore.resize(correspondingCount);
+		correspondingFromCloudAfter.resize(correspondingCount);
+
+		return std::make_pair(correspondingFromCloudBefore, correspondingFromCloudAfter);
 	}
 
 	std::vector<Point_f> GetAlignedCloud(const std::vector<Point_f>& cloud)
@@ -151,39 +181,94 @@ namespace Common
 		auto center = GetCenterOfMass(cloud);
 		auto result = std::vector<Point_f>(cloud.size());
 		// TODO: Use thrust maybe and parametrize host/device run
-
+		std::transform(cloud.begin(), cloud.end(), result.begin(),
+			[center](const Point_f& point) -> Point_f { return point - center; });
 
 		return result;
 	}
 
+	// Return matrix with every column storing one point (in 3 rows)
 	Eigen::Matrix3Xf GetMatrix3XFromPointsVector(const std::vector<Point_f>& points)
 	{
 		Eigen::Matrix3Xf result = Eigen::ArrayXXf::Zero(3, points.size());
-
+		for (int i = 0; i < points.size(); i++)
+		{
+			result(0, i) = points[i].x;
+			result(1, i) = points[i].y;
+			result(2, i) = points[i].z;
+		}
 
 		return result;
 	}
 
-	glm::mat4 LeastSquaresSVD(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& orderedCloudAfter, const Point_f& cBefore, const Point_f& cAfter)
+	glm::mat4 LeastSquaresSVD(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& orderedCloudAfter, float *error)
 	{
 		auto transformationMatrix = glm::mat4();
 		
-		// Official documentation says thin U and thin V are enough for us, not gonna argue
-		// But maybe it is not enough, delete flags then
-		//Eigen::JacobiSVD svd(matrix, Eigen::ComputeFullU | Eigen::ComputeFullV);
+		auto centerBefore = GetCenterOfMass(cloudBefore);
+		auto centerAfter = GetCenterOfMass(orderedCloudAfter);
 
-		//Eigen::Matrix3f vMatrix = svd.matrixV();
-		//Eigen::Matrix3f uMatrix = svd.matrixU();
+		Eigen::Matrix3Xf alignedBefore = GetMatrix3XFromPointsVector(GetAlignedCloud(cloudBefore));
+		Eigen::Matrix3Xf alignedAfter = GetMatrix3XFromPointsVector(GetAlignedCloud(orderedCloudAfter));
+
+		Eigen::Matrix3f matrix = alignedAfter * alignedBefore.transpose();
+
+		//// Official documentation says thin U and thin V are enough for us, not gonna argue
+		//// But maybe it is not enough
+		Eigen::JacobiSVD<Eigen::Matrix3f> const svd(matrix, Eigen::ComputeFullU | Eigen::ComputeFullV);
+		
+		double det = (svd.matrixU() * svd.matrixV().transpose()).determinant();
+		Eigen::Matrix3f diag = Eigen::DiagonalMatrix<float, 3>(1, 1, det);
+		Eigen::Matrix3f rotation = svd.matrixU() * diag * svd.matrixV().transpose();
+
+		Point_f translation = centerAfter - (rotation * centerBefore);
+
+		for (int i = 0; i < 3; i++)
+		{
+			for (int j = 0; j < 3; j++)
+			{
+				transformationMatrix[i][j] = rotation(j, i);
+			}
+			transformationMatrix[i][3] = 0;
+		}
+		
+		transformationMatrix[3][0] = translation.x;
+		transformationMatrix[3][1] = translation.y;
+		transformationMatrix[3][2] = translation.z;
+		transformationMatrix[3][3] = 1.0f;
 
 		return transformationMatrix;
 	}
 
-	glm::mat4 GetTransformationMatrix(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, int *iterations, float *error, int maxIterations = -1)
+	glm::mat4 GetTransformationMatrix(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, int *iterations, float *error, float maxDistanceSquared, int maxIterations = -1)
 	{
+		*iterations = 0;
+		*error = 1e5;
 		glm::mat4 transformationMatrix(1.0f);
 		std::pair<std::vector<Point_f>, std::vector<Point_f>> closestPoints;
-		*iterations = 0;
-		*error = 1.0f;
+
+		Eigen::Matrix3Xf cloudBeforeMatrix = GetMatrix3XFromPointsVector(cloudBefore);
+		Eigen::Matrix3Xf cloudAfterMatrix = GetMatrix3XFromPointsVector(cloudAfter);
+
+		while (maxIterations == -1 || *iterations < maxIterations)
+		{
+			// 1. difference: Maybe use cloud in Matrix here?
+			auto transformedCloudBefore = GetTransformedCloud(cloudBefore, transformationMatrix);
+
+			auto correspondingPoints = GetCorrespondingPoints(transformedCloudBefore, cloudAfter, maxDistanceSquared);
+			if (correspondingPoints.first.size() == 0)
+				break;
+
+			// Here we multiply
+			transformationMatrix = LeastSquaresSVD(correspondingPoints.first, correspondingPoints.second, error) * transformationMatrix;
+
+			*error = GetMeanSquaredError(cloudBefore, cloudAfter, transformationMatrix);
+
+			if (*error < TEST_EPS)
+				break;
+
+			(*iterations)++;
+		}
 
 		return transformationMatrix;
 	}
@@ -203,15 +288,15 @@ namespace Common
 		cloud.resize(3000);
 		int cloudSize = cloud.size();
 
-		const auto transform = glm::translate(glm::mat4(1.f), { 1.f, 1.f, 0.f }); //GetRandomTransformMatrix({ 0.f, 0.f, 0.f }, { 0.1, 0.1, 0.1 }, glm::radians(0.f));
+		const auto transform = GetRandomTransformMatrix({ 0.f, 0.f, 0.f }, { 10.0f, 10.0f, 10.0f }, glm::radians(35.f));
 		const auto permutation = GetRandomPermutationVector(cloudSize);
 		const auto permutedCloud = ApplyPermutation(cloud, permutation);
 		const auto transformedCloud = GetTransformedCloud(cloud, transform);
 		const auto transformedPermutedCloud = GetTransformedCloud(permutedCloud, transform);
 
 		const auto calculatedPermutation = InversePermutation(GetClosestPointIndexes(cloud, transformedPermutedCloud));
-		const auto icpCalculatedTransform1 = GetTransformationMatrix(cloud, transformedPermutedCloud, &iterations, &error, 50);
-		const auto icpCalculatedTransform2 = GetTransformationMatrix(cloud, transformedPermutedCloud, &iterations, &error, 5);
+		const auto icpCalculatedTransform2 = GetTransformationMatrix(cloud, transformedPermutedCloud, &iterations, &error, 25.0f, 5);
+		const auto icpCalculatedTransform1 = GetTransformationMatrix(cloud, transformedPermutedCloud, &iterations, &error, 25.0f, 50);
 
 		const auto resultOrdered = TestTransformOrdered(cloud, transformedCloud, transform);
 		const auto resultUnordered = TestTransformWithPermutation(cloud, transformedPermutedCloud, permutation, transform);
