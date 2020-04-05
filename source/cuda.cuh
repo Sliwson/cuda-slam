@@ -2,7 +2,6 @@
 
 #include "_common.h"
 #include "common.h"
-#include "helpers.h"
 
 #include <thrust/transform.h>
 #include <thrust/execution_policy.h>

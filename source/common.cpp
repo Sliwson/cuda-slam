@@ -206,7 +206,7 @@ namespace Common
 		auto diag = Eigen::DiagonalMatrix<float, 3>(1, 1, uv.determinant());
 		auto rotation = uMatrix * diag * vMatrix.transpose();
 
-		Point_f translation = cAfter - rotation * cBefore;
+		Point_f translation = { 0, 0, 0 };// cAfter - rotation * cBefore;
 
 		// TODO: Do something with interaction between glm and eigen
 		for (int i = 0; i < 3; i++)
