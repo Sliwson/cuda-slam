@@ -10,5 +10,4 @@
 
 using namespace Common;
 
-
 void CudaTest();

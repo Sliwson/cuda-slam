@@ -1,6 +1,6 @@
 #include "cuda.cuh"
 
-namespace Helpers {
+namespace {
 	struct MatrixTransform : thrust::unary_function<glm::vec3, glm::vec3>
 	{
 		MatrixTransform(const glm::mat4& transform) : transformMatrix(transform) {}
@@ -20,18 +20,37 @@ namespace Helpers {
 		for (int i = 0; i < vec.size(); i++)
 			hostCloud[i] = (glm::vec3)vec[i];
 
-		return std::move(hostCloud);
+		return hostCloud;
+	}
+
+	std::vector<Point_f> ThrustToCommonVector(const thrust::device_vector<glm::vec3>& vec)
+	{
+		thrust::host_vector<glm::vec3> hostCloud = vec;
+		std::vector<Point_f> outVector(vec.size());
+		for (int i = 0; i < hostCloud.size(); i++)
+			outVector[i] = { hostCloud[i].x, hostCloud[i].y, hostCloud[i].z };
+
+		return outVector;
 	}
 }
 
 void CudaTest()
 {
 	const auto testCloud = LoadCloud("data/bunny.obj");
-	auto hostCloud = Helpers::CommonToThrustVector(testCloud);
+	auto hostCloud = CommonToThrustVector(testCloud);
 	thrust::device_vector<glm::vec3> deviceCloudBefore = hostCloud;
 	thrust::device_vector<glm::vec3> deviceCloudAfter(deviceCloudBefore.size());
 
 	const auto sampleTransform = glm::translate(glm::mat4(1.f), { 1.f, 0, 0 });
-	auto fun = Helpers::MatrixTransform(sampleTransform);
+	auto fun = MatrixTransform(sampleTransform);
 	thrust::transform(thrust::device, deviceCloudBefore.begin(), deviceCloudBefore.end(), deviceCloudAfter.begin(), fun);
+
+	Common::Renderer renderer(
+			Common::ShaderType::SimpleModel,
+			testCloud, //grey
+			ThrustToCommonVector(deviceCloudAfter), //blue
+			std::vector<Point_f>(1),
+			std::vector<Point_f>(1));
+
+	renderer.Show();
 }
