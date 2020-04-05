@@ -82,6 +82,8 @@ namespace Common
 		float pointScale;
 		//scale
 		float defaultScale;
+		//visibility of clouds
+		bool isVisible[verticesVectorsCount];
 
 		//data
 		std::vector<Point_f> origin_points;

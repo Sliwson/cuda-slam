@@ -46,6 +46,11 @@ namespace Common
 		vertices = sphere.getInterleavedVerticesVector();
 		indices = sphere.getIndicesVector();
 
+		for (size_t i = 0; i < verticesVectorsCount; i++)
+		{
+			isVisible[i] = true;
+		}
+
 		SetModelMatrixToData();
 	}
 
@@ -113,6 +118,18 @@ namespace Common
 			{
 			case GLFW_KEY_ESCAPE:
 				glfwSetWindowShouldClose(window, true);
+				break;
+			case GLFW_KEY_1:
+				renderer->isVisible[0] = !renderer->isVisible[0];
+				break;
+			case GLFW_KEY_2:
+				renderer->isVisible[1] = !renderer->isVisible[1];
+				break;
+			case GLFW_KEY_3:
+				renderer->isVisible[2] = !renderer->isVisible[2];
+				break;
+			case GLFW_KEY_4:
+				renderer->isVisible[3] = !renderer->isVisible[3];
 				break;
 			default:
 				break;
@@ -342,26 +359,28 @@ namespace Common
 
 		for (unsigned int i = 0; i < verticesVectorsCount; i++)
 		{
-			std::vector<Point_f>& vector = GetVector(i);
+			if (isVisible[i] == true)
+			{
+				std::vector<Point_f>& vector = GetVector(i);
 
-			shader->setVec3("objectColor", GetColor(i));
+				shader->setVec3("objectColor", GetColor(i));
 
-			// Uncomment to draw samples
-			//
-			//glm::mat4 tmp = modelMatrix;
+				// uncomment to enable rotation
+				//glm::mat4 tmp = modelMatrix;
 
-			////modelMatrix = glm::translate(modelMatrix, glm::vec3(i, i, i));
-			//modelMatrix = glm::rotate(modelMatrix, (float)i, glm::vec3(0.5f, 0.5f, 0.5f));
+				////modelMatrix = glm::translate(modelMatrix, glm::vec3(i, i, i));
+				//modelMatrix = glm::rotate(modelMatrix, (float)i, glm::vec3(0.5f, 0.5f, 0.5f));
 
-			//SetModelMatrix(modelMatrix);
-			//shader->setMat4("model", modelMatrix);
-			//shader->setMat3("NormalMatrix", normalMatrix);
+				//SetModelMatrix(modelMatrix);
+				//shader->setMat4("model", modelMatrix);
+				//shader->setMat3("NormalMatrix", normalMatrix);
 
-			//SetModelMatrix(tmp);
+				//SetModelMatrix(tmp);
 
-			glBindVertexArray(VAO[i]);
-			glDrawElementsInstanced(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0, vector.size());
-			glBindVertexArray(0);
+				glBindVertexArray(VAO[i]);
+				glDrawElementsInstanced(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0, vector.size());
+				glBindVertexArray(0);
+			}
 		}
 	}
 
