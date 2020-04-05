@@ -1,19 +1,7 @@
 #include "cuda.cuh"
+#include "functors.cuh"
 
 namespace {
-	struct MatrixTransform : thrust::unary_function<glm::vec3, glm::vec3>
-	{
-		MatrixTransform(const glm::mat4& transform) : transformMatrix(transform) {}
-
-		__device__ __host__ glm::vec3 operator()(const glm::vec3& vector)
-		{
-			return glm::vec3(transformMatrix * glm::vec4(vector, 1.f));
-		}
-
-	private:
-		glm::mat4 transformMatrix = glm::mat4(1.f);
-	};
-
 	thrust::host_vector<glm::vec3> CommonToThrustVector(const std::vector<Common::Point_f>& vec)
 	{
 		thrust::host_vector<glm::vec3> hostCloud(vec.size() * 3);
@@ -32,24 +20,38 @@ namespace {
 
 		return outVector;
 	}
+
+	glm::mat4 CudaICP(const thrust::device_vector<glm::vec3>& before, const thrust::device_vector<glm::vec3>& after)
+	{
+		return glm::mat4(1.f);
+	}
 }
 
 void CudaTest()
 {
 	const auto testCloud = LoadCloud("data/bunny.obj");
-	auto hostCloud = CommonToThrustVector(testCloud);
+	const auto hostCloud = CommonToThrustVector(testCloud);
+
 	thrust::device_vector<glm::vec3> deviceCloudBefore = hostCloud;
 	thrust::device_vector<glm::vec3> deviceCloudAfter(deviceCloudBefore.size());
+	thrust::device_vector<glm::vec3> calculatedCloud(deviceCloudBefore.size());
 
-	const auto sampleTransform = glm::translate(glm::mat4(1.f), { 1.f, 0, 0 });
-	auto fun = MatrixTransform(sampleTransform);
-	thrust::transform(thrust::device, deviceCloudBefore.begin(), deviceCloudBefore.end(), deviceCloudAfter.begin(), fun);
+	const auto scaleInput = Functors::ScaleTransform(100.f);
+	thrust::transform(thrust::device, deviceCloudBefore.begin(), deviceCloudBefore.end(), deviceCloudBefore.begin(), scaleInput);
+
+	const auto sampleTransform = glm::translate(glm::rotate(glm::mat4(1.f), glm::radians(10.f), { 0.5f, 0.5f, 0.f }), { 5.f, 5.f, 0.f });
+	const auto idealTransform = Functors::MatrixTransform(sampleTransform);
+	thrust::transform(thrust::device, deviceCloudBefore.begin(), deviceCloudBefore.end(), deviceCloudAfter.begin(), idealTransform);
+
+	const auto result = CudaICP(deviceCloudBefore, deviceCloudAfter);
+	const auto calculatedTransform = Functors::MatrixTransform(result);
+	thrust::transform(thrust::device, deviceCloudBefore.begin(), deviceCloudBefore.end(), calculatedCloud.begin(), calculatedTransform);
 
 	Common::Renderer renderer(
 			Common::ShaderType::SimpleModel,
-			testCloud, //grey
+			ThrustToCommonVector(deviceCloudBefore), //grey
 			ThrustToCommonVector(deviceCloudAfter), //blue
-			std::vector<Point_f>(1),
+			ThrustToCommonVector(calculatedCloud), //red
 			std::vector<Point_f>(1));
 
 	renderer.Show();

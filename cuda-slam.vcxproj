@@ -21,6 +21,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\cuda.cuh" />
+    <ClInclude Include="source\functors.cuh" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="common.vcxproj">
