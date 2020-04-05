@@ -27,5 +27,18 @@ namespace Functors {
 	private:
 		float multiplier = 1.f;
 	};
+
+	struct TranslateTransform : thrust::unary_function<glm::vec3, glm::vec3>
+	{
+		TranslateTransform(glm::vec3 translation) : translation(translation) {}
+
+		__device__ __host__ glm::vec3 operator()(const glm::vec3& vector)
+		{
+			return vector + translation;
+		}
+
+	private:
+		glm::vec3 translation = { 0.f, 0.f, 0.f };
+	};
 }
 

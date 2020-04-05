@@ -21,6 +21,12 @@ namespace {
 		return outVector;
 	}
 
+	glm::vec3 CalculateCentroid(const thrust::device_vector<glm::vec3>& vec)
+	{
+		const auto sum = thrust::reduce(thrust::device, vec.begin(), vec.end());
+		return sum / static_cast<float>(vec.size());
+	}
+
 	glm::mat4 CudaICP(const thrust::device_vector<glm::vec3>& before, const thrust::device_vector<glm::vec3>& after)
 	{
 		return glm::mat4(1.f);
@@ -39,7 +45,7 @@ void CudaTest()
 	const auto scaleInput = Functors::ScaleTransform(100.f);
 	thrust::transform(thrust::device, deviceCloudBefore.begin(), deviceCloudBefore.end(), deviceCloudBefore.begin(), scaleInput);
 
-	const auto sampleTransform = glm::translate(glm::rotate(glm::mat4(1.f), glm::radians(10.f), { 0.5f, 0.5f, 0.f }), { 5.f, 5.f, 0.f });
+	const auto sampleTransform = glm::translate(glm::rotate(glm::mat4(1.f), glm::radians(20.f), { 0.5f, 0.5f, 0.f }), { 5.f, 5.f, 0.f });
 	const auto idealTransform = Functors::MatrixTransform(sampleTransform);
 	thrust::transform(thrust::device, deviceCloudBefore.begin(), deviceCloudBefore.end(), deviceCloudAfter.begin(), idealTransform);
 
