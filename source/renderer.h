@@ -69,8 +69,8 @@ namespace Common
 		int height;
 
 		//frames
-		double deltaTime;
-		double lastFrame;
+		float deltaTime;
+		float lastFrame;
 
 		//mouse
 		float lastX;

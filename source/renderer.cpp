@@ -346,16 +346,18 @@ namespace Common
 
 			shader->setVec3("objectColor", GetColor(i));
 
-			glm::mat4 tmp = modelMatrix;
+			// Uncomment to draw samples
+			//
+			//glm::mat4 tmp = modelMatrix;
 
-			//modelMatrix = glm::translate(modelMatrix, glm::vec3(i, i, i));
-			modelMatrix = glm::rotate(modelMatrix, (float)i, glm::vec3(0.5f, 0.5f, 0.5f));
+			////modelMatrix = glm::translate(modelMatrix, glm::vec3(i, i, i));
+			//modelMatrix = glm::rotate(modelMatrix, (float)i, glm::vec3(0.5f, 0.5f, 0.5f));
 
-			SetModelMatrix(modelMatrix);
-			shader->setMat4("model", modelMatrix);
-			shader->setMat3("NormalMatrix", normalMatrix);
+			//SetModelMatrix(modelMatrix);
+			//shader->setMat4("model", modelMatrix);
+			//shader->setMat3("NormalMatrix", normalMatrix);
 
-			SetModelMatrix(tmp);
+			//SetModelMatrix(tmp);
 
 			glBindVertexArray(VAO[i]);
 			glDrawElementsInstanced(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0, vector.size());
