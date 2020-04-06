@@ -262,7 +262,8 @@ namespace Common
 			// Here we multiply
 			transformationMatrix = LeastSquaresSVD(correspondingPoints.first, correspondingPoints.second, error) * transformationMatrix;
 
-			*error = GetMeanSquaredError(cloudBefore, cloudAfter, transformationMatrix);
+			*error = GetMeanSquaredError(correspondingPoints.first, correspondingPoints.second, transformationMatrix);
+			//powinnismy wziac corresponding points first i second
 
 			if (*error < TEST_EPS)
 				break;
@@ -272,6 +273,57 @@ namespace Common
 
 		return transformationMatrix;
 	}
+
+	//refactored functions
+	Eigen::Matrix3Xf GetMatrix3XFromPointsVector_Refactor(const std::vector<Point_f>& points)
+	{
+		Eigen::Matrix3Xf result(points.size());
+		for (int i = 0; i < points.size(); i++)
+		{
+			result(0, i) = points[i].x;
+			result(1, i) = points[i].y;
+			result(2, i) = points[i].z;
+		}
+
+		return result;
+	}
+
+
+	std::pair<glm::mat3, glm::vec3> BasicICP(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, int* iterations, float* error, float maxDistanceSquared, int maxIterations = -1)
+	{
+		*iterations = 0;
+		*error = 1e5;
+		glm::mat3 rotationMatrix(1.0f);
+		std::pair<std::vector<Point_f>, std::vector<Point_f>> closestPoints;
+
+		Eigen::Matrix3Xf cloudBeforeMatrix = GetMatrix3XFromPointsVector(cloudBefore);
+		Eigen::Matrix3Xf cloudAfterMatrix = GetMatrix3XFromPointsVector(cloudAfter);
+
+
+		while (maxIterations == -1 || *iterations < maxIterations)
+		{
+			// 1. difference: Maybe use cloud in Matrix here?
+			auto transformedCloudBefore = GetTransformedCloud(cloudBefore, transformationMatrix);
+
+			auto correspondingPoints = GetCorrespondingPoints(transformedCloudBefore, cloudAfter, maxDistanceSquared);
+			if (correspondingPoints.first.size() == 0)
+				break;
+
+			// Here we multiply
+			transformationMatrix = LeastSquaresSVD(correspondingPoints.first, correspondingPoints.second, error) * transformationMatrix;
+
+			*error = GetMeanSquaredError(correspondingPoints.first, correspondingPoints.second, transformationMatrix);
+			//powinnismy wziac corresponding points first i second
+
+			if (*error < TEST_EPS)
+				break;
+
+			(*iterations)++;
+		}
+	}
+
+
+
 
 	void LibraryTest()
 	{

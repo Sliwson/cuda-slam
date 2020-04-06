@@ -21,6 +21,10 @@ namespace Common
 			return glm::vec3(x, y, z);
 		}
 
+		constexpr operator Eigen::Vector3f() const {
+			return Eigen::Vector3f(x, y, z);
+		}
+
 		constexpr T Length() const {
 			return std::sqrt(x * x + y * y + z * z);
 		}
