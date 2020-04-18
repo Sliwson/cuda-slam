@@ -40,7 +40,8 @@ namespace {
 	IndexIterator GetCorrespondingPoints(const Cloud& before, const Cloud& after)
 	{
 		thrust::device_vector<int> indices(before.size());
-		thrust::sequence(thrust::device, indices.begin(), indices.end());
+		const auto nearestFunctor = Functors::FindNearestIndex(after);
+		thrust::transform(thrust::device, before.begin(), before.end(), indices.begin(), nearestFunctor);
 		return indices;
 	}
 
@@ -84,10 +85,39 @@ namespace {
 
 		return transformationMatrix;
 	}
+
+	void CorrespondencesTest()
+	{
+		const int size = 3;
+		thrust::device_vector<glm::vec3> input(size);
+		thrust::device_vector<glm::vec3> output(size);
+		for (int i = 0; i < size; i++)
+		{
+			const auto vec = glm::vec3(i);
+			input[i] = vec;
+			output[size - i - 1] = vec;
+		}
+
+		auto result = GetCorrespondingPoints(input, output);
+		thrust::host_vector<int> copy = result;
+		printf("Correspondence result:\n");
+		for (int i = 0; i < size; i++)
+			printf("%d = %d\n", i, copy[i]);
+
+		printf("Correspondence test end\n");
+	}
 }
 
 void CudaTest()
 {
+	/****************************/
+	//TESTS
+	/****************************/
+	CorrespondencesTest();
+
+	/****************************/
+	//ALGORITHM
+	/****************************/
 	const auto testCloud = LoadCloud("data/bunny.obj");
 	const auto hostCloud = CommonToThrustVector(testCloud);
 

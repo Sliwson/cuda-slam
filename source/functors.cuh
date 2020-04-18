@@ -45,11 +45,50 @@ namespace Functors {
 	{
 		__device__ __host__ float operator()(const thrust::tuple<glm::vec3, glm::vec3>& pair)
 		{
-			auto p1 = thrust::get<0>(pair);
-			auto p2 = thrust::get<1>(pair);
-			return p1.x * p2.x + p1.y * p2.y + p1.z * p2.z;
+			const auto p1 = thrust::get<0>(pair);
+			const auto p2 = thrust::get<1>(pair);
+			const auto p = p2 - p1;
+			return p.x * p.x + p.y * p.y + p.z * p.z;
 		}
 	};
-;
+
+	struct FindNearestIndex : thrust::unary_function<glm::vec3, int>
+	{
+		FindNearestIndex(const thrust::device_vector<glm::vec3>& elementsAfter)
+		{
+			this->elementsAfter = thrust::raw_pointer_cast(elementsAfter.data());
+			this->elementsSize = elementsAfter.size();
+		}
+
+		__device__ __host__ int operator()(const glm::vec3& vector)
+		{
+			if (elementsSize == 0)
+				return 0;
+
+			int nearestIdx = 0;
+			float smallestError = GetDistanceSquared(vector, elementsAfter[0]);
+			for (int i = 1; i < elementsSize; i++)
+			{
+				const auto dist = GetDistanceSquared(vector, elementsAfter[i]);
+				if (dist < smallestError)
+				{
+					smallestError = dist;
+					nearestIdx = i;
+				}
+			}
+
+			return nearestIdx;
+		}
+
+	private:
+		__device__ __host__ float GetDistanceSquared(const glm::vec3& first, const glm::vec3& second)
+		{
+			const auto d = second - first;
+			return d.x * d.x + d.y * d.y + d.z * d.z;
+		}
+
+		const glm::vec3* elementsAfter;
+		int elementsSize;
+	};
 }
 
