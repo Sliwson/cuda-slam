@@ -8,6 +8,8 @@
 #include <thrust/device_vector.h>
 #include <thrust/host_vector.h>
 #include <thrust/sequence.h>
+#include <thrust/iterator/permutation_iterator.h>
+#include <thrust/transform_reduce.h>
 
 using namespace Common;
 

@@ -40,5 +40,16 @@ namespace Functors {
 	private:
 		glm::vec3 translation = { 0.f, 0.f, 0.f };
 	};
+	
+	struct MSETransform : thrust::unary_function<thrust::tuple<glm::vec3, glm::vec3>, float>
+	{
+		__device__ __host__ float operator()(const thrust::tuple<glm::vec3, glm::vec3>& pair)
+		{
+			auto p1 = thrust::get<0>(pair);
+			auto p2 = thrust::get<1>(pair);
+			return p1.x * p2.x + p1.y * p2.y + p1.z * p2.z;
+		}
+	};
+;
 }
 
