@@ -46,10 +46,10 @@ namespace {
 
 	float GetMeanSquaredError(const IndexIterator& permutation, const Cloud& before, const Cloud& after)
 	{
-		auto permutationIteratorBegin = thrust::make_permutation_iterator(before.begin(), permutation.begin());
-		auto permutationIteratorEnd = thrust::make_permutation_iterator(before.end(), permutation.end());
-		auto zipBegin = thrust::make_zip_iterator(thrust::make_tuple(permutationIteratorBegin, after.begin()));
-		auto zipEnd = thrust::make_zip_iterator(thrust::make_tuple(permutationIteratorEnd, after.end()));
+		auto permutationIteratorBegin = thrust::make_permutation_iterator(after.begin(), permutation.begin());
+		auto permutationIteratorEnd = thrust::make_permutation_iterator(after.end(), permutation.end());
+		auto zipBegin = thrust::make_zip_iterator(thrust::make_tuple(permutationIteratorBegin, before.begin()));
+		auto zipEnd = thrust::make_zip_iterator(thrust::make_tuple(permutationIteratorEnd, before.end()));
 		auto mseFunctor = Functors::MSETransform();
 		auto sumFunctor = thrust::plus<float>();
 		auto result = thrust::transform_reduce(thrust::device, zipBegin, zipEnd, mseFunctor, 0.f, sumFunctor);
