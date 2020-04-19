@@ -73,16 +73,23 @@ namespace {
 		cublasDestroy(handle);
 	}
 
+	glm::mat3 CreateGlmMatrix(float* squareMatrix)
+	{
+		return glm::make_mat3(squareMatrix);
+	}
+
 	glm::mat4 LeastSquaresSVD(const IndexIterator& permutation, const Cloud& before, const Cloud& after, Cloud& alignBefore, Cloud& alignAfter, float* workBefore, float* workAfter, float *multiplyResult)
 	{
 		const int size = before.size();
 
 		//align arrays
+		const auto centroidBefore = CalculateCentroid(before);
 		GetAlignedCloud(before, alignBefore);
 		
 		auto permutationIteratorBegin = thrust::make_permutation_iterator(after.begin(), permutation.begin());
 		auto permutationIteratorEnd = thrust::make_permutation_iterator(after.end(), permutation.end());
 		thrust::copy(thrust::device, permutationIteratorBegin, permutationIteratorEnd, alignAfter.begin());
+		const auto centroidAfter = CalculateCentroid(alignAfter);
 		GetAlignedCloud(alignAfter, alignAfter);
 
 		//create array AFTER (transposed)
@@ -102,8 +109,61 @@ namespace {
 
 		//multiply
 		CuBlasMultiply(workBefore, workAfter, multiplyResult, size);
+
+		//svd
+		float * S, * VT, * U;
+		int* devInfo;
+		int workSize = 0;
+
+		cudaMalloc(&devInfo, sizeof(int));
+		cudaMalloc(&S, 9 * sizeof(float));
+		cudaMalloc(&VT, 9 * sizeof(float));
+		cudaMalloc(&U, 9 * sizeof(float));
+
+		cusolverDnHandle_t solver_handle;
+		cusolverDnCreate(&solver_handle);
+
+		cusolverDnDgesvd_bufferSize(solver_handle, 3, 3, &workSize);
+		float* work;
+		cudaMalloc(&work, workSize * sizeof(float));
+
+		cusolverDnSgesvd(solver_handle, 'A', 'A', 3, 3, multiplyResult, 3, S, U, 3, VT, 3, work, workSize, nullptr, devInfo);
+		int svdResultInfo = 0;
+		cudaMemcpy(&svdResultInfo, devInfo, sizeof(int), cudaMemcpyDeviceToHost);
+		if (svdResultInfo != 0)
+			printf("Svd execution failed!\n");
+
+		float hostS[9], hostVT[9], hostU[9];
+		const int copySize = 9 * sizeof(float);
+		cudaMemcpy(hostS, S, copySize, cudaMemcpyDeviceToHost);
+		cudaMemcpy(hostVT, S, copySize, cudaMemcpyDeviceToHost);
+		cudaMemcpy(hostU, S, copySize, cudaMemcpyDeviceToHost);
+
+		const auto gVT = CreateGlmMatrix(hostVT);
+		const auto gU = CreateGlmMatrix(hostU);
+		const float determinant = glm::determinant(gU * gVT);
+		const auto diagonal = glm::diagonal3x3(glm::vec3 { 1.f, 1.f, determinant });
+		const auto rotation = gU * diagonal * gVT;
+
+		const auto translation = centroidAfter - rotation * centroidBefore;
+
+		auto transformation = glm::mat4(0.f);
+		for (int i = 0; i < 3; i++)
+			for (int j = 0; j < 3; j++)
+				transformation[i][j] = rotation[i][j];
+
+		transformation[3][0] = translation.x;
+		transformation[3][1] = translation.y;
+		transformation[3][2] = translation.z;
+		transformation[3][3] = 1.0f;
+
+		cudaFree(work);
+		cudaFree(devInfo);
+		cudaFree(S);
+		cudaFree(VT);
+		cudaFree(U);
 		
-		return glm::mat4(1);
+		return transformation;
 	}
 
 	glm::mat4 CudaICP(const Cloud& before, const Cloud& after)
