@@ -57,6 +57,26 @@ namespace {
 		return result / after.size();
 	}
 
+	void GetAlignedCloud(const Cloud& source, Cloud& target)
+	{
+		const auto centroid = CalculateCentroid(source);
+		const auto transform = Functors::TranslateTransform(-centroid);
+		thrust::transform(thrust::device, source.begin(), source.end(), target.begin(), transform);
+	}
+
+	glm::mat4 LeastSquaresSVD(const IndexIterator& permutation, const Cloud& before, const Cloud& after, float* workBefore, float* workAfter)
+	{
+		//create permuted after
+		auto permutationIteratorBegin = thrust::make_permutation_iterator(after.begin(), permutation.begin());
+		auto permutationIteratorEnd = thrust::make_permutation_iterator(after.end(), permutation.end());
+		//thrust::copy(thrust::device, permutationIteratorBegin, permutationIteratorEnd, workAfter.begin());
+
+		//GetAlignedCloud(before, workBefore);
+		//GetAlignedCloud(workAfter, workAfter);
+
+		return glm::mat4(1);
+	}
+
 	glm::mat4 CudaICP(const Cloud& before, const Cloud& after)
 	{
 		const int maxIterations = 60;
@@ -64,15 +84,22 @@ namespace {
 
 		int iterations = 0;
 		glm::mat4 transformationMatrix(1.0f);
+
+		//do not change before vector - copy it for calculations
 		Cloud workingBefore(before.size());
 		thrust::copy(thrust::device, before.begin(), before.end(), workingBefore.begin());
+
+		//allocate memory for cuBLAS
+		float * tempBefore = nullptr, * tempAfter = nullptr, * result = nullptr;
+		cudaMalloc(&tempBefore, before.size() * 3 * sizeof(float));
+		cudaMalloc(&tempAfter, before.size() * 3 * sizeof(float));
+		cudaMalloc(&result, 3 * 3 * sizeof(float));
 
 		while (iterations < maxIterations)
 		{
 			auto correspondingPoints = GetCorrespondingPoints(workingBefore, after);
 
-			//// Here we multiply
-			//transformationMatrix = LeastSquaresSVD(correspondingPoints.first, correspondingPoints.second, error) * transformationMatrix;
+			transformationMatrix = LeastSquaresSVD(correspondingPoints, workingBefore, after, tempBefore, tempAfter) * transformationMatrix;
 
 			TransformCloud(before, workingBefore, transformationMatrix);
 			float error = GetMeanSquaredError(correspondingPoints, workingBefore, after);
@@ -83,6 +110,9 @@ namespace {
 			iterations++;
 		}
 
+		cudaFree(tempBefore);
+		cudaFree(tempAfter);
+		cudaFree(result);
 		return transformationMatrix;
 	}
 
