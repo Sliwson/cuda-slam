@@ -8,7 +8,7 @@ namespace {
 
 	thrust::host_vector<glm::vec3> CommonToThrustVector(const std::vector<Common::Point_f>& vec)
 	{
-		thrust::host_vector<glm::vec3> hostCloud(vec.size() * 3);
+		thrust::host_vector<glm::vec3> hostCloud(vec.size());
 		for (int i = 0; i < vec.size(); i++)
 			hostCloud[i] = (glm::vec3)vec[i];
 
@@ -109,6 +109,10 @@ namespace {
 
 		//multiply
 		CuBlasMultiply(workBefore, workAfter, multiplyResult, size);
+		float result[9];
+		cudaMemcpy(result, multiplyResult, 9 * sizeof(float), cudaMemcpyDeviceToHost);
+		auto matrix = glm::transpose(CreateGlmMatrix(result));
+		return Common::GetTransform(matrix, centroidBefore, centroidAfter);
 
 		//svd
 		float * S, * VT, * U;
@@ -136,8 +140,8 @@ namespace {
 		float hostS[9], hostVT[9], hostU[9];
 		const int copySize = 9 * sizeof(float);
 		cudaMemcpy(hostS, S, copySize, cudaMemcpyDeviceToHost);
-		cudaMemcpy(hostVT, S, copySize, cudaMemcpyDeviceToHost);
-		cudaMemcpy(hostU, S, copySize, cudaMemcpyDeviceToHost);
+		cudaMemcpy(hostVT, VT, copySize, cudaMemcpyDeviceToHost);
+		cudaMemcpy(hostU, U, copySize, cudaMemcpyDeviceToHost);
 
 		const auto gVT = CreateGlmMatrix(hostVT);
 		const auto gU = CreateGlmMatrix(hostU);
@@ -283,7 +287,7 @@ void CudaTest()
 	const auto scaleInput = Functors::ScaleTransform(100.f);
 	thrust::transform(thrust::device, deviceCloudBefore.begin(), deviceCloudBefore.end(), deviceCloudBefore.begin(), scaleInput);
 
-	const auto sampleTransform = glm::translate(glm::rotate(glm::mat4(1.f), glm::radians(20.f), { 0.5f, 0.5f, 0.f }), { 5.f, 5.f, 0.f });
+	const auto sampleTransform = glm::translate(glm::rotate(glm::mat4(1.f), glm::radians(5.f), { 0.5f, 0.5f, 0.f }), { 5.f, 5.f, 0.f });
 	TransformCloud(deviceCloudBefore, deviceCloudAfter, sampleTransform);
 
 	const auto result = CudaICP(deviceCloudBefore, deviceCloudAfter);
