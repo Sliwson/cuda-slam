@@ -35,9 +35,45 @@ namespace Common
 	{
 		AssimpCloudLoader loader(path);
 		if (loader.GetCloudCount() > 0)
-			return loader.GetCloud(0);
+			return loader.GetMergedCloud();
 		else
 			return std::vector<Point_f>();
+	}
+
+	glm::mat4 GetTransform(glm::mat3 forSvd, glm::vec3 before, glm::vec3 after)
+	{
+		//// Official documentation says thin U and thin V are enough for us, not gonna argue
+		//// But maybe it is not enough
+		Eigen::Matrix3f matrix;
+		for (int i = 0; i < 3; i++)
+			for (int j = 0; j < 3; j++)
+				matrix(i, j) = forSvd[j][i];
+
+		Eigen::JacobiSVD<Eigen::Matrix3f> const svd(matrix, Eigen::ComputeFullU | Eigen::ComputeFullV);
+
+		double det = (svd.matrixU() * svd.matrixV().transpose()).determinant();
+		Eigen::Matrix3f diag = Eigen::DiagonalMatrix<float, 3>(1, 1, det);
+		Eigen::Matrix3f rotation = svd.matrixU() * diag * svd.matrixV().transpose();
+
+		glm::mat4 transformationMatrix(0);
+		for (int i = 0; i < 3; i++)
+		{
+			for (int j = 0; j < 3; j++)
+			{
+				transformationMatrix[i][j] = rotation(j, i);
+			}
+			transformationMatrix[i][3] = 0;
+		}
+
+		Eigen::Vector3f beforep{ before.x, before.y, before.z };
+		Eigen::Vector3f afterp{ after.x, after.y, after.z };
+		Eigen::Vector3f translation = afterp - (rotation * beforep);
+
+		transformationMatrix[3][0] = translation.x();
+		transformationMatrix[3][1] = translation.y();
+		transformationMatrix[3][2] = translation.z();
+		transformationMatrix[3][3] = 1.0f;
+		return transformationMatrix;
 	}
 
 	std::vector<Point_f> GetRandomPointCloud(const Point_f& corner, const Point_f& size, int count)
@@ -197,7 +233,7 @@ namespace Common
 
 		// Official documentation says thin U and thin V are enough for us, not gonna argue
 		// But maybe it is not enough, delete flags then
-		Eigen::JacobiSVD svd(matrix, Eigen::ComputeFullU | Eigen::ComputeFullV);
+		Eigen::JacobiSVD<Eigen::Matrix3f> svd(matrix, Eigen::ComputeFullU | Eigen::ComputeFullV);
 
 		Eigen::Matrix3f vMatrix = svd.matrixV();
 		Eigen::Matrix3f uMatrix = svd.matrixU();

@@ -8,7 +8,7 @@ namespace {
 
 	thrust::host_vector<glm::vec3> CommonToThrustVector(const std::vector<Common::Point_f>& vec)
 	{
-		thrust::host_vector<glm::vec3> hostCloud(vec.size() * 3);
+		thrust::host_vector<glm::vec3> hostCloud(vec.size());
 		for (int i = 0; i < vec.size(); i++)
 			hostCloud[i] = (glm::vec3)vec[i];
 
@@ -75,7 +75,7 @@ namespace {
 
 	glm::mat3 CreateGlmMatrix(float* squareMatrix)
 	{
-		return glm::make_mat3(squareMatrix);
+		return glm::transpose(glm::make_mat3(squareMatrix));
 	}
 
 	glm::mat4 LeastSquaresSVD(const IndexIterator& permutation, const Cloud& before, const Cloud& after, Cloud& alignBefore, Cloud& alignAfter, float* workBefore, float* workAfter, float *multiplyResult)
@@ -109,8 +109,12 @@ namespace {
 
 		//multiply
 		CuBlasMultiply(workBefore, workAfter, multiplyResult, size);
+		float result[9];
+		cudaMemcpy(result, multiplyResult, 9 * sizeof(float), cudaMemcpyDeviceToHost);
+		auto matrix = CreateGlmMatrix(result);
+		return Common::GetTransform(matrix, centroidBefore, centroidAfter);
 
-		//svd
+		//svd TODO: test and fix below
 		float * S, * VT, * U;
 		int* devInfo;
 		int workSize = 0;
@@ -136,8 +140,8 @@ namespace {
 		float hostS[9], hostVT[9], hostU[9];
 		const int copySize = 9 * sizeof(float);
 		cudaMemcpy(hostS, S, copySize, cudaMemcpyDeviceToHost);
-		cudaMemcpy(hostVT, S, copySize, cudaMemcpyDeviceToHost);
-		cudaMemcpy(hostU, S, copySize, cudaMemcpyDeviceToHost);
+		cudaMemcpy(hostVT, VT, copySize, cudaMemcpyDeviceToHost);
+		cudaMemcpy(hostU, U, copySize, cudaMemcpyDeviceToHost);
 
 		const auto gVT = CreateGlmMatrix(hostVT);
 		const auto gU = CreateGlmMatrix(hostU);
@@ -273,20 +277,24 @@ void CudaTest()
 	/****************************/
 	//ALGORITHM
 	/****************************/
-	const auto testCloud = LoadCloud("data/bunny.obj");
+	const auto testCloud = LoadCloud("data/rose.obj");
 	const auto hostCloud = CommonToThrustVector(testCloud);
 
 	Cloud deviceCloudBefore = hostCloud;
 	Cloud deviceCloudAfter(deviceCloudBefore.size());
 	Cloud calculatedCloud(deviceCloudBefore.size());
 
-	const auto scaleInput = Functors::ScaleTransform(100.f);
+	const auto scaleInput = Functors::ScaleTransform(1000.f);
 	thrust::transform(thrust::device, deviceCloudBefore.begin(), deviceCloudBefore.end(), deviceCloudBefore.begin(), scaleInput);
 
-	const auto sampleTransform = glm::translate(glm::rotate(glm::mat4(1.f), glm::radians(20.f), { 0.5f, 0.5f, 0.f }), { 5.f, 5.f, 0.f });
+	const auto sampleTransform = glm::rotate(glm::translate(glm::mat4(1), { 0.05f, 0.05f, 0.05f }), glm::radians(5.f), { 0.5f, 0.5f, 0.5f });
 	TransformCloud(deviceCloudBefore, deviceCloudAfter, sampleTransform);
 
+	auto start = std::chrono::high_resolution_clock::now();
 	const auto result = CudaICP(deviceCloudBefore, deviceCloudAfter);
+	auto stop = std::chrono::high_resolution_clock::now();
+	printf("Size: %d points, duration: %dms\n", testCloud.size(), std::chrono::duration_cast<std::chrono::milliseconds>(stop - start));
+
 	TransformCloud(deviceCloudBefore, calculatedCloud, result);
 
 	Common::Renderer renderer(
