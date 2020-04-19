@@ -12,6 +12,8 @@
 #include <thrust/iterator/permutation_iterator.h>
 #include <thrust/transform_reduce.h>
 
+#include <cublas_v2.h>
+
 using namespace Common;
 
 void CudaTest();

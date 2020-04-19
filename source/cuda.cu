@@ -64,29 +64,40 @@ namespace {
 		thrust::transform(thrust::device, source.begin(), source.end(), target.begin(), transform);
 	}
 
-	glm::mat4 LeastSquaresSVD(const IndexIterator& permutation, const Cloud& before, const Cloud& after, float* workBefore, float* workAfter)
+	glm::mat4 LeastSquaresSVD(const IndexIterator& permutation, const Cloud& before, const Cloud& after, Cloud& alignBefore, Cloud& alignAfter, float* workBefore, float* workAfter, float *multiplyResult)
 	{
 		const int size = before.size();
 
-		//create array AFTER (transposed)
+		//align arrays
+		GetAlignedCloud(before, alignBefore);
+		
 		auto permutationIteratorBegin = thrust::make_permutation_iterator(after.begin(), permutation.begin());
 		auto permutationIteratorEnd = thrust::make_permutation_iterator(after.end(), permutation.end());
+		thrust::copy(thrust::device, permutationIteratorBegin, permutationIteratorEnd, alignAfter.begin());
+		GetAlignedCloud(alignAfter, alignAfter);
+
+		//create array AFTER (transposed)
 		auto countingBegin = thrust::make_counting_iterator<int>(0);
 		auto countingEnd = thrust::make_counting_iterator<int>(size);
-		auto zipBegin = thrust::make_zip_iterator(thrust::make_tuple(countingBegin, permutationIteratorBegin));
-		auto zipEnd = thrust::make_zip_iterator(thrust::make_tuple(countingEnd, permutationIteratorEnd));
+		auto zipBegin = thrust::make_zip_iterator(thrust::make_tuple(countingBegin, alignAfter.begin()));
+		auto zipEnd = thrust::make_zip_iterator(thrust::make_tuple(countingEnd, alignAfter.end()));
 
 		auto convertAfter = Functors::GlmToCuBlas(true, size, workAfter);
 		thrust::for_each(thrust::device, zipBegin, zipEnd, convertAfter);
 
 		//create array BEFORE
-		const auto beforeZipBegin = thrust::make_zip_iterator(thrust::make_tuple(countingBegin, before.begin()));
-		const auto beforeZipEnd = thrust::make_zip_iterator(thrust::make_tuple(countingEnd, before.end()));
+		const auto beforeZipBegin = thrust::make_zip_iterator(thrust::make_tuple(countingBegin, alignBefore.begin()));
+		const auto beforeZipEnd = thrust::make_zip_iterator(thrust::make_tuple(countingEnd, alignBefore.end()));
 		auto convertBefore = Functors::GlmToCuBlas(false, before.size(), workBefore);
 		thrust::for_each(thrust::device, beforeZipBegin, beforeZipEnd, convertBefore);
 
-		//GetAlignedCloud(before, workBefore);
-		//GetAlignedCloud(workAfter, workAfter);
+
+		//cuBLAS multiply
+		const float alpha = 1.f, beta = 0.f;
+		cublasHandle_t handle;
+		cublasCreate(&handle);
+		cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, 3, 3, size, &alpha, workBefore, 3, workAfter, size, &beta, multiplyResult, 3);
+		cublasDestroy(handle);
 
 		return glm::mat4(1);
 	}
@@ -101,6 +112,8 @@ namespace {
 
 		//do not change before vector - copy it for calculations
 		Cloud workingBefore(before.size());
+		Cloud alignBefore(before.size());
+		Cloud alignAfter(before.size());
 		thrust::copy(thrust::device, before.begin(), before.end(), workingBefore.begin());
 
 		//allocate memory for cuBLAS
@@ -113,7 +126,7 @@ namespace {
 		{
 			auto correspondingPoints = GetCorrespondingPoints(workingBefore, after);
 
-			transformationMatrix = LeastSquaresSVD(correspondingPoints, workingBefore, after, tempBefore, tempAfter) * transformationMatrix;
+			transformationMatrix = LeastSquaresSVD(correspondingPoints, workingBefore, after, alignBefore, alignAfter, tempBefore, tempAfter, result) * transformationMatrix;
 
 			TransformCloud(before, workingBefore, transformationMatrix);
 			float error = GetMeanSquaredError(correspondingPoints, workingBefore, after);
