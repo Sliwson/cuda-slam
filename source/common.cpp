@@ -35,11 +35,7 @@ namespace Common
 	{
 		AssimpCloudLoader loader(path);
 		if (loader.GetCloudCount() > 0)
-		{
-			auto points = loader.GetCloud(0);
-			points.resize(1000);
-			return points;
-		}
+			return loader.GetCloud(0);
 		else
 			return std::vector<Point_f>();
 	}

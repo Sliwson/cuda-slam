@@ -75,7 +75,7 @@ namespace {
 
 	glm::mat3 CreateGlmMatrix(float* squareMatrix)
 	{
-		return glm::make_mat3(squareMatrix);
+		return glm::transpose(glm::make_mat3(squareMatrix));
 	}
 
 	glm::mat4 LeastSquaresSVD(const IndexIterator& permutation, const Cloud& before, const Cloud& after, Cloud& alignBefore, Cloud& alignAfter, float* workBefore, float* workAfter, float *multiplyResult)
@@ -111,10 +111,10 @@ namespace {
 		CuBlasMultiply(workBefore, workAfter, multiplyResult, size);
 		float result[9];
 		cudaMemcpy(result, multiplyResult, 9 * sizeof(float), cudaMemcpyDeviceToHost);
-		auto matrix = glm::transpose(CreateGlmMatrix(result));
+		auto matrix = CreateGlmMatrix(result);
 		return Common::GetTransform(matrix, centroidBefore, centroidAfter);
 
-		//svd
+		//svd TODO: test and fix below
 		float * S, * VT, * U;
 		int* devInfo;
 		int workSize = 0;
