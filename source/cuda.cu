@@ -287,7 +287,7 @@ void CudaTest()
 	const auto scaleInput = Functors::ScaleTransform(100.f);
 	thrust::transform(thrust::device, deviceCloudBefore.begin(), deviceCloudBefore.end(), deviceCloudBefore.begin(), scaleInput);
 
-	const auto sampleTransform = glm::rotate(glm::translate(glm::mat4(1), { 5.f, 5.f, 0.f }), glm::radians(40.f), { 0.5f, 0.5f, 0.5f });
+	const auto sampleTransform = glm::rotate(glm::translate(glm::mat4(1), { 5.f, 5.f, 0.f }), glm::radians(10.f), { 0.5f, 0.5f, 0.5f });
 	TransformCloud(deviceCloudBefore, deviceCloudAfter, sampleTransform);
 
 	auto start = std::chrono::high_resolution_clock::now();

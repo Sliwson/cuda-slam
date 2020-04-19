@@ -35,7 +35,7 @@ namespace Common
 	{
 		AssimpCloudLoader loader(path);
 		if (loader.GetCloudCount() > 0)
-			return loader.GetCloud(0);
+			return loader.GetMergedCloud();
 		else
 			return std::vector<Point_f>();
 	}
@@ -233,7 +233,7 @@ namespace Common
 
 		// Official documentation says thin U and thin V are enough for us, not gonna argue
 		// But maybe it is not enough, delete flags then
-		Eigen::JacobiSVD svd(matrix, Eigen::ComputeFullU | Eigen::ComputeFullV);
+		Eigen::JacobiSVD<Eigen::Matrix3f> svd(matrix, Eigen::ComputeFullU | Eigen::ComputeFullV);
 
 		Eigen::Matrix3f vMatrix = svd.matrixV();
 		Eigen::Matrix3f uMatrix = svd.matrixU();
