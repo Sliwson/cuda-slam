@@ -64,6 +64,15 @@ namespace {
 		thrust::transform(thrust::device, source.begin(), source.end(), target.begin(), transform);
 	}
 
+	void CuBlasMultiply(float* A, float* B, float* C, int size)
+	{
+		const float alpha = 1.f, beta = 0.f;
+		cublasHandle_t handle;
+		cublasCreate(&handle);
+		cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, 3, 3, size, &alpha, A, 3, B, size, &beta, C, 3);
+		cublasDestroy(handle);
+	}
+
 	glm::mat4 LeastSquaresSVD(const IndexIterator& permutation, const Cloud& before, const Cloud& after, Cloud& alignBefore, Cloud& alignAfter, float* workBefore, float* workAfter, float *multiplyResult)
 	{
 		const int size = before.size();
@@ -91,14 +100,9 @@ namespace {
 		auto convertBefore = Functors::GlmToCuBlas(false, before.size(), workBefore);
 		thrust::for_each(thrust::device, beforeZipBegin, beforeZipEnd, convertBefore);
 
-
-		//cuBLAS multiply
-		const float alpha = 1.f, beta = 0.f;
-		cublasHandle_t handle;
-		cublasCreate(&handle);
-		cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, 3, 3, size, &alpha, workBefore, 3, workAfter, size, &beta, multiplyResult, 3);
-		cublasDestroy(handle);
-
+		//multiply
+		CuBlasMultiply(workBefore, workAfter, multiplyResult, size);
+		
 		return glm::mat4(1);
 	}
 
@@ -145,7 +149,7 @@ namespace {
 
 	void CorrespondencesTest()
 	{
-		const int size = 3;
+		const int size = 100;
 		thrust::device_vector<glm::vec3> input(size);
 		thrust::device_vector<glm::vec3> output(size);
 		for (int i = 0; i < size; i++)
@@ -157,11 +161,44 @@ namespace {
 
 		auto result = GetCorrespondingPoints(input, output);
 		thrust::host_vector<int> copy = result;
-		printf("Correspondence result:\n");
+		bool ok = true;
 		for (int i = 0; i < size; i++)
-			printf("%d = %d\n", i, copy[i]);
+			if (copy[i] != size - i - 1)
+				ok = false;
 
-		printf("Correspondence test end\n");
+		printf("Correspondence test [%s]\n", ok ? "OK" : "FAILED");
+	}
+
+	void MultiplicationTest()
+	{
+		const int size = 100;
+		float * A = nullptr, * B = nullptr, * C = nullptr;
+		cudaMalloc(&A, size * 3 * sizeof(float));
+		cudaMalloc(&B, size * 3 * sizeof(float));
+		cudaMalloc(&C, 3 * 3 * sizeof(float));
+
+		float ones[3 * size];
+		for (int i = 0; i < 3 * size; i++)
+			ones[i] = 1.f;
+
+		cudaMemcpy(A, ones, 3 * size * sizeof(float), cudaMemcpyHostToDevice);
+		cudaMemcpy(B, ones, 3 * size * sizeof(float), cudaMemcpyHostToDevice);
+
+		CuBlasMultiply(A, B, C, size);
+
+		float result[9];
+		cudaMemcpy(result, C, 9 * sizeof(float), cudaMemcpyDeviceToHost);
+
+		bool ok = true;
+		for (int i = 0; i < 9; i++)
+			if (abs(result[i] - size) > 1e-5)
+				ok = false;
+
+		printf("Multiplication test [%s]\n", ok ? "OK" : "FAILED");
+
+		cudaFree(A);
+		cudaFree(B);
+		cudaFree(C);
 	}
 }
 
@@ -171,6 +208,7 @@ void CudaTest()
 	//TESTS
 	/****************************/
 	CorrespondencesTest();
+	MultiplicationTest();
 
 	/****************************/
 	//ALGORITHM
