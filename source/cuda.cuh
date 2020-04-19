@@ -3,6 +3,8 @@
 #include "_common.h"
 #include "common.h"
 
+#include <chrono>
+
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/matrix_operation.hpp>
 
