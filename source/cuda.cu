@@ -66,10 +66,24 @@ namespace {
 
 	glm::mat4 LeastSquaresSVD(const IndexIterator& permutation, const Cloud& before, const Cloud& after, float* workBefore, float* workAfter)
 	{
-		//create permuted after
+		const int size = before.size();
+
+		//create array AFTER (transposed)
 		auto permutationIteratorBegin = thrust::make_permutation_iterator(after.begin(), permutation.begin());
 		auto permutationIteratorEnd = thrust::make_permutation_iterator(after.end(), permutation.end());
-		//thrust::copy(thrust::device, permutationIteratorBegin, permutationIteratorEnd, workAfter.begin());
+		auto countingBegin = thrust::make_counting_iterator<int>(0);
+		auto countingEnd = thrust::make_counting_iterator<int>(size);
+		auto zipBegin = thrust::make_zip_iterator(thrust::make_tuple(countingBegin, permutationIteratorBegin));
+		auto zipEnd = thrust::make_zip_iterator(thrust::make_tuple(countingEnd, permutationIteratorEnd));
+
+		auto convertAfter = Functors::GlmToCuBlas(true, size, workAfter);
+		thrust::for_each(thrust::device, zipBegin, zipEnd, convertAfter);
+
+		//create array BEFORE
+		const auto beforeZipBegin = thrust::make_zip_iterator(thrust::make_tuple(countingBegin, before.begin()));
+		const auto beforeZipEnd = thrust::make_zip_iterator(thrust::make_tuple(countingEnd, before.end()));
+		auto convertBefore = Functors::GlmToCuBlas(false, before.size(), workBefore);
+		thrust::for_each(thrust::device, beforeZipBegin, beforeZipEnd, convertBefore);
 
 		//GetAlignedCloud(before, workBefore);
 		//GetAlignedCloud(workAfter, workAfter);

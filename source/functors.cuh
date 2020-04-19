@@ -90,5 +90,34 @@ namespace Functors {
 		const glm::vec3* elementsAfter;
 		int elementsSize;
 	};
+
+	struct GlmToCuBlas : thrust::unary_function<thrust::tuple<int, glm::vec3>, void>
+	{
+		GlmToCuBlas(bool transpose, int length, float* output) : transpose(transpose), output(output), length(length)	{ }
+
+		__device__ __host__ void operator()(const thrust::tuple<int, glm::vec3>& pair)
+		{
+			const auto idx = thrust::get<0>(pair);
+			const auto vector = thrust::get<1>(pair);
+
+			if (transpose)
+			{
+				output[idx] = vector.x;
+				output[idx + length] = vector.y;
+				output[idx + 2 * length] = vector.z;
+			}
+			else
+			{
+				output[3 * idx] = vector.x;
+				output[3 * idx + 1] = vector.y;
+				output[3 * idx + 2] = vector.z;
+			}
+		}
+
+	private:
+		bool transpose = false;
+		float* output = nullptr;
+		int length = 0;
+	};
 }
 
