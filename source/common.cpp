@@ -40,15 +40,8 @@ namespace Common
 			return std::vector<Point_f>();
 	}
 
-	glm::mat4 GetTransform(glm::mat3 forSvd, glm::vec3 before, glm::vec3 after)
+	glm::mat4 GetTransform(Eigen::Matrix3f matrix, glm::vec3 before, glm::vec3 after)
 	{
-		//// Official documentation says thin U and thin V are enough for us, not gonna argue
-		//// But maybe it is not enough
-		Eigen::Matrix3f matrix;
-		for (int i = 0; i < 3; i++)
-			for (int j = 0; j < 3; j++)
-				matrix(i, j) = forSvd[j][i];
-
 		Eigen::JacobiSVD<Eigen::Matrix3f> const svd(matrix, Eigen::ComputeFullU | Eigen::ComputeFullV);
 
 		double det = (svd.matrixU() * svd.matrixV().transpose()).determinant();
@@ -74,6 +67,17 @@ namespace Common
 		transformationMatrix[3][2] = translation.z();
 		transformationMatrix[3][3] = 1.0f;
 		return transformationMatrix;
+
+	}
+
+	glm::mat4 GetTransform(glm::mat3 forSvd, glm::vec3 before, glm::vec3 after)
+	{
+		Eigen::Matrix3f matrix;
+		for (int i = 0; i < 3; i++)
+			for (int j = 0; j < 3; j++)
+				matrix(i, j) = forSvd[j][i];
+
+		return GetTransform(matrix, before, after);
 	}
 
 	std::vector<Point_f> GetRandomPointCloud(const Point_f& corner, const Point_f& size, int count)
@@ -249,31 +253,7 @@ namespace Common
 
 		Eigen::Matrix3f matrix = alignedAfter * alignedBefore.transpose();
 
-		//// Official documentation says thin U and thin V are enough for us, not gonna argue
-		//// But maybe it is not enough
-		Eigen::JacobiSVD<Eigen::Matrix3f> const svd(matrix, Eigen::ComputeFullU | Eigen::ComputeFullV);
-		
-		double det = (svd.matrixU() * svd.matrixV().transpose()).determinant();
-		Eigen::Matrix3f diag = Eigen::DiagonalMatrix<float, 3>(1, 1, det);
-		Eigen::Matrix3f rotation = svd.matrixU() * diag * svd.matrixV().transpose();
-		Point_f translation = centerAfter - (rotation * centerBefore);
-
-
-		for (int i = 0; i < 3; i++)
-		{
-			for (int j = 0; j < 3; j++)
-			{
-				transformationMatrix[i][j] = rotation(j, i);
-			}
-			transformationMatrix[i][3] = 0;
-		}
-		
-		transformationMatrix[3][0] = translation.x;
-		transformationMatrix[3][1] = translation.y;
-		transformationMatrix[3][2] = translation.z;
-		transformationMatrix[3][3] = 1.0f;
-
-		return transformationMatrix;
+		return GetTransform(matrix, centerBefore, centerAfter);
 	}
 
 	glm::mat4 GetTransformationMatrix(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, int *iterations, float *error, float maxDistanceSquared, int maxIterations = -1)
