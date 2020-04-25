@@ -120,11 +120,9 @@ namespace BasicICP
 
 		rotationMatrix = matrixU * diag * matrixVtransposed;
 
-		translationVector = centerAfter - (rotationMatrix * centerBefore);
-
 		glm::mat3 rotationMatrixGLM = ConvertRotationMatrix(rotationMatrix);
 
-		glm::vec3 translationVectorGLM = ConvertTranslationVector(translationVector);
+		glm::vec3 translationVectorGLM = glm::vec3(centerAfter) - (rotationMatrixGLM * centerBefore);
 
 		return std::make_pair(rotationMatrixGLM, translationVectorGLM);
 	}
