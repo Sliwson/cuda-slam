@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <numeric>
 #include <random>
+#include <iostream>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
