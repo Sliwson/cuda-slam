@@ -397,7 +397,7 @@ namespace Common
 		case 3:
 			return gpu_points;
 		default:
-			origin_points;
+			return origin_points;
 		}
 	}
 
