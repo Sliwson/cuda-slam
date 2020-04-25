@@ -20,8 +20,7 @@ namespace Common
 
 	std::vector<Point_f> AssimpCloudLoader::GetMergedCloud() const
 	{
-		auto sum = std::accumulate(clouds.begin(), clouds.end(), 0, [](int acc, const std::vector<Point_f>& vec) { return acc + vec.size(); });
-		auto merged = std::vector<Point_f>(sum);
+		auto merged = std::vector<Point_f>();
 		for (const auto& cloud : clouds)
 			merged.insert(merged.end(), cloud.begin(), cloud.end());
 
