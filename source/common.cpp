@@ -40,6 +40,11 @@ namespace Common
 			return std::vector<Point_f>();
 	}
 
+	void PrintMatrix(Eigen::Matrix3f matrix)
+	{
+		std::cout << matrix << std::endl;
+	}
+
 	glm::mat4 GetTransform(Eigen::Matrix3f matrix, glm::vec3 before, glm::vec3 after)
 	{
 		Eigen::JacobiSVD<Eigen::Matrix3f> const svd(matrix, Eigen::ComputeFullU | Eigen::ComputeFullV);
