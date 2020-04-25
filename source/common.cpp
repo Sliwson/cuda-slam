@@ -80,6 +80,26 @@ namespace Common
 		return GetTransform(matrix, before, after);
 	}
 
+	void PrintMatrixWithSize(const glm::mat4& matrix, int size)
+	{
+		for (int j = 0; j < 3; j++) {
+			for (int i = 0; i < 3; i++)
+				printf("%1.8f ", matrix[i][j]);
+
+			printf("\n");
+		}
+	}
+
+	void PrintMatrix(const glm::mat4& matrix)
+	{
+		PrintMatrixWithSize(matrix, 4);
+	}
+		
+	void PrintMatrix(const glm::mat3& matrix)
+	{
+		PrintMatrixWithSize(matrix, 3);
+	}
+
 	std::vector<Point_f> GetRandomPointCloud(const Point_f& corner, const Point_f& size, int count)
 	{
 		std::vector<Point_f> result;
