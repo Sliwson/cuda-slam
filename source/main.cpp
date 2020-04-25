@@ -1,9 +1,7 @@
-#include <stdio.h>
-#include "common.h"
+#include "cuda.cuh"
 
 int main()
 {
-	printf("Hello cuda-slam!\n");
-	Common::LibraryTest();
+	CudaTest();
 	return 0;
 }

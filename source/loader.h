@@ -12,6 +12,7 @@ namespace Common
 	{
 	public:
 		AssimpCloudLoader(std::string const& path);
+		std::vector<Point_f> GetMergedCloud() const;
 		std::vector<Point_f> GetCloud(int idx) const { return clouds[idx]; }
 		int GetCloudCount() const { return static_cast<int>(clouds.size()); }
 
