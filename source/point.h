@@ -19,10 +19,6 @@ namespace Common
 			return glm::vec3(x, y, z);
 		}
 
-		constexpr operator Eigen::Vector3f() const {
-			return Eigen::Vector3f(x, y, z);
-		}
-
 		constexpr T Length() const {
 			return std::sqrt(x * x + y * y + z * z);
 		}
@@ -39,11 +35,9 @@ namespace Common
 			return Point<T>({ 1 }, { 1 }, { 1 });
 		}
 
-
 		T x = { 0 };
 		T y = { 0 };
 		T z = { 0 };
-
 	};
 
 	template<class T>
