@@ -174,9 +174,11 @@ namespace {
 	{
 		const int maxIterations = 60;
 		const float TEST_EPS = 1e-5;
+		float previousError = std::numeric_limits<float>::max();
 
 		int iterations = 0;
 		glm::mat4 transformationMatrix(1.0f);
+		glm::mat4 previousTransformationMatrix = transformationMatrix;
 
 		//do not change before vector - copy it for calculations
 		Cloud workingBefore(before.size());
@@ -202,6 +204,15 @@ namespace {
 			if (error < TEST_EPS)
 				break;
 
+			if (error > previousError)
+			{
+				printf("Error has increased, aborting\n");
+				transformationMatrix = previousTransformationMatrix;
+				break;
+			}
+
+			previousTransformationMatrix = transformationMatrix;
+			previousError = error;
 			iterations++;
 		}
 
