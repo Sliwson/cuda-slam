@@ -78,7 +78,7 @@ namespace {
 		return glm::transpose(glm::make_mat3(squareMatrix));
 	}
 
-	glm::mat4 LeastSquaresSVD(const IndexIterator& permutation, const Cloud& before, const Cloud& after, Cloud& alignBefore, Cloud& alignAfter, float* workBefore, float* workAfter, float *multiplyResult)
+	glm::mat4 LeastSquaresSVD(const IndexIterator& permutation, const Cloud& before, const Cloud& after, Cloud& alignBefore, Cloud& alignAfter, float* workBefore, float* workAfter, float *multiplyResult, cusolverDnHandle_t solver_handle)
 	{
 		const int size = before.size();
 
@@ -112,7 +112,13 @@ namespace {
 		float result[9];
 		cudaMemcpy(result, multiplyResult, 9 * sizeof(float), cudaMemcpyDeviceToHost);
 		auto matrix = CreateGlmMatrix(result);
-		return Common::GetTransform(matrix, centroidBefore, centroidAfter);
+		//return Common::GetTransform(matrix, centroidBefore, centroidAfter);
+
+		float transposed[9];
+		for (int i = 0; i < 3; i++)
+			for (int j = 0; j < 3; j++)
+				transposed[3 * i + j] = result[3 * j + i];
+		cudaMemcpy(multiplyResult, transposed, 9 * sizeof(float), cudaMemcpyHostToDevice);
 
 		//svd TODO: test and fix below
 		float * S, * VT, * U;
@@ -124,13 +130,9 @@ namespace {
 		cudaMalloc(&VT, 9 * sizeof(float));
 		cudaMalloc(&U, 9 * sizeof(float));
 
-		cusolverDnHandle_t solver_handle;
-		cusolverDnCreate(&solver_handle);
-
 		cusolverDnDgesvd_bufferSize(solver_handle, 3, 3, &workSize);
 		float* work;
 		cudaMalloc(&work, workSize * sizeof(float));
-
 		cusolverDnSgesvd(solver_handle, 'A', 'A', 3, 3, multiplyResult, 3, S, U, 3, VT, 3, work, workSize, nullptr, devInfo);
 		int svdResultInfo = 0;
 		cudaMemcpy(&svdResultInfo, devInfo, sizeof(int), cudaMemcpyDeviceToHost);
@@ -143,8 +145,16 @@ namespace {
 		cudaMemcpy(hostVT, VT, copySize, cudaMemcpyDeviceToHost);
 		cudaMemcpy(hostU, U, copySize, cudaMemcpyDeviceToHost);
 
-		const auto gVT = CreateGlmMatrix(hostVT);
-		const auto gU = CreateGlmMatrix(hostU);
+		auto gVT = glm::transpose(CreateGlmMatrix(hostVT));
+		auto gU = glm::transpose(CreateGlmMatrix(hostU));
+
+		//revert signs to match svd cpu solution
+		for (int i = 0; i < 3; i++)
+		{
+			gU[1][i] = -gU[1][i];
+			gVT[i][1] = -gVT[i][1];
+		}
+
 		const float determinant = glm::determinant(gU * gVT);
 		const auto diagonal = glm::diagonal3x3(glm::vec3 { 1.f, 1.f, determinant });
 		const auto rotation = gU * diagonal * gVT;
@@ -166,7 +176,7 @@ namespace {
 		cudaFree(S);
 		cudaFree(VT);
 		cudaFree(U);
-		
+
 		return transformation;
 	}
 
@@ -191,12 +201,14 @@ namespace {
 		cudaMalloc(&tempBefore, before.size() * 3 * sizeof(float));
 		cudaMalloc(&tempAfter, before.size() * 3 * sizeof(float));
 		cudaMalloc(&result, 3 * 3 * sizeof(float));
+		cusolverDnHandle_t solver_handle;
+		cusolverDnCreate(&solver_handle);
 
 		while (iterations < maxIterations)
 		{
 			auto correspondingPoints = GetCorrespondingPoints(workingBefore, after);
 
-			transformationMatrix = LeastSquaresSVD(correspondingPoints, workingBefore, after, alignBefore, alignAfter, tempBefore, tempAfter, result) * transformationMatrix;
+			transformationMatrix = LeastSquaresSVD(correspondingPoints, workingBefore, after, alignBefore, alignAfter, tempBefore, tempAfter, result, solver_handle) * transformationMatrix;
 
 			TransformCloud(before, workingBefore, transformationMatrix);
 			float error = GetMeanSquaredError(correspondingPoints, workingBefore, after);
@@ -219,6 +231,7 @@ namespace {
 		cudaFree(tempBefore);
 		cudaFree(tempAfter);
 		cudaFree(result);
+		cusolverDnDestroy(solver_handle);
 		return transformationMatrix;
 	}
 
