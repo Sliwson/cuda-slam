@@ -45,7 +45,7 @@ namespace Common
 		std::cout << matrix << std::endl;
 	}
 
-	glm::mat4 GetTransform(Eigen::Matrix3f matrix, glm::vec3 before, glm::vec3 after)
+	glm::mat4 SolveLeastSquaresSvd(Eigen::Matrix3f matrix, const glm::vec3& centroidBefore, const glm::vec3& centroidAfter)
 	{
 		Eigen::JacobiSVD<Eigen::Matrix3f> const svd(matrix, Eigen::ComputeFullU | Eigen::ComputeFullV);
 
@@ -63,8 +63,8 @@ namespace Common
 			transformationMatrix[i][3] = 0;
 		}
 
-		Eigen::Vector3f beforep{ before.x, before.y, before.z };
-		Eigen::Vector3f afterp{ after.x, after.y, after.z };
+		Eigen::Vector3f beforep{ centroidBefore.x, centroidBefore.y, centroidBefore.z };
+		Eigen::Vector3f afterp{ centroidAfter.x, centroidAfter.y, centroidAfter.z };
 		Eigen::Vector3f translation = afterp - (rotation * beforep);
 
 		transformationMatrix[3][0] = translation.x();
@@ -75,14 +75,14 @@ namespace Common
 
 	}
 
-	glm::mat4 GetTransform(glm::mat3 forSvd, glm::vec3 before, glm::vec3 after)
+	glm::mat4 SolveLeastSquaresSvd(const glm::mat3& forSvd, const glm::vec3& centroidBefore, const glm::vec3& centroidAfter)
 	{
 		Eigen::Matrix3f matrix;
 		for (int i = 0; i < 3; i++)
 			for (int j = 0; j < 3; j++)
 				matrix(i, j) = forSvd[j][i];
 
-		return GetTransform(matrix, before, after);
+		return SolveLeastSquaresSvd(matrix, centroidBefore, centroidAfter);
 	}
 
 	void PrintMatrixWithSize(const glm::mat4& matrix, int size)
@@ -270,15 +270,14 @@ namespace Common
 	{
 		auto transformationMatrix = glm::mat4();
 		
-		auto centerBefore = GetCenterOfMass(cloudBefore);
-		auto centerAfter = GetCenterOfMass(orderedCloudAfter);
+		const auto centerBefore = GetCenterOfMass(cloudBefore);
+		const auto centerAfter = GetCenterOfMass(orderedCloudAfter);
 
 		Eigen::Matrix3Xf alignedBefore = GetMatrix3XFromPointsVector(GetAlignedCloud(cloudBefore));
 		Eigen::Matrix3Xf alignedAfter = GetMatrix3XFromPointsVector(GetAlignedCloud(orderedCloudAfter));
-
 		Eigen::Matrix3f matrix = alignedAfter * alignedBefore.transpose();
 
-		return GetTransform(matrix, centerBefore, centerAfter);
+		return SolveLeastSquaresSvd(matrix, centerBefore, centerAfter);
 	}
 
 	glm::mat4 GetTransformationMatrix(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, int *iterations, float *error, float maxDistanceSquared, int maxIterations = -1)
