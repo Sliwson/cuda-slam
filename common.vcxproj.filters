@@ -24,6 +24,7 @@
     <ClCompile Include="source\glad.c">
       <Filter>GUI</Filter>
     </ClCompile>
+    <ClCompile Include="source\tests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\loader.h" />
@@ -51,6 +52,7 @@
       <Filter>GUI\Sphere</Filter>
     </ClInclude>
     <ClInclude Include="source\_common.h" />
+    <ClInclude Include="source\tests.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="GUI">
