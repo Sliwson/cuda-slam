@@ -9,6 +9,7 @@
 #include <memory>
 
 #include "shader.h"
+#include "point.h"
 
 namespace Common
 {
