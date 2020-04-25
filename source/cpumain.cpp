@@ -1,9 +1,9 @@
 #include <stdio.h>
-#include "common.h"
+#include "tests.h"
 
 int main()
 {
 	printf("Hello cpu-slam!\n");
-	Common::LibraryTest();
+	Tests::BasicICPTest();
 	return 0;
 }
