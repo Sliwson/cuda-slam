@@ -601,7 +601,7 @@ namespace Common
 		int cloudSize = cloud.size();
 
 		//old tests
-		if(false)
+		if(true)
 		{
 			std::cout << "Szymon" << std::endl;
 			const auto transform = GetRandomTransformMatrix({ 0.f, 0.f, 0.f }, { 10.0f, 10.0f, 10.0f }, glm::radians(35.f));
@@ -631,6 +631,12 @@ namespace Common
 			printf("ICP test 1 duration %f\n", icp1duration.count());
 			printf("ICP test 2 duration %f\n", icp2duration.count());
 
+			std::cout << "Transform Matrix" << std::endl;
+			PrintMatrix(transform);
+
+			std::cout << "ICP2 Matrix" << std::endl;
+			PrintMatrix(icpCalculatedTransform2);
+
 			Common::Renderer renderer(
 				Common::ShaderType::SimpleModel,
 				cloud, //grey
@@ -643,7 +649,7 @@ namespace Common
 		}
 
 		//new tests
-		if(true)
+		if(false)
 		{
 			std::cout << "Michal" << std::endl;
 			const auto transform = GetRandomTransformMatrix({ 0.f, 0.f, 0.f }, { 10.0f, 10.0f, 10.0f }, glm::radians(35.f));
