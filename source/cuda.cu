@@ -92,7 +92,7 @@ namespace {
 
 		//create array AFTER (transposed)
 		auto countingBegin = thrust::make_counting_iterator<int>(0);
-		auto countingEnd = thrust::make_counting_iterator<int>(size);
+		auto countingEnd = thrust::make_counting_iterator<int>(alignAfter.size());
 		auto zipBegin = thrust::make_zip_iterator(thrust::make_tuple(countingBegin, alignAfter.begin()));
 		auto zipEnd = thrust::make_zip_iterator(thrust::make_tuple(countingEnd, alignAfter.end()));
 
@@ -171,13 +171,14 @@ namespace {
 		glm::mat4 previousTransformationMatrix = transformationMatrix;
 
 		//do not change before vector - copy it for calculations
-		Cloud workingBefore(before.size());
-		Cloud alignBefore(before.size());
-		Cloud alignAfter(before.size());
+		const int size = std::max(before.size(), after.size());
+		Cloud workingBefore(size);
+		Cloud alignBefore(size);
+		Cloud alignAfter(size);
 		thrust::copy(thrust::device, before.begin(), before.end(), workingBefore.begin());
 
 		//allocate memory for cuBLAS
-		CudaSvdParams params(before.size(), after.size());
+		CudaSvdParams params(size, size);
 		
 		while (iterations < maxIterations)
 		{
