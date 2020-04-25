@@ -15,4 +15,9 @@ namespace Common
 	glm::vec3 ConvertTranslationVector(const Eigen::Vector3f& translationVector);
 	Point_f TransformPoint(const Point_f& point, const glm::mat4& transformationMatrix);
 	Point_f TransformPoint(const Point_f& point, const glm::mat3& rotationMatrix, const glm::vec3& translationVector);
+
+	//from master
+	glm::mat4 SolveLeastSquaresSvd(const glm::mat3& matrix, const glm::vec3& centroidBefore, const glm::vec3& centroidAfter);
+	void PrintMatrix(const glm::mat4& matrix);
+	void PrintMatrix(const glm::mat3& matrix);
 }

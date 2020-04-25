@@ -18,6 +18,15 @@ namespace Common
 
 	}
 
+	std::vector<Point_f> AssimpCloudLoader::GetMergedCloud() const
+	{
+		auto merged = std::vector<Point_f>();
+		for (const auto& cloud : clouds)
+			merged.insert(merged.end(), cloud.begin(), cloud.end());
+
+		return merged;
+	}
+
 	void AssimpCloudLoader::LoadModel(std::string const& path)
 	{
 		Assimp::Importer importer;

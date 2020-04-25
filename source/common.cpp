@@ -16,6 +16,75 @@ namespace Common
 			return std::vector<Point_f>();
 	}
 
+
+
+	void PrintMatrix(Eigen::Matrix3f matrix)
+	{
+		std::cout << matrix << std::endl;
+	}
+	//i'll leave it here but check later if you can use svd from basicicp
+	glm::mat4 SolveLeastSquaresSvd(Eigen::Matrix3f matrix, const glm::vec3& centroidBefore, const glm::vec3& centroidAfter)
+	{
+		Eigen::JacobiSVD<Eigen::Matrix3f> const svd(matrix, Eigen::ComputeFullU | Eigen::ComputeFullV);
+
+		double det = (svd.matrixU() * svd.matrixV().transpose()).determinant();
+		Eigen::Matrix3f diag = Eigen::DiagonalMatrix<float, 3>(1, 1, det);
+		Eigen::Matrix3f rotation = svd.matrixU() * diag * svd.matrixV().transpose();
+
+		glm::mat4 transformationMatrix(0);
+		for (int i = 0; i < 3; i++)
+		{
+			for (int j = 0; j < 3; j++)
+			{
+				transformationMatrix[i][j] = rotation(j, i);
+			}
+			transformationMatrix[i][3] = 0;
+		}
+
+		Eigen::Vector3f beforep{ centroidBefore.x, centroidBefore.y, centroidBefore.z };
+		Eigen::Vector3f afterp{ centroidAfter.x, centroidAfter.y, centroidAfter.z };
+		Eigen::Vector3f translation = afterp - (rotation * beforep);
+
+		transformationMatrix[3][0] = translation.x();
+		transformationMatrix[3][1] = translation.y();
+		transformationMatrix[3][2] = translation.z();
+		transformationMatrix[3][3] = 1.0f;
+		return transformationMatrix;
+
+	}
+
+	glm::mat4 SolveLeastSquaresSvd(const glm::mat3& forSvd, const glm::vec3& centroidBefore, const glm::vec3& centroidAfter)
+	{
+		Eigen::Matrix3f matrix;
+		for (int i = 0; i < 3; i++)
+			for (int j = 0; j < 3; j++)
+				matrix(i, j) = forSvd[j][i];
+
+		return SolveLeastSquaresSvd(matrix, centroidBefore, centroidAfter);
+	}
+
+	void PrintMatrixWithSize(const glm::mat4& matrix, int size)
+	{
+		for (int j = 0; j < 3; j++) {
+			for (int i = 0; i < 3; i++)
+				printf("%1.8f ", matrix[i][j]);
+
+			printf("\n");
+		}
+	}
+
+	void PrintMatrix(const glm::mat4& matrix)
+	{
+		PrintMatrixWithSize(matrix, 4);
+	}
+		
+	void PrintMatrix(const glm::mat3& matrix)
+	{
+		PrintMatrixWithSize(matrix, 3);
+	}
+
+	
+			
 	Point_f TransformPoint(const Point_f& point, const glm::mat4& transformationMatrix)
 	{
 		const glm::vec3 result = transformationMatrix * glm::vec4(glm::vec3(point), 1.0f);

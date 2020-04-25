@@ -265,6 +265,7 @@ namespace Common
 		for (unsigned int i = 0; i < verticesVectorsCount; i++)
 		{
 			std::vector<Point_f>& vector = GetVector(i);
+
 			glBindBuffer(GL_ARRAY_BUFFER, instanceVBO[i]);
 			glBufferData(GL_ARRAY_BUFFER, vector.size() * sizeof(Point_f), &vector[0], GL_STATIC_DRAW);
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -396,9 +397,9 @@ namespace Common
 			return cpu_points;
 		case 3:
 			return gpu_points;
-		default:
-			return origin_points;
 		}
+
+		return origin_points;
 	}
 
 	glm::vec3 Renderer::GetColor(int index)

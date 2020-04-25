@@ -1,7 +1,5 @@
 #pragma once
 
-#include <Eigen/Dense>
-
 namespace Common
 {
 	template<class T>
@@ -12,7 +10,7 @@ namespace Common
 
 		constexpr Point<T>(const glm::vec3& vector) : x(vector.x), y(vector.y), z(vector.z) {}
 
-		constexpr Point<T>& operator/=(const T& scalar) {	
+		constexpr Point<T>& operator/=(const T& scalar) {
 			*this = *this / scalar;
 			return *this;
 		}
@@ -32,22 +30,22 @@ namespace Common
 		constexpr T LengthSquared() const {
 			return x * x + y * y + z * z;
 		}
-		
+
 		constexpr static Point<T> Zero() {
-			return Point<T>(); 
+			return Point<T>();
 		}
 
 		constexpr static Point<T> One() {
 			return Point<T>({ 1 }, { 1 }, { 1 });
 		}
 
-	
+
 		T x = { 0 };
 		T y = { 0 };
 		T z = { 0 };
 
 	};
-		
+
 	template<class T>
 	constexpr Point<T> operator+(const Point<T>& p1, const Point<T>& p2) {
 		return { p1.x + p2.x, p1.y + p2.y, p1.z + p2.z };
@@ -66,11 +64,5 @@ namespace Common
 	template<class T>
 	constexpr bool operator==(const Point<T>& p1, const Point<T>& p2) {
 		return p1.x == p2.x && p1.y == p2.y && p1.z == p2.z;
-	}
-
-	template<class T = float>
-	constexpr Point<T> operator*(const Eigen::Matrix3f& matrix, const Point<T>& p1) {
-		Eigen::Vector3f eigenResult = matrix * Eigen::Vector3f(p1.x, p1.y, p1.z);
-		return Point<T>(eigenResult(0), eigenResult(1), eigenResult(2));
 	}
 }
