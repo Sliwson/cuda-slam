@@ -1,5 +1,6 @@
 #include "cuda.cuh"
 #include "functors.cuh"
+#include "svdparams.cuh"
 
 namespace {
 	typedef thrust::device_vector<glm::vec3> Cloud;
@@ -64,13 +65,10 @@ namespace {
 		thrust::transform(thrust::device, source.begin(), source.end(), target.begin(), transform);
 	}
 
-	void CuBlasMultiply(float* A, float* B, float* C, int size)
+	void CuBlasMultiply(float* A, float* B, float* C, int size, CudaSvdParams& params)
 	{
 		const float alpha = 1.f, beta = 0.f;
-		cublasHandle_t handle;
-		cublasCreate(&handle);
-		cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, 3, 3, size, &alpha, A, 3, B, size, &beta, C, 3);
-		cublasDestroy(handle);
+		cublasSgemm(params.multiplyHandle, CUBLAS_OP_N, CUBLAS_OP_N, 3, 3, size, &alpha, A, 3, B, size, &beta, C, 3);
 	}
 
 	glm::mat3 CreateGlmMatrix(float* squareMatrix)
@@ -78,7 +76,7 @@ namespace {
 		return glm::transpose(glm::make_mat3(squareMatrix));
 	}
 
-	glm::mat4 LeastSquaresSVD(const IndexIterator& permutation, const Cloud& before, const Cloud& after, Cloud& alignBefore, Cloud& alignAfter, float* workBefore, float* workAfter, float *multiplyResult, cusolverDnHandle_t solver_handle)
+	glm::mat4 LeastSquaresSVD(const IndexIterator& permutation, const Cloud& before, const Cloud& after, Cloud& alignBefore, Cloud& alignAfter, CudaSvdParams params)
 	{
 		const int size = before.size();
 
@@ -98,19 +96,19 @@ namespace {
 		auto zipBegin = thrust::make_zip_iterator(thrust::make_tuple(countingBegin, alignAfter.begin()));
 		auto zipEnd = thrust::make_zip_iterator(thrust::make_tuple(countingEnd, alignAfter.end()));
 
-		auto convertAfter = Functors::GlmToCuBlas(true, size, workAfter);
+		auto convertAfter = Functors::GlmToCuBlas(true, size, params.workAfter);
 		thrust::for_each(thrust::device, zipBegin, zipEnd, convertAfter);
 
 		//create array BEFORE
 		const auto beforeZipBegin = thrust::make_zip_iterator(thrust::make_tuple(countingBegin, alignBefore.begin()));
 		const auto beforeZipEnd = thrust::make_zip_iterator(thrust::make_tuple(countingEnd, alignBefore.end()));
-		auto convertBefore = Functors::GlmToCuBlas(false, before.size(), workBefore);
+		auto convertBefore = Functors::GlmToCuBlas(false, before.size(), params.workBefore);
 		thrust::for_each(thrust::device, beforeZipBegin, beforeZipEnd, convertBefore);
 
 		//multiply
-		CuBlasMultiply(workBefore, workAfter, multiplyResult, size);
+		CuBlasMultiply(params.workBefore, params.workAfter, params.multiplyResult, size, params);
 		float result[9];
-		cudaMemcpy(result, multiplyResult, 9 * sizeof(float), cudaMemcpyDeviceToHost);
+		cudaMemcpy(result, params.multiplyResult, 9 * sizeof(float), cudaMemcpyDeviceToHost);
 		auto matrix = CreateGlmMatrix(result);
 		//return Common::GetTransform(matrix, centroidBefore, centroidAfter);
 
@@ -118,32 +116,20 @@ namespace {
 		for (int i = 0; i < 3; i++)
 			for (int j = 0; j < 3; j++)
 				transposed[3 * i + j] = result[3 * j + i];
-		cudaMemcpy(multiplyResult, transposed, 9 * sizeof(float), cudaMemcpyHostToDevice);
+		cudaMemcpy(params.multiplyResult, transposed, 9 * sizeof(float), cudaMemcpyHostToDevice);
 
-		//svd TODO: test and fix below
-		float * S, * VT, * U;
-		int* devInfo;
-		int workSize = 0;
-
-		cudaMalloc(&devInfo, sizeof(int));
-		cudaMalloc(&S, 9 * sizeof(float));
-		cudaMalloc(&VT, 9 * sizeof(float));
-		cudaMalloc(&U, 9 * sizeof(float));
-
-		cusolverDnDgesvd_bufferSize(solver_handle, 3, 3, &workSize);
-		float* work;
-		cudaMalloc(&work, workSize * sizeof(float));
-		cusolverDnSgesvd(solver_handle, 'A', 'A', 3, 3, multiplyResult, 3, S, U, 3, VT, 3, work, workSize, nullptr, devInfo);
+		//svd
+		cusolverDnSgesvd(params.solverHandle, 'A', 'A', 3, 3, params.multiplyResult, 3, params.S, params.U, 3, params.VT, 3, params.work, params.workSize, nullptr, params.devInfo);
 		int svdResultInfo = 0;
-		cudaMemcpy(&svdResultInfo, devInfo, sizeof(int), cudaMemcpyDeviceToHost);
+		cudaMemcpy(&svdResultInfo, params.devInfo, sizeof(int), cudaMemcpyDeviceToHost);
 		if (svdResultInfo != 0)
 			printf("Svd execution failed!\n");
 
 		float hostS[9], hostVT[9], hostU[9];
 		const int copySize = 9 * sizeof(float);
-		cudaMemcpy(hostS, S, copySize, cudaMemcpyDeviceToHost);
-		cudaMemcpy(hostVT, VT, copySize, cudaMemcpyDeviceToHost);
-		cudaMemcpy(hostU, U, copySize, cudaMemcpyDeviceToHost);
+		cudaMemcpy(hostS, params.S, copySize, cudaMemcpyDeviceToHost);
+		cudaMemcpy(hostVT, params.VT, copySize, cudaMemcpyDeviceToHost);
+		cudaMemcpy(hostU, params.U, copySize, cudaMemcpyDeviceToHost);
 
 		auto gVT = glm::transpose(CreateGlmMatrix(hostVT));
 		auto gU = glm::transpose(CreateGlmMatrix(hostU));
@@ -171,12 +157,6 @@ namespace {
 		transformation[3][2] = translation.z;
 		transformation[3][3] = 1.0f;
 
-		cudaFree(work);
-		cudaFree(devInfo);
-		cudaFree(S);
-		cudaFree(VT);
-		cudaFree(U);
-
 		return transformation;
 	}
 
@@ -197,18 +177,13 @@ namespace {
 		thrust::copy(thrust::device, before.begin(), before.end(), workingBefore.begin());
 
 		//allocate memory for cuBLAS
-		float * tempBefore = nullptr, * tempAfter = nullptr, * result = nullptr;
-		cudaMalloc(&tempBefore, before.size() * 3 * sizeof(float));
-		cudaMalloc(&tempAfter, before.size() * 3 * sizeof(float));
-		cudaMalloc(&result, 3 * 3 * sizeof(float));
-		cusolverDnHandle_t solver_handle;
-		cusolverDnCreate(&solver_handle);
-
+		CudaSvdParams params(before.size(), after.size());
+		
 		while (iterations < maxIterations)
 		{
 			auto correspondingPoints = GetCorrespondingPoints(workingBefore, after);
 
-			transformationMatrix = LeastSquaresSVD(correspondingPoints, workingBefore, after, alignBefore, alignAfter, tempBefore, tempAfter, result, solver_handle) * transformationMatrix;
+			transformationMatrix = LeastSquaresSVD(correspondingPoints, workingBefore, after, alignBefore, alignAfter, params) * transformationMatrix;
 
 			TransformCloud(before, workingBefore, transformationMatrix);
 			float error = GetMeanSquaredError(correspondingPoints, workingBefore, after);
@@ -227,11 +202,8 @@ namespace {
 			previousError = error;
 			iterations++;
 		}
-
-		cudaFree(tempBefore);
-		cudaFree(tempAfter);
-		cudaFree(result);
-		cusolverDnDestroy(solver_handle);
+		
+		params.Free();
 		return transformationMatrix;
 	}
 
@@ -260,22 +232,20 @@ namespace {
 	void MultiplicationTest()
 	{
 		const int size = 100;
-		float * A = nullptr, * B = nullptr, * C = nullptr;
-		cudaMalloc(&A, size * 3 * sizeof(float));
-		cudaMalloc(&B, size * 3 * sizeof(float));
-		cudaMalloc(&C, 3 * 3 * sizeof(float));
 
 		float ones[3 * size];
 		for (int i = 0; i < 3 * size; i++)
 			ones[i] = 1.f;
 
-		cudaMemcpy(A, ones, 3 * size * sizeof(float), cudaMemcpyHostToDevice);
-		cudaMemcpy(B, ones, 3 * size * sizeof(float), cudaMemcpyHostToDevice);
 
-		CuBlasMultiply(A, B, C, size);
+		CudaSvdParams params(size, size);
+		cudaMemcpy(params.workBefore, ones, 3 * size * sizeof(float), cudaMemcpyHostToDevice);
+		cudaMemcpy(params.workAfter, ones, 3 * size * sizeof(float), cudaMemcpyHostToDevice);
+
+		CuBlasMultiply(params.workBefore, params.workAfter, params.multiplyResult, size, params);
 
 		float result[9];
-		cudaMemcpy(result, C, 9 * sizeof(float), cudaMemcpyDeviceToHost);
+		cudaMemcpy(result, params.multiplyResult, 9 * sizeof(float), cudaMemcpyDeviceToHost);
 
 		bool ok = true;
 		for (int i = 0; i < 9; i++)
@@ -283,11 +253,8 @@ namespace {
 				ok = false;
 
 		printf("Multiplication test [%s]\n", ok ? "OK" : "FAILED");
-
-		cudaFree(A);
-		cudaFree(B);
-		cudaFree(C);
-	}
+		params.Free();
+	}	
 }
 
 void CudaTest()
