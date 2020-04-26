@@ -27,6 +27,5 @@ namespace Common
 	std::tuple<std::vector<Common::Point_f>, std::vector<Common::Point_f>, std::vector<int>, std::vector<int>>GetCorrespondingPoints(const std::vector<Common::Point_f>& cloudBefore, const std::vector<Common::Point_f>& cloudAfter, float maxDistanceSquared);
 	std::pair<glm::mat3, glm::vec3> LeastSquaresSVD(const std::vector<Common::Point_f>& cloudBefore, const std::vector<Common::Point_f>& cloudAfter);
 
-	//from master -> is it needed - almost duplicate from basicicp
 	glm::mat4 SolveLeastSquaresSvd(const glm::mat3& matrix, const glm::vec3& centroidBefore, const glm::vec3& centroidAfter);	
 }
