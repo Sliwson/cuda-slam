@@ -17,11 +17,15 @@ namespace Common
 	std::vector<Point_f> GetAlignedCloud(const std::vector<Point_f>& cloud, const Point_f& center_of_mass);
 	glm::mat3 ConvertRotationMatrix(const Eigen::Matrix3f& rotationMatrix);
 	glm::vec3 ConvertTranslationVector(const Eigen::Vector3f& translationVector);
+	glm::mat4 ConvertToTransformationMatrix(const glm::mat3& rotationMatrix, const glm::vec3& translationVector);
 	Point_f TransformPoint(const Point_f& point, const glm::mat4& transformationMatrix);
 	Point_f TransformPoint(const Point_f& point, const glm::mat3& rotationMatrix, const glm::vec3& translationVector);
 	void PrintMatrix(const glm::mat4& matrix);
 	void PrintMatrix(const glm::mat3& matrix);
 	void PrintMatrix(Eigen::Matrix3f matrix);
+
+	std::tuple<std::vector<Common::Point_f>, std::vector<Common::Point_f>, std::vector<int>, std::vector<int>>GetCorrespondingPoints(const std::vector<Common::Point_f>& cloudBefore, const std::vector<Common::Point_f>& cloudAfter, float maxDistanceSquared);
+	std::pair<glm::mat3, glm::vec3> LeastSquaresSVD(const std::vector<Common::Point_f>& cloudBefore, const std::vector<Common::Point_f>& cloudAfter);
 
 	//from master -> is it needed - almost duplicate from basicicp
 	glm::mat4 SolveLeastSquaresSvd(const glm::mat3& matrix, const glm::vec3& centroidBefore, const glm::vec3& centroidAfter);	

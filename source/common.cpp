@@ -15,46 +15,6 @@ namespace Common
 			return std::vector<Point_f>();
 	}
 
-	//i'll leave it here but check later if you can use svd from basicicp
-	glm::mat4 SolveLeastSquaresSvd(Eigen::Matrix3f matrix, const glm::vec3& centroidBefore, const glm::vec3& centroidAfter)
-	{
-		Eigen::JacobiSVD<Eigen::Matrix3f> const svd(matrix, Eigen::ComputeFullU | Eigen::ComputeFullV);
-
-		double det = (svd.matrixU() * svd.matrixV().transpose()).determinant();
-		Eigen::Matrix3f diag = Eigen::DiagonalMatrix<float, 3>(1, 1, det);
-		Eigen::Matrix3f rotation = svd.matrixU() * diag * svd.matrixV().transpose();
-
-		glm::mat4 transformationMatrix(0);
-		for (int i = 0; i < 3; i++)
-		{
-			for (int j = 0; j < 3; j++)
-			{
-				transformationMatrix[i][j] = rotation(j, i);
-			}
-			transformationMatrix[i][3] = 0;
-		}
-
-		Eigen::Vector3f beforep{ centroidBefore.x, centroidBefore.y, centroidBefore.z };
-		Eigen::Vector3f afterp{ centroidAfter.x, centroidAfter.y, centroidAfter.z };
-		Eigen::Vector3f translation = afterp - (rotation * beforep);
-
-		transformationMatrix[3][0] = translation.x();
-		transformationMatrix[3][1] = translation.y();
-		transformationMatrix[3][2] = translation.z();
-		transformationMatrix[3][3] = 1.0f;
-		return transformationMatrix;
-	}
-
-	glm::mat4 SolveLeastSquaresSvd(const glm::mat3& forSvd, const glm::vec3& centroidBefore, const glm::vec3& centroidAfter)
-	{
-		Eigen::Matrix3f matrix;
-		for (int i = 0; i < 3; i++)
-			for (int j = 0; j < 3; j++)
-				matrix(i, j) = forSvd[j][i];
-
-		return SolveLeastSquaresSvd(matrix, centroidBefore, centroidAfter);
-	}
-
 	Point_f TransformPoint(const Point_f& point, const glm::mat4& transformationMatrix)
 	{
 		const glm::vec3 result = transformationMatrix * glm::vec4(glm::vec3(point), 1.0f);
@@ -162,6 +122,13 @@ namespace Common
 		return glm::vec3(translationVector[0], translationVector[1], translationVector[2]);
 	}
 
+	glm::mat4 ConvertToTransformationMatrix(const glm::mat3& rotationMatrix, const glm::vec3& translationVector)
+	{
+		auto matrix = glm::mat4(rotationMatrix);
+		matrix[3] = glm::vec4(translationVector, 1.0f);
+		return matrix;
+	}
+
 	void PrintMatrix(Eigen::Matrix3f matrix)
 	{
 		std::cout << matrix << std::endl;
@@ -185,5 +152,123 @@ namespace Common
 	void PrintMatrix(const glm::mat3& matrix)
 	{
 		PrintMatrixWithSize(matrix, 3);
+	}
+
+	std::tuple<std::vector<Point_f>, std::vector<Point_f>, std::vector<int>, std::vector<int>>GetCorrespondingPoints(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, float maxDistanceSquared)
+	{
+		std::vector<Point_f> correspondingFromCloudBefore(cloudBefore.size());
+		std::vector<Point_f> correspondingFromCloudAfter(cloudBefore.size());
+		std::vector<int> correspondingIndexesBefore(cloudBefore.size());
+		std::vector<int> correspondingIndexesAfter(cloudBefore.size());
+		int correspondingCount = 0;
+
+		for (int i = 0; i < cloudBefore.size(); i++)
+		{
+			int closestIndex = -1;
+			float closestDistance = std::numeric_limits<float>::max();
+
+			for (int j = 0; j < cloudAfter.size(); j++)
+			{
+				float distance = (cloudAfter[j] - cloudBefore[i]).LengthSquared();
+
+				if (distance < closestDistance || closestIndex == -1)
+				{
+					closestDistance = distance;
+					closestIndex = j;
+				}
+			}
+			if (closestDistance < maxDistanceSquared && closestIndex >= 0)
+			{
+				correspondingFromCloudBefore[correspondingCount] = cloudBefore[i];
+				correspondingFromCloudAfter[correspondingCount] = cloudAfter[closestIndex];
+				correspondingIndexesBefore[correspondingCount] = i;
+				correspondingIndexesAfter[correspondingCount] = closestIndex;
+
+				correspondingCount++;
+			}
+		}
+
+		correspondingFromCloudBefore.resize(correspondingCount);
+		correspondingFromCloudAfter.resize(correspondingCount);
+		correspondingIndexesBefore.resize(correspondingCount);
+		correspondingIndexesAfter.resize(correspondingCount);
+
+		return std::make_tuple(correspondingFromCloudBefore, correspondingFromCloudAfter, correspondingIndexesBefore, correspondingIndexesAfter);
+	}
+
+	std::pair<glm::mat3, glm::vec3> LeastSquaresSVD(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter)
+	{
+		Eigen::Matrix3f rotationMatrix;// = Eigen::Matrix3f::Identity();
+		Eigen::Vector3f translationVector;// = Eigen::Vector3f::Zero();
+
+		auto centerBefore = GetCenterOfMass(cloudBefore);
+		auto centerAfter = GetCenterOfMass(cloudAfter);
+
+		const Eigen::Matrix3Xf alignedBefore = GetMatrix3XFromPointsVector(GetAlignedCloud(cloudBefore, centerBefore));
+		const Eigen::Matrix3Xf alignedAfter = GetMatrix3XFromPointsVector(GetAlignedCloud(cloudAfter, centerAfter));
+
+		//version with thinU (docs say it should be enough for us, further efficiency tests are needed
+		// cheching option with MatrixXf instead od Matrix3f because documantation says: my matrix should have dynamic number of columns
+		const Eigen::MatrixXf matrix = alignedAfter * alignedBefore.transpose();
+		const Eigen::JacobiSVD<Eigen::MatrixXf> svd = Eigen::JacobiSVD<Eigen::MatrixXf>(matrix, Eigen::ComputeThinU | Eigen::ComputeThinV);
+
+		//version with fullU
+		//const Eigen::Matrix3f matrix = alignedAfter * alignedBefore.transpose();
+		//const Eigen::JacobiSVD<Eigen::Matrix3f> svd = Eigen::JacobiSVD<Eigen::Matrix3f>(matrix, Eigen::ComputeFullU | Eigen::ComputeFullV);
+
+		const Eigen::Matrix3f matrixU = svd.matrixU();
+		const Eigen::Matrix3f matrixV = svd.matrixV();
+		const Eigen::Matrix3f matrixVtransposed = matrixV.transpose();
+
+		const Eigen::Matrix3f determinantMatrix = matrixU * matrixVtransposed;
+
+		const Eigen::Matrix3f diag = Eigen::DiagonalMatrix<float, 3>(1, 1, determinantMatrix.determinant());
+
+		rotationMatrix = matrixU * diag * matrixVtransposed;
+
+		glm::mat3 rotationMatrixGLM = ConvertRotationMatrix(rotationMatrix);
+
+		glm::vec3 translationVectorGLM = glm::vec3(centerAfter) - (rotationMatrixGLM * centerBefore);
+
+		return std::make_pair(rotationMatrixGLM, translationVectorGLM);
+	}
+
+	glm::mat4 SolveLeastSquaresSvd(Eigen::Matrix3f matrix, const glm::vec3& centroidBefore, const glm::vec3& centroidAfter)
+	{
+		Eigen::JacobiSVD<Eigen::Matrix3f> const svd(matrix, Eigen::ComputeFullU | Eigen::ComputeFullV);
+
+		double det = (svd.matrixU() * svd.matrixV().transpose()).determinant();
+		Eigen::Matrix3f diag = Eigen::DiagonalMatrix<float, 3>(1, 1, det);
+		Eigen::Matrix3f rotation = svd.matrixU() * diag * svd.matrixV().transpose();
+
+		glm::mat4 transformationMatrix(0);
+		for (int i = 0; i < 3; i++)
+		{
+			for (int j = 0; j < 3; j++)
+			{
+				transformationMatrix[i][j] = rotation(j, i);
+			}
+			transformationMatrix[i][3] = 0;
+		}
+
+		Eigen::Vector3f beforep{ centroidBefore.x, centroidBefore.y, centroidBefore.z };
+		Eigen::Vector3f afterp{ centroidAfter.x, centroidAfter.y, centroidAfter.z };
+		Eigen::Vector3f translation = afterp - (rotation * beforep);
+
+		transformationMatrix[3][0] = translation.x();
+		transformationMatrix[3][1] = translation.y();
+		transformationMatrix[3][2] = translation.z();
+		transformationMatrix[3][3] = 1.0f;
+		return transformationMatrix;
+	}
+
+	glm::mat4 SolveLeastSquaresSvd(const glm::mat3& forSvd, const glm::vec3& centroidBefore, const glm::vec3& centroidAfter)
+	{
+		Eigen::Matrix3f matrix;
+		for (int i = 0; i < 3; i++)
+			for (int j = 0; j < 3; j++)
+				matrix(i, j) = forSvd[j][i];
+
+		return SolveLeastSquaresSvd(matrix, centroidBefore, centroidAfter);
 	}
 }
