@@ -10,7 +10,7 @@ namespace Common
 	{
 		AssimpCloudLoader loader(path);
 		if (loader.GetCloudCount() > 0)
-			return loader.GetCloud(0);
+			return loader.GetMergedCloud();
 		else
 			return std::vector<Point_f>();
 	}
@@ -131,15 +131,16 @@ namespace Common
 
 	void PrintMatrix(Eigen::Matrix3f matrix)
 	{
-		std::cout << matrix << std::endl;
+		std::stringstream ss;
+		ss << matrix;
+		printf("%s\n", ss.str().c_str());
 	}
 
 	void PrintMatrixWithSize(const glm::mat4& matrix, int size)
 	{
-		for (int j = 0; j < 3; j++) {
-			for (int i = 0; i < 3; i++)
+		for (int j = 0; j < size; j++) {
+			for (int i = 0; i < size; i++)
 				printf("%1.8f ", matrix[i][j]);
-
 			printf("\n");
 		}
 	}
@@ -154,7 +155,13 @@ namespace Common
 		PrintMatrixWithSize(matrix, 3);
 	}
 
-	std::tuple<std::vector<Point_f>, std::vector<Point_f>, std::vector<int>, std::vector<int>>GetCorrespondingPoints(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, float maxDistanceSquared)
+	void PrintMatrix(const glm::mat3& matrix, const glm::vec3& vector)
+	{
+		const auto transform = ConvertToTransformationMatrix(matrix, vector);
+		PrintMatrix(transform);
+	}
+
+	CorrespondingPointsTuple GetCorrespondingPoints(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, float maxDistanceSquared)
 	{
 		std::vector<Point_f> correspondingFromCloudBefore(cloudBefore.size());
 		std::vector<Point_f> correspondingFromCloudAfter(cloudBefore.size());
@@ -231,44 +238,5 @@ namespace Common
 		glm::vec3 translationVectorGLM = glm::vec3(centerAfter) - (rotationMatrixGLM * centerBefore);
 
 		return std::make_pair(rotationMatrixGLM, translationVectorGLM);
-	}
-
-	glm::mat4 SolveLeastSquaresSvd(Eigen::Matrix3f matrix, const glm::vec3& centroidBefore, const glm::vec3& centroidAfter)
-	{
-		Eigen::JacobiSVD<Eigen::Matrix3f> const svd(matrix, Eigen::ComputeFullU | Eigen::ComputeFullV);
-
-		double det = (svd.matrixU() * svd.matrixV().transpose()).determinant();
-		Eigen::Matrix3f diag = Eigen::DiagonalMatrix<float, 3>(1, 1, det);
-		Eigen::Matrix3f rotation = svd.matrixU() * diag * svd.matrixV().transpose();
-
-		glm::mat4 transformationMatrix(0);
-		for (int i = 0; i < 3; i++)
-		{
-			for (int j = 0; j < 3; j++)
-			{
-				transformationMatrix[i][j] = rotation(j, i);
-			}
-			transformationMatrix[i][3] = 0;
-		}
-
-		Eigen::Vector3f beforep{ centroidBefore.x, centroidBefore.y, centroidBefore.z };
-		Eigen::Vector3f afterp{ centroidAfter.x, centroidAfter.y, centroidAfter.z };
-		Eigen::Vector3f translation = afterp - (rotation * beforep);
-
-		transformationMatrix[3][0] = translation.x();
-		transformationMatrix[3][1] = translation.y();
-		transformationMatrix[3][2] = translation.z();
-		transformationMatrix[3][3] = 1.0f;
-		return transformationMatrix;
-	}
-
-	glm::mat4 SolveLeastSquaresSvd(const glm::mat3& forSvd, const glm::vec3& centroidBefore, const glm::vec3& centroidAfter)
-	{
-		Eigen::Matrix3f matrix;
-		for (int i = 0; i < 3; i++)
-			for (int j = 0; j < 3; j++)
-				matrix(i, j) = forSvd[j][i];
-
-		return SolveLeastSquaresSvd(matrix, centroidBefore, centroidAfter);
 	}
 }

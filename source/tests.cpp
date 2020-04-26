@@ -39,8 +39,6 @@ namespace Tests
 	std::vector<int> InversePermutation(const std::vector<int>& permutation);
 	std::vector<Point_f> ApplyPermutation(const std::vector<Point_f>& input, const std::vector<int>& permutation);
 	std::vector<int> GetClosestPointIndexes(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter);
-	void PrintMatrix(glm::mat4 matrix);
-	void PrintMatrix(glm::mat3 matrix, glm::vec3 vector);
 	//helper test functions
 	bool TestTransformOrdered(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, const glm::mat4& matrix);
 	bool TestTransformOrdered(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, const glm::mat3& rotationMatrix, const glm::vec3& translationVector);
@@ -115,32 +113,6 @@ namespace Tests
 		return resultPermutation;
 	}
 
-	void PrintMatrix(glm::mat4 matrix)
-	{
-		for (size_t i = 0; i < 4; i++)
-		{
-			for (size_t j = 0; j < 4; j++)
-			{
-				std::cout << matrix[j][i] << '\t';
-			}
-			std::cout << std::endl;
-		}
-	}
-
-	void PrintMatrix(glm::mat3 matrix, glm::vec3 vector)
-	{
-		for (size_t i = 0; i < 3; i++)
-		{
-			for (size_t j = 0; j < 3; j++)
-			{
-				std::cout << matrix[j][i] << '\t';
-			}
-			std::cout << vector[i];
-			std::cout << std::endl;
-		}
-		std::cout << "0\t0\t0\t1\t" << std::endl;
-	}
-
 	bool TestTransformOrdered(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, const glm::mat4& matrix)
 	{
 		if (cloudBefore.size() != cloudAfter.size())
@@ -196,11 +168,11 @@ namespace Tests
 		const auto calculatedPermutation = InversePermutation(GetClosestPointIndexes(cloud, transformedPermutedCloud));
 		//TODO: scale clouds to the same size always so threshold would make sense
 		auto icp1start = std::chrono::high_resolution_clock::now();
-		const auto icpCalculatedTransform1 = BasicICP::BasicICP(cloud, transformedPermutedCloud, &iterations, &error, TEST_EPS, 25.0f, 5);
+		const auto icpCalculatedTransform1 = BasicICP::GetBasicICPTransformationMatrix(cloud, transformedPermutedCloud, &iterations, &error, TEST_EPS, 25.0f, 5);
 		auto icp2start = std::chrono::high_resolution_clock::now();
 		iterations = 0;
 		error = 1.0f;
-		const auto icpCalculatedTransform2 = BasicICP::BasicICP(cloud, transformedPermutedCloud, &iterations, &error, TEST_EPS, 1000.0f, 100);
+		const auto icpCalculatedTransform2 = BasicICP::GetBasicICPTransformationMatrix(cloud, transformedPermutedCloud, &iterations, &error, TEST_EPS, 1000.0f, 100);
 		auto icp2end = std::chrono::high_resolution_clock::now();
 
 		std::chrono::duration<double> icp1duration = icp2start - icp1start;
