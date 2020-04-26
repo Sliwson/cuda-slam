@@ -25,6 +25,7 @@
       <Filter>GUI</Filter>
     </ClCompile>
     <ClCompile Include="source\tests.cpp" />
+    <ClCompile Include="source\testutils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\loader.h" />
@@ -53,6 +54,7 @@
     </ClInclude>
     <ClInclude Include="source\_common.h" />
     <ClInclude Include="source\tests.h" />
+    <ClInclude Include="source\testutils.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="GUI">

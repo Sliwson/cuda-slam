@@ -25,6 +25,7 @@
     <ClCompile Include="source\shader.cpp" />
     <ClCompile Include="source\shaderfactory.cpp" />
     <ClCompile Include="source\tests.cpp" />
+    <ClCompile Include="source\testutils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\camera.h" />
@@ -38,6 +39,7 @@
     <ClInclude Include="source\shaderfactory.h" />
     <ClInclude Include="source\shadertype.h" />
     <ClInclude Include="source\tests.h" />
+    <ClInclude Include="source\testutils.h" />
     <ClInclude Include="source\_common.h" />
   </ItemGroup>
   <ItemGroup>
