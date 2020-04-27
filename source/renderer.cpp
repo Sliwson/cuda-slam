@@ -1,7 +1,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <string>
 
-#include "common.h"
+#include "renderer.h"
 #include "moveablecamera.h"
 #include "shaderfactory.h"
 #include "shadertype.h"

@@ -209,7 +209,11 @@ namespace half_impl {
 // conversion steps back and forth.
 
 EIGEN_STRONG_INLINE __device__ half operator + (const half& a, const half& b) {
-  return __hadd(a, b);
+#if defined(EIGEN_CUDACC_VER) && EIGEN_CUDACC_VER >= 90000
+	return __hadd(::__half(a), ::__half(b));
+#else
+	return __hadd(a, b);
+#endif
 }
 EIGEN_STRONG_INLINE __device__ half operator * (const half& a, const half& b) {
   return __hmul(a, b);

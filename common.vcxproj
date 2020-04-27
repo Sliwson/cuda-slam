@@ -24,6 +24,8 @@
     <ClCompile Include="source\renderer.cpp" />
     <ClCompile Include="source\shader.cpp" />
     <ClCompile Include="source\shaderfactory.cpp" />
+    <ClCompile Include="source\tests.cpp" />
+    <ClCompile Include="source\testutils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\camera.h" />
@@ -36,6 +38,8 @@
     <ClInclude Include="source\shader.h" />
     <ClInclude Include="source\shaderfactory.h" />
     <ClInclude Include="source\shadertype.h" />
+    <ClInclude Include="source\tests.h" />
+    <ClInclude Include="source\testutils.h" />
     <ClInclude Include="source\_common.h" />
   </ItemGroup>
   <ItemGroup>
@@ -152,6 +156,7 @@
       </PrecompiledHeaderFile>
       <PrecompiledHeaderOutputFile />
       <AdditionalIncludeDirectories>$(ProjectDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -160,6 +165,9 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <Lib>
+      <AdditionalLibraryDirectories>$(ProjectDir)lib-vc2019</AdditionalLibraryDirectories>
+    </Lib>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -35,11 +35,9 @@ namespace Common
 			return Point<T>({ 1 }, { 1 }, { 1 });
 		}
 
-
 		T x = { 0 };
 		T y = { 0 };
 		T z = { 0 };
-
 	};
 
 	template<class T>

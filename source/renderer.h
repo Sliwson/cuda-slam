@@ -9,6 +9,7 @@
 #include <memory>
 
 #include "shader.h"
+#include "point.h"
 
 namespace Common
 {
@@ -37,7 +38,7 @@ namespace Common
 	private:
 		static Renderer* FindInstance(GLFWwindow* window);
 		static bool IsRendererCreated(Renderer* renderer);
-		
+
 		int InitWindow();
 		void SetBuffers();
 
