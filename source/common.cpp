@@ -27,6 +27,12 @@ namespace Common
 		return Point_f(result);
 	}
 
+	Point_f TransformPoint(const Point_f& point, const glm::mat3& rotationMatrix, const glm::vec3& translationVector, const float& scale)
+	{
+		const glm::vec3 result = scale * (rotationMatrix * point) + translationVector;
+		return Point_f(result);
+	}
+
 	std::vector<Point_f> GetTransformedCloud(const std::vector<Point_f>& cloud, const glm::mat4& matrix)
 	{
 		auto clone = cloud;
@@ -38,6 +44,13 @@ namespace Common
 	{
 		auto clone = cloud;
 		std::transform(clone.begin(), clone.end(), clone.begin(), [&](const Point_f& p) { return TransformPoint(p, rotationMatrix, translationVector); });
+		return clone;
+	}
+
+	std::vector<Point_f> GetTransformedCloud(const std::vector<Point_f>& cloud, const glm::mat3& rotationMatrix, const glm::vec3& translationVector, const float& scale)
+	{
+		auto clone = cloud;
+		std::transform(clone.begin(), clone.end(), clone.begin(), [&](const Point_f& p) { return TransformPoint(p, rotationMatrix, translationVector, scale); });
 		return clone;
 	}
 
@@ -94,6 +107,24 @@ namespace Common
 			result(2, i) = points[i].z;
 		}
 		return result;
+	}
+
+	Eigen::MatrixXf GetMatrixXFromPointsVector(const std::vector<float>& points, const int& rows, const int& cols)
+	{
+		Eigen::MatrixXf result = Eigen::ArrayXXf::Zero(rows, cols);
+		for (size_t x = 0; x < rows; x++)
+		{
+			for (size_t y = 0; y < cols; y++)
+			{
+				result(x, y) = points[x * cols + y];
+			}
+		}
+		return result;
+	}
+
+	Eigen::Vector3f ConvertToEigenVector(const Point_f& point)
+	{
+		return Eigen::Vector3f(point.x, point.y, point.z);
 	}
 
 	std::vector<Point_f> GetAlignedCloud(const std::vector<Point_f>& cloud, const Point_f& center_of_mass)
