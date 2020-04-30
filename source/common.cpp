@@ -15,6 +15,20 @@ namespace Common
 			return std::vector<Point_f>();
 	}
 
+	std::vector<Point_f> ResizeCloud(const std::vector<Point_f>& cloud, int step)
+	{
+		int size = cloud.size() / step;
+		if (size == 0)
+			return cloud;
+		std::vector<Point_f> result = std::vector<Point_f>(size);
+		size_t i = 0, j = 0;
+		for (i = 0, j = 0; i < cloud.size(); i += step, j++);
+		{
+			result[j] = cloud[i];
+		}
+		return result;
+	}
+
 	Point_f TransformPoint(const Point_f& point, const glm::mat4& transformationMatrix)
 	{
 		const glm::vec3 result = transformationMatrix * glm::vec4(glm::vec3(point), 1.0f);
