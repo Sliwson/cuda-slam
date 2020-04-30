@@ -94,10 +94,10 @@ namespace Tests
 
 		Common::Renderer renderer(
 			Common::ShaderType::SimpleModel,
-			cloud, //grey
-			transformedPermutedCloud, //blue
-			GetTransformedCloud(cloud, icpCalculatedTransform1.first, icpCalculatedTransform1.second), //red
-			GetTransformedCloud(cloud, icpCalculatedTransform2.first, icpCalculatedTransform2.second)); //green
+			cloud, //red
+			transformedPermutedCloud, //green
+			GetTransformedCloud(cloud, icpCalculatedTransform1.first, icpCalculatedTransform1.second), //yellow
+			GetTransformedCloud(cloud, icpCalculatedTransform2.first, icpCalculatedTransform2.second)); //blue
 
 		renderer.Show();
 	}
@@ -110,30 +110,51 @@ namespace Tests
 		int iterations = 0;
 		float error = 1.0f;
 
+		const char* object_path1 = "data/noise_00_bunny.off";
+		const char* object_path2 = "data/noise_25_bunny.off";
+		const char* object_path3 = "data/noise_50_bunny.off";
+		const char* object_path4 = "data/bunny-decapitated.obj";
+
 		//const auto cloud = GetRandomPointCloud(corner, size, 3000);
 		auto cloud = LoadCloud(objectPath);
+		auto cloud1 = LoadCloud(object_path1);
+		auto cloud2 = LoadCloud(object_path2);
+		auto cloud3 = LoadCloud(object_path3);
+		auto cloud4 = LoadCloud(object_path4);
+		printf("Original cloud size: %d, cloud1: %d, cloud2: %d, cloud3: %d, cloud4: %d\n", cloud.size(), cloud1.size(), cloud2.size(), cloud3.size(), cloud4.size());
+
 
 		std::transform(cloud.begin(), cloud.end(), cloud.begin(), [](const Point_f& point) { return Point_f{ point.x * 100.f, point.y * 100.f, point.z * 100.f }; });
-		if (pointCount > 0)
-			cloud.resize(pointCount);
+		std::transform(cloud1.begin(), cloud1.end(), cloud1.begin(), [](const Point_f& point) { return Point_f{ point.x * 100.f, point.y * 100.f, point.z * 100.f }; });
+		std::transform(cloud2.begin(), cloud2.end(), cloud2.begin(), [](const Point_f& point) { return Point_f{ point.x * 100.f, point.y * 100.f, point.z * 100.f }; });
+		std::transform(cloud3.begin(), cloud3.end(), cloud3.begin(), [](const Point_f& point) { return Point_f{ point.x * 100.f, point.y * 100.f, point.z * 100.f }; });
+		std::transform(cloud4.begin(), cloud4.end(), cloud4.begin(), [](const Point_f& point) { return Point_f{ point.x * 100.f, point.y * 100.f, point.z * 100.f }; });
+		//if (pointCount > 0)
+			//cloud.resize(pointCount);
 
-		int cloudSize = cloud.size();
+		//cloud.resize(4000);
+		//cloud4.resize(4000);
+
+		int cloudSize = cloud1.size();
 		printf("Processing %d points\n", cloudSize);
 
 		const auto translation_vector = glm::vec3(15.0f, 0.0f, 0.0f);
-		const auto rotation_matrix = GetRotationMatrix({ 1.0f, 0.4f, -0.3f }, glm::radians(3.0f));
+		const auto rotation_matrix = GetRotationMatrix({ 1.0f, 0.4f, -0.3f }, glm::radians(50.0f));
 
 		const auto transform = ConvertToTransformationMatrix(rotation_matrix, translation_vector);
 		//const auto transform = GetRandomTransformMatrix({ 0.f, 0.f, 0.f }, { 10.0f, 10.0f, 10.0f }, glm::radians(35.f));
 		const auto permutation = GetRandomPermutationVector(cloudSize);
-		auto permutedCloud = ApplyPermutation(cloud, permutation);
-		//std::transform(permutedCloud.begin(), permutedCloud.end(), permutedCloud.begin(), [](const Point_f& point) { return Point_f{ point.x * 2.f, point.y * 2.f, point.z * 2.f }; });
-		const auto transformedCloud = GetTransformedCloud(cloud, transform);
+		auto permutedCloud = ApplyPermutation(cloud1, permutation);
+		std::transform(permutedCloud.begin(), permutedCloud.end(), permutedCloud.begin(), [](const Point_f& point) { return Point_f{ point.x * 2.f, point.y * 2.f, point.z * 2.f }; });
+		const auto transformedCloud = GetTransformedCloud(cloud1, transform);
 		const auto transformedPermutedCloud = GetTransformedCloud(permutedCloud, transform);
+
+		printf("TransfPermCloudSize: %d\n", transformedPermutedCloud.size());
+		printf("Cloud4Size: %d\n", cloud4.size());
 
 		//TODO: scale clouds to the same size always so threshold would make sense
 		auto icp1start = std::chrono::high_resolution_clock::now();
-		const auto icpCalculatedTransform1 = CoherentPointDrift::GetRigidCPDTransformationMatrix(cloud, transformedPermutedCloud, &iterations, &error, testEps, 0.0f, 30);
+		const auto icpCalculatedTransform1 = CoherentPointDrift::GetRigidCPDTransformationMatrix(transformedPermutedCloud, cloud3, &iterations, &error, testEps, 0.1f, 30);
 		auto icp2start = std::chrono::high_resolution_clock::now();
 		iterations = 0;
 		error = 1.0f;
@@ -143,11 +164,11 @@ namespace Tests
 		std::chrono::duration<double> icp1duration = icp2start - icp1start;
 		std::chrono::duration<double> icp2duration = icp2end - icp2start;
 
-		const auto resultOrdered = TestTransformOrdered(cloud, transformedCloud, transform, testEps);
-		const auto resultUnordered = TestTransformWithPermutation(cloud, transformedPermutedCloud, permutation, transform, testEps);
+		//const auto resultOrdered = TestTransformOrdered(cloud, transformedCloud, transform, testEps);
+		//const auto resultUnordered = TestTransformWithPermutation(cloud, transformedPermutedCloud, permutation, transform, testEps);
 
-		printf("Ordered cloud test [%s]\n", resultOrdered ? "OK" : "FAIL");
-		printf("Unordered cloud test [%s]\n", resultUnordered ? "OK" : "FAIL");
+		//printf("Ordered cloud test [%s]\n", resultOrdered ? "OK" : "FAIL");
+		//printf("Unordered cloud test [%s]\n", resultUnordered ? "OK" : "FAIL");
 		printf("ICP test (%d iterations) error = %g\n", iterations, error);
 		printf("ICP test 1 duration %f\n", icp1duration.count());
 		printf("ICP test 2 duration %f\n", icp2duration.count());
@@ -162,11 +183,19 @@ namespace Tests
 
 		Common::Renderer renderer(
 			Common::ShaderType::SimpleModel,
-			cloud, //grey
-			transformedPermutedCloud, //blue
-			GetTransformedCloud(transformedPermutedCloud, icpCalculatedTransform1.first, icpCalculatedTransform1.second), //red
-			//GetTransformedCloud(cloud, icpCalculatedTransform2.first, icpCalculatedTransform2.second)); //green
+			cloud3, //red
+			transformedPermutedCloud, //green
+			GetTransformedCloud(cloud3, icpCalculatedTransform1.first, icpCalculatedTransform1.second), //yellow
+			//GetTransformedCloud(cloud, icpCalculatedTransform2.first, icpCalculatedTransform2.second)); //blue
 			std::vector<Point_f>(1)); //green
+
+		//Common::Renderer renderer(
+		//	Common::ShaderType::SimpleModel,
+		//	cloud1, //red
+		//	cloud2, //green
+		//	cloud3, //yellow
+		//	//GetTransformedCloud(cloud, icpCalculatedTransform2.first, icpCalculatedTransform2.second)); //blue
+		//	cloud4); //blue
 
 		renderer.Show();
 	}
