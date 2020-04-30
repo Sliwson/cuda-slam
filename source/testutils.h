@@ -20,7 +20,7 @@ namespace Tests
 
 	// Helpers
 	//
-	glm::mat3 GetRotationMatrix(const Point_f& rotationAxis, float rotationAngle);
+	glm::mat3 GetRotationMatrix(const Point_f& rotationAxis, float rotationAngleRadians);
 	std::vector<int> InversePermutation(const std::vector<int>& permutation);
 	std::vector<Point_f> ApplyPermutation(const std::vector<Point_f>& input, const std::vector<int>& permutation);
 }
