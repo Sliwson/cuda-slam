@@ -135,7 +135,7 @@ namespace Tests
 		//cloud.resize(4000);
 		//cloud4.resize(4000);
 
-		int cloudSize = cloud1.size();
+		int cloudSize = cloud.size();
 		printf("Processing %d points\n", cloudSize);
 
 		const auto translation_vector = glm::vec3(15.0f, 0.0f, 0.0f);
@@ -144,9 +144,9 @@ namespace Tests
 		const auto transform = ConvertToTransformationMatrix(rotation_matrix, translation_vector);
 		//const auto transform = GetRandomTransformMatrix({ 0.f, 0.f, 0.f }, { 10.0f, 10.0f, 10.0f }, glm::radians(35.f));
 		const auto permutation = GetRandomPermutationVector(cloudSize);
-		auto permutedCloud = ApplyPermutation(cloud1, permutation);
+		auto permutedCloud = ApplyPermutation(cloud, permutation);
 		std::transform(permutedCloud.begin(), permutedCloud.end(), permutedCloud.begin(), [](const Point_f& point) { return Point_f{ point.x * 2.f, point.y * 2.f, point.z * 2.f }; });
-		const auto transformedCloud = GetTransformedCloud(cloud1, transform);
+		const auto transformedCloud = GetTransformedCloud(cloud, transform);
 		const auto transformedPermutedCloud = GetTransformedCloud(permutedCloud, transform);
 
 		printf("TransfPermCloudSize: %d\n", transformedPermutedCloud.size());
@@ -154,7 +154,7 @@ namespace Tests
 
 		//TODO: scale clouds to the same size always so threshold would make sense
 		auto icp1start = std::chrono::high_resolution_clock::now();
-		const auto icpCalculatedTransform1 = CoherentPointDrift::GetRigidCPDTransformationMatrix(transformedPermutedCloud, cloud3, &iterations, &error, testEps, 0.1f, 30);
+		const auto icpCalculatedTransform1 = CoherentPointDrift::GetRigidCPDTransformationMatrix(transformedPermutedCloud, cloud3, &iterations, &error, testEps, 0.1f, true, 30);
 		auto icp2start = std::chrono::high_resolution_clock::now();
 		iterations = 0;
 		error = 1.0f;
@@ -196,6 +196,83 @@ namespace Tests
 		//	cloud3, //yellow
 		//	//GetTransformedCloud(cloud, icpCalculatedTransform2.first, icpCalculatedTransform2.second)); //blue
 		//	cloud4); //blue
+
+		renderer.Show();
+	}
+
+	void BasicRigidCPDTest(const char* objectPath1, const char* objectPath2, const int& pointCount1, const int& pointCount2, const float& testEps)
+	{
+		srand(RANDOM_SEED);
+		int iterations = 0;
+		float error = 1.0f;
+
+		auto cloud1 = LoadCloud(objectPath1);
+		auto cloud2 = LoadCloud(objectPath2);
+
+		printf("First cloud size: %d, Second cloud size: %d\n", cloud1.size(), cloud2.size());
+
+
+		std::transform(cloud1.begin(), cloud1.end(), cloud1.begin(), [](const Point_f& point) { return Point_f{ point.x * 100.f, point.y * 100.f, point.z * 100.f }; });
+		std::transform(cloud2.begin(), cloud2.end(), cloud2.begin(), [](const Point_f& point) { return Point_f{ point.x * 100.f, point.y * 100.f, point.z * 100.f }; });
+		if (pointCount1 > 0)
+			cloud1.resize(pointCount1);
+		if (pointCount2 > 0)
+			cloud1.resize(pointCount2);
+
+		int cloudSize1 = cloud1.size();
+		int cloudSize2 = cloud2.size();
+		printf("Processing (%d, %d) points\n", cloudSize1, cloudSize2);
+
+		// transformation
+
+		const float scale1 = 1.0f;
+		const auto translation_vector1 = glm::vec3(15.0f, 0.0f, 0.0f);
+		const auto rotation_matrix1 = GetRotationMatrix({ 1.0f, 0.4f, -0.3f }, glm::radians(50.0f));
+
+		const auto transform1 = ConvertToTransformationMatrix(scale1 * rotation_matrix1, translation_vector1);
+
+		const auto transform2 = glm::mat4(1.0f);
+		//const auto transform = GetRandomTransformMatrix({ 0.f, 0.f, 0.f }, { 10.0f, 10.0f, 10.0f }, glm::radians(35.f));
+		
+		// permuting both clouds
+		const auto permutation1 = GetRandomPermutationVector(cloudSize1);
+		const auto permutation2 = GetRandomPermutationVector(cloudSize2);
+		auto permutedCloud1 = ApplyPermutation(cloud1, permutation1);
+		auto permutedCloud2 = ApplyPermutation(cloud2, permutation2);
+
+		const auto transformedPermutedCloud1 = GetTransformedCloud(permutedCloud1, transform1);
+		const auto transformedPermutedCloud2 = GetTransformedCloud(permutedCloud2, transform2);
+
+
+		// parameters:
+		const float weight = 0.1f;
+		const bool const_scale = false;
+		const int max_iterations = 30;
+
+		auto icp1start = std::chrono::high_resolution_clock::now();
+		const auto icpCalculatedTransform1 = CoherentPointDrift::GetRigidCPDTransformationMatrix(transformedPermutedCloud1, transformedPermutedCloud2, &iterations, &error, testEps, weight, const_scale, max_iterations);
+		auto icp1end = std::chrono::high_resolution_clock::now();
+
+		std::chrono::duration<double> icp1duration = icp1end - icp1start;
+
+		printf("ICP test (%d iterations) error = %g\n", iterations, error);
+		printf("ICP test 1 duration %f\n", icp1duration.count());
+
+		std::cout << "Transform Matrix 1" << std::endl;
+		PrintMatrix(transform1);
+		std::cout << "Inverted Transform Matrix 1" << std::endl;
+		PrintMatrix(glm::inverse(transform1));
+
+		std::cout << "ICP1 Matrix" << std::endl;
+		PrintMatrix(icpCalculatedTransform1.first, icpCalculatedTransform1.second);
+
+		Common::Renderer renderer(
+			Common::ShaderType::SimpleModel,
+			transformedPermutedCloud1, //red
+			transformedPermutedCloud2, //green
+			GetTransformedCloud(transformedPermutedCloud2, icpCalculatedTransform1.first, icpCalculatedTransform1.second), //yellow
+			//GetTransformedCloud(cloud, icpCalculatedTransform2.first, icpCalculatedTransform2.second)); //blue
+			std::vector<Point_f>(1)); //green
 
 		renderer.Show();
 	}

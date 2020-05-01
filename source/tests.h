@@ -12,4 +12,5 @@ namespace Tests
 
 	void BasicICPTest(const char* objectPath, const int& pointCount, const float& testEps);
 	void BasicRigidCPDTest(const char* objectPath, const int& pointCount, const float& testEps);
+	void BasicRigidCPDTest(const char* objectPath1, const char* objectPath2, const int& pointCount1, const int& pointCount2, const float& testEps);
 }
