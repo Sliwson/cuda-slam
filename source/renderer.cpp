@@ -1,5 +1,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <string>
+#include <algorithm>
 
 #include "renderer.h"
 #include "moveablecamera.h"

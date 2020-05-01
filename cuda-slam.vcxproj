@@ -120,7 +120,7 @@
       <ShowProgress Condition="'$(Configuration)|$(Platform)'=='FastDebug|x64'">NotSet</ShowProgress>
     </Link>
     <CudaCompile>
-      <CodeGeneration>compute_75,sm_75</CodeGeneration>
+      <CodeGeneration>compute_50,sm_50;compute_75,sm_75</CodeGeneration>
       <Runtime>MDd</Runtime>
       <TargetMachinePlatform>64</TargetMachinePlatform>
     </CudaCompile>
