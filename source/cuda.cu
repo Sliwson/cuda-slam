@@ -115,7 +115,7 @@ namespace {
 		return glm::transpose(glm::make_mat3(squareMatrix));
 	}
 
-	glm::mat4 LeastSquaresSVD(const IndexIterator& permutation, const Cloud& before, const Cloud& after, Cloud& alignBefore, Cloud& alignAfter, thrust::device_vector<int>& indices, CudaSvdParams params)
+	glm::mat4 LeastSquaresSVD(const IndexIterator& permutation, const Cloud& before, const Cloud& after, Cloud& alignBefore, Cloud& alignAfter, CudaSvdParams params)
 	{
 		const int size = before.size();
 
@@ -224,7 +224,7 @@ namespace {
 		{
 			GetCorrespondingPoints(indices, workingBefore, after);
 
-			transformationMatrix = LeastSquaresSVD(indices, workingBefore, after, alignBefore, alignAfter, indices, params) * transformationMatrix;
+			transformationMatrix = LeastSquaresSVD(indices, workingBefore, after, alignBefore, alignAfter, params) * transformationMatrix;
 
 			TransformCloud(before, workingBefore, transformationMatrix);
 			float error = GetMeanSquaredError(indices, workingBefore, after);
