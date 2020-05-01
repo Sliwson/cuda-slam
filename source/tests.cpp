@@ -1,4 +1,5 @@
 #include "tests.h"
+#include "timer.h"
 #include "basicicp.h"
 #include "renderer.h"
 #include "shadertype.h"
@@ -47,8 +48,11 @@ namespace Tests
 		int iterations = 0;
 		float error = 1.0f;
 
-		//const auto cloud = GetRandomPointCloud(corner, size, 3000);
+		Common::Timer timer("Cpu timer");
+
+		timer.StartStage("cloud-loading");
 		auto cloud = LoadCloud(objectPath);
+		timer.StopStage("cloud-loading");
 
 		std::transform(cloud.begin(), cloud.end(), cloud.begin(), [](const Point_f& point) { return Point_f{ point.x * 100.f, point.y * 100.f, point.z * 100.f }; });
 		if (pointCount > 0)
@@ -56,24 +60,27 @@ namespace Tests
 
 		int cloudSize = cloud.size();
 		printf("Processing %d points\n", cloudSize);
+		timer.StartStage("processing");
 
 		const auto transform = GetRandomTransformMatrix({ 0.f, 0.f, 0.f }, { 10.0f, 10.0f, 10.0f }, glm::radians(35.f));
 		const auto permutation = GetRandomPermutationVector(cloudSize);
 		const auto permutedCloud = ApplyPermutation(cloud, permutation);
 		const auto transformedCloud = GetTransformedCloud(cloud, transform);
 		const auto transformedPermutedCloud = GetTransformedCloud(permutedCloud, transform);
+		
+		timer.StopStage("processing");
 
 		//TODO: scale clouds to the same size always so threshold would make sense
-		auto icp1start = std::chrono::high_resolution_clock::now();
-		const auto icpCalculatedTransform1 = BasicICP::GetBasicICPTransformationMatrix(cloud, transformedPermutedCloud, &iterations, &error, testEps, 25.0f, 5);
-		auto icp2start = std::chrono::high_resolution_clock::now();
 		iterations = 0;
 		error = 1.0f;
-		const auto icpCalculatedTransform2 = BasicICP::GetBasicICPTransformationMatrix(cloud, transformedPermutedCloud, &iterations, &error, testEps, 1000.0f, 100);
-		auto icp2end = std::chrono::high_resolution_clock::now();
 
-		std::chrono::duration<double> icp1duration = icp2start - icp1start;
-		std::chrono::duration<double> icp2duration = icp2end - icp2start;
+		timer.StartStage("icp1");
+		const auto icpCalculatedTransform1 = BasicICP::GetBasicICPTransformationMatrix(cloud, transformedPermutedCloud, &iterations, &error, testEps, 25.0f, 5);
+		timer.StopStage("icp1");
+
+		timer.StartStage("icp2");
+		const auto icpCalculatedTransform2 = BasicICP::GetBasicICPTransformationMatrix(cloud, transformedPermutedCloud, &iterations, &error, testEps, 1000.0f, 100);
+		timer.StopStage("icp2");
 
 		const auto resultOrdered = TestTransformOrdered(cloud, transformedCloud, transform, testEps);
 		const auto resultUnordered = TestTransformWithPermutation(cloud, transformedPermutedCloud, permutation, transform, testEps);
@@ -81,14 +88,14 @@ namespace Tests
 		printf("Ordered cloud test [%s]\n", resultOrdered ? "OK" : "FAIL");
 		printf("Unordered cloud test [%s]\n", resultUnordered ? "OK" : "FAIL");
 		printf("ICP test (%d iterations) error = %g\n", iterations, error);
-		printf("ICP test 1 duration %f\n", icp1duration.count());
-		printf("ICP test 2 duration %f\n", icp2duration.count());
 
 		std::cout << "Transform Matrix" << std::endl;
 		PrintMatrix(transform);
 
 		std::cout << "ICP2 Matrix" << std::endl;
 		PrintMatrix(icpCalculatedTransform2.first, icpCalculatedTransform2.second);
+
+		timer.PrintResults();
 
 		Common::Renderer renderer(
 			Common::ShaderType::SimpleModel,
