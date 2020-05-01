@@ -317,8 +317,8 @@ void CudaTest()
 	/****************************/
 	//ALGORITHM
 	/****************************/
-	const auto testCloud = LoadCloud("data/bird.obj");
-	const auto testCorrupted = LoadCloud("data/bird.obj");
+	const auto testCloud = LoadCloud("data/rose.obj");
+	const auto testCorrupted = LoadCloud("data/rose.obj");
 
 	const auto hostBefore = CommonToThrustVector(testCloud);
 	const auto hostAfter = CommonToThrustVector(testCorrupted);
@@ -328,9 +328,9 @@ void CudaTest()
 
 	Cloud calculatedCloud(hostAfter.size());
 
-	const auto scaleInput = Functors::ScaleTransform(5.f);
+	const auto scaleInput = Functors::ScaleTransform(1000.f);
 	thrust::transform(thrust::device, deviceCloudBefore.begin(), deviceCloudBefore.end(), deviceCloudBefore.begin(), scaleInput);
-	const auto scaleInputCorrupted = Functors::ScaleTransform(5.f);
+	const auto scaleInputCorrupted = Functors::ScaleTransform(1000.f);
 	thrust::transform(thrust::device, deviceCloudAfter.begin(), deviceCloudAfter.end(), deviceCloudAfter.begin(), scaleInputCorrupted);
 
 	const auto sampleTransform = glm::rotate(glm::translate(glm::mat4(1), { 0.05f, 0.05f, 0.05f }), glm::radians(5.f), { 0.5f, 0.5f, 0.5f });
