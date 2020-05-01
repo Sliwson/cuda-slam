@@ -4,11 +4,12 @@ namespace Common
 {
 	std::shared_ptr<StageProperties> Timer::AddStage(const std::string& name)
 	{
-		if (auto foundStage = GetStage(name))
-			return foundStage;
+		auto found = GetStage(name);
+		if (found != nullptr)
+			return found;
 
-		auto stage = std::make_shared<StageProperties>(name);
-		stages.push_back(stage);
+		auto stage = std::make_shared<StageProperties>();
+		stages.insert(std::make_pair(name, stage));
 		return stage;
 	}
 
@@ -46,19 +47,19 @@ namespace Common
 
 	void Timer::PrintResults()
 	{
-		if (std::any_of(stages.begin(), stages.end(), [](auto prop) { return prop->IsRunning; }))
+		if (std::any_of(stages.begin(), stages.end(), [](auto prop) { return prop.second->IsRunning; }))
 			printf("One or more timers are still running!");
 
 		printf("%s results:\n", timerName.c_str());
 		for (const auto& stage : stages)
-			printf("%s -> %lldms\n", stage->Name.c_str(), static_cast<long long int>(stage->MilisecondsElpased.count()));
+			printf("%s -> %lldms\n", stage.first.c_str(), static_cast<long long int>(stage.second->MilisecondsElpased.count()));
 	}
 
 	std::shared_ptr<StageProperties> Timer::GetStage(const std::string& name)
 	{
-		auto it = std::find_if(stages.begin(), stages.end(), [&name](auto prop) { return prop->Name == name; });
+		const auto it = stages.find(name);
 		if (it != stages.end())
-			return *it;
+			return (*it).second;
 		else
 			return nullptr;
 	}

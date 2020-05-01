@@ -5,9 +5,6 @@
 namespace Common {
 	struct StageProperties
 	{
-		StageProperties(const std::string& name) : Name(name) {}
-
-		std::string Name = "";
 		bool IsRunning = false;
 		std::chrono::time_point<std::chrono::high_resolution_clock> Begin;
 		std::chrono::milliseconds MilisecondsElpased = std::chrono::duration_values<std::chrono::milliseconds>::zero();
@@ -29,7 +26,7 @@ namespace Common {
 	private:
 
 		std::shared_ptr<StageProperties> GetStage(const std::string& name);
-		std::vector<std::shared_ptr<StageProperties>> stages;
+		std::map<std::string, std::shared_ptr<StageProperties>> stages;
 		std::string timerName = "";
 
 	};

@@ -9,6 +9,7 @@
 #endif
 
 #include <vector>
+#include <map>
 #include <filesystem>
 #include <algorithm>
 #include <stdio.h>
