@@ -17,6 +17,10 @@ namespace CoherentPointDrift
 		Eigen::VectorXf pt1;
 		// The probability matrix multiplied by the fixed(cloud before) points.
 		Eigen::MatrixXf px;
+		// The total error.
+		float error;
+		// Correspodences vector.
+		std::vector<int> correspondence;
 	};
 
 	constexpr int DIMENSION = 3;
@@ -61,12 +65,21 @@ namespace CoherentPointDrift
 		const Probabilities& probabilities,
 		const std::vector<Point_f>& cloudBefore,
 		const std::vector<Point_f>& cloudAfter,
+		bool const_scale,
 		glm::mat3* rotationMatrix,
 		glm::vec3* translationVector,
 		float* scale,
 		float* sigmaSquared);
 
-	std::pair<glm::mat3, glm::vec3> GetRigidCPDTransformationMatrix(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, int* iterations, float* error, float eps, float weight, int maxIterations)
+	std::pair<glm::mat3, glm::vec3> GetRigidCPDTransformationMatrix(
+		const std::vector<Point_f>& cloudBefore,
+		const std::vector<Point_f>& cloudAfter,
+		int* iterations,
+		float* error,
+		float eps,
+		float weight,
+		bool const_scale,
+		int maxIterations)
 	{
 		*iterations = 0;
 		*error = 1e5;
@@ -89,7 +102,7 @@ namespace CoherentPointDrift
 			probabilities = ComputePMatrix3(cloudBefore, transformedCloud, constant, sigmaSquared);
 
 			//M-step
-			MStep3(probabilities, cloudBefore, cloudAfter, &rotationMatrix, &translationVector, &scale, &sigmaSquared);
+			MStep3(probabilities, cloudBefore, cloudAfter, const_scale, &rotationMatrix, &translationVector, &scale, &sigmaSquared);
 			//MStep(PMatrix, cloudBefore, cloudAfter, &rotationMatrix, &translationVector, &scale, &sigmaSquared);
 
 			//if doesnt work change this line
@@ -194,9 +207,11 @@ namespace CoherentPointDrift
 		const float multiplier = -0.5f / sigmaSquared;
 		Eigen::VectorXf p = Eigen::VectorXf::Zero(cloudAfter.size());
 		Eigen::VectorXf p1 = Eigen::VectorXf::Zero(cloudAfter.size());
-		//Eigen::VectorXf p1_max = Eigen::VectorXf::Zero(cloudAfter.size());
+		Eigen::VectorXf p1_max = Eigen::VectorXf::Zero(cloudAfter.size());
 		Eigen::VectorXf pt1 = Eigen::VectorXf::Zero(cloudBefore.size());
 		Eigen::MatrixXf px = Eigen::MatrixXf::Zero(cloudAfter.size(), DIMENSION);
+		std::vector<int> correspondece = std::vector<int>(cloudAfter.size());
+		float error = 0.0;
 		for (size_t x = 0; x < cloudBefore.size(); x++)
 		{
 			float denominator = 0.0;
@@ -215,9 +230,17 @@ namespace CoherentPointDrift
 				float value = p(k) / denominator;
 				p1(k) += value;
 				px.row(k) += ConvertToEigenVector(cloudBefore[x]) * value;
+				if (value > p1_max(k))
+				{
+					correspondece[k] = x;
+					p1_max(k) = value;
+				}
 			}
+			error -= std::log(denominator);
 		}
-		return { p1, pt1, px };
+		error += DIMENSION * cloudBefore.size() * std::log(sigmaSquared) / 2;
+
+		return { p1, pt1, px, error, correspondece };
 	}
 
 	void MStep(
@@ -339,6 +362,7 @@ namespace CoherentPointDrift
 		const Probabilities& probabilities,
 		const std::vector<Point_f>& cloudBefore,
 		const std::vector<Point_f>& cloudAfter,
+		bool const_scale,
 		glm::mat3* rotationMatrix,
 		glm::vec3* translationVector,
 		float* scale,
@@ -346,16 +370,13 @@ namespace CoherentPointDrift
 	{
 		const float Np = probabilities.p1.sum();
 		const float InvertedNp = 1.0f / Np;
-		printf("Np: %f\n", Np);
 		auto EigenBeforeT = GetMatrix3XFromPointsVector(cloudBefore);
 		auto EigenAfterT = GetMatrix3XFromPointsVector(cloudAfter);
 		Eigen::Vector3f EigenCenterBefore = InvertedNp * EigenBeforeT * probabilities.pt1;
 		Eigen::Vector3f EigenCenterAfter = InvertedNp * EigenAfterT * probabilities.p1;
 
-		//const Eigen::MatrixXf AMatrix = (probabilities.px.transpose() * EigenAfterT.transpose());
 		const Eigen::MatrixXf AMatrix = (EigenAfterT * probabilities.px).transpose() - Np * (EigenCenterBefore * EigenCenterAfter.transpose());
-		printf("AmatrixMSTEP3:\n");
-		PrintMatrix(AMatrix);
+
 		const Eigen::JacobiSVD<Eigen::MatrixXf> svd = Eigen::JacobiSVD<Eigen::MatrixXf>(AMatrix, Eigen::ComputeThinU | Eigen::ComputeThinV);
 
 		const Eigen::Matrix3f matrixU = svd.matrixU();
@@ -368,35 +389,28 @@ namespace CoherentPointDrift
 
 		const Eigen::Matrix3f EigenRotationMatrix = matrixU * diag * matrixVT;
 
-		//const Eigen::Matrix3f EigenScaleNumerator = AMatrix.transpose() * EigenRotationMatrix;
 		const Eigen::Matrix3f EigenScaleNumerator = svd.singularValues().asDiagonal() * diag;
 
 		const float scaleNumerator = EigenScaleNumerator.trace();
-
-		//const Eigen::VectorXf PMatrixDiagonalVector = EigenPMatrix * Eigen::VectorXf::Ones(cloudBefore.size());
-		//const Eigen::VectorXf PMatrixTransposedDiagonalVector = EigenPMatrix.transpose() * Eigen::VectorXf::Ones(cloudAfter.size());
-
-		const float scaleDenominator = (EigenAfterT.transpose().array().pow(2) * probabilities.p1.replicate(1, DIMENSION).array()).sum() 
+		const float sigmaSubtrahend = (EigenBeforeT.transpose().array().pow(2) * probabilities.pt1.replicate(1, DIMENSION).array()).sum()
+			- Np * EigenCenterBefore.transpose() * EigenCenterBefore;
+		const float scaleDenominator = (EigenAfterT.transpose().array().pow(2) * probabilities.p1.replicate(1, DIMENSION).array()).sum()
 			- Np * EigenCenterAfter.transpose() * EigenCenterAfter;
 
-		*scale = scaleNumerator / scaleDenominator;
-		//float scale_tmp = scaleNumerator / scaleDenominator;
+		if (const_scale == true)
+		{
+			*scale = scaleNumerator / scaleDenominator;
+			*sigmaSquared = (InvertedNp * std::abs(sigmaSubtrahend - (*scale) * scaleNumerator)) / (float)DIMENSION;
+		}
+		else
+		{
+			*sigmaSquared = (InvertedNp * std::abs(sigmaSubtrahend + scaleDenominator - 2 * scaleNumerator)) / (float)DIMENSION;
+		}
 
 		const Eigen::Vector3f EigenTranslationVector = EigenCenterBefore - (*scale) * EigenRotationMatrix * EigenCenterAfter;
 
 		*translationVector = ConvertTranslationVector(EigenTranslationVector);
-		//auto translationVector_tmp = ConvertTranslationVector(EigenTranslationVector);
-
-		const float sigmaSubtrahend = (EigenBeforeT.transpose().array().pow(2) * probabilities.pt1.replicate(1, DIMENSION).array()).sum()
-			- Np * EigenCenterBefore.transpose() * EigenCenterBefore;
-
-		*sigmaSquared = (InvertedNp * std::abs(sigmaSubtrahend - (*scale) * scaleNumerator)) / DIMENSION;
-		//float sigmaSquared_tmp = (InvertedNp * std::abs(sigmaSubtrahend - (*scale) * scaleNumerator)) / DIMENSION;
 
 		*rotationMatrix = ConvertRotationMatrix(EigenRotationMatrix);
-		//auto rotationMatrix_tmp = ConvertRotationMatrix(EigenRotationMatrix);
-
-		//printf("MStep3, sigmaSquared: %f, scale: %f\nTransformation Matrix:\n", sigmaSquared_tmp, *scale);
-		//PrintMatrix(ConvertToTransformationMatrix(*scale * *rotationMatrix, translationVector));
 	}
 }
