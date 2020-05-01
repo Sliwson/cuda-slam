@@ -397,7 +397,7 @@ namespace CoherentPointDrift
 		const float scaleDenominator = (EigenAfterT.transpose().array().pow(2) * probabilities.p1.replicate(1, DIMENSION).array()).sum()
 			- Np * EigenCenterAfter.transpose() * EigenCenterAfter;
 
-		if (const_scale == true)
+		if (const_scale == false)
 		{
 			*scale = scaleNumerator / scaleDenominator;
 			*sigmaSquared = (InvertedNp * std::abs(sigmaSubtrahend - (*scale) * scaleNumerator)) / (float)DIMENSION;
