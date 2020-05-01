@@ -38,12 +38,31 @@ namespace {
 		thrust::transform(thrust::device, vec.begin(), vec.end(), out.begin(), functor);
 	}
 	
+	__device__ void FindCorrespondences(int* result, glm::vec3* before, glm::vec3* after, int beforeSize, int afterSize)
+	{
+
+	}
+
 	IndexIterator GetCorrespondingPoints(const Cloud& before, const Cloud& after)
 	{
 		thrust::device_vector<int> indices(before.size());
+
+#ifdef USE_CORRESPONDENCES_KERNEL
+		int* dIndices = thrust::raw_pointer_cast(indices);
+		glm::vec3* dBefore = thrust::raw_pointer_cast(before);
+		glm::vec3* dAfter = thrust::raw_pointer_cast(after);
+		int beforeSize = before.size();
+		int afterSize = after.size();
+
+		constexpr int threadsPerBlock = 256;
+		const int blocksPerGrid = (beforeSize + threadsPerBlock - 1) / threadsPerBlock;
+		FindCorrespondences << <blocksPerGrid, threadsPerBlock >> > (dIndices, dBefore, dAfter, beforeSize, afterSize);
+		cudaDeviceSynchronize();
+#elif
 		const auto nearestFunctor = Functors::FindNearestIndex(after);
 		thrust::transform(thrust::device, before.begin(), before.end(), indices.begin(), nearestFunctor);
 		return indices;
+#endif
 	}
 
 	float GetMeanSquaredError(const IndexIterator& permutation, const Cloud& before, const Cloud& after)
