@@ -38,9 +38,32 @@ namespace {
 		thrust::transform(thrust::device, vec.begin(), vec.end(), out.begin(), functor);
 	}
 	
-	__device__ void FindCorrespondences(int* result, glm::vec3* before, glm::vec3* after, int beforeSize, int afterSize)
+	__device__ float GetDistanceSquared(const glm::vec3& first, const glm::vec3& second)
 	{
+		const auto d = second - first;
+		return d.x * d.x + d.y * d.y + d.z * d.z;
+	}
 
+	__global__ void FindCorrespondences(int* result, const glm::vec3* before, const glm::vec3* after, int beforeSize, int afterSize)
+	{
+		int targetIdx = blockDim.x * blockIdx.x + threadIdx.x;
+		if (targetIdx < beforeSize)
+		{
+			const glm::vec3 vector = before[targetIdx];
+			int nearestIdx = 0;
+			float smallestError = GetDistanceSquared(vector, after[0]);
+			for (int i = 1; i < afterSize; i++)
+			{
+				const auto dist = GetDistanceSquared(vector, after[i]);
+				if (dist < smallestError)
+				{
+					smallestError = dist;
+					nearestIdx = i;
+				}
+			}
+			
+			result[targetIdx] = nearestIdx;
+		}
 	}
 
 	IndexIterator GetCorrespondingPoints(const Cloud& before, const Cloud& after)
@@ -48,9 +71,9 @@ namespace {
 		thrust::device_vector<int> indices(before.size());
 
 #ifdef USE_CORRESPONDENCES_KERNEL
-		int* dIndices = thrust::raw_pointer_cast(indices);
-		glm::vec3* dBefore = thrust::raw_pointer_cast(before);
-		glm::vec3* dAfter = thrust::raw_pointer_cast(after);
+		int* dIndices = thrust::raw_pointer_cast(indices.data());
+		const glm::vec3* dBefore = thrust::raw_pointer_cast(before.data());
+		const glm::vec3* dAfter = thrust::raw_pointer_cast(after.data());
 		int beforeSize = before.size();
 		int afterSize = after.size();
 
@@ -61,8 +84,9 @@ namespace {
 #elif
 		const auto nearestFunctor = Functors::FindNearestIndex(after);
 		thrust::transform(thrust::device, before.begin(), before.end(), indices.begin(), nearestFunctor);
-		return indices;
 #endif
+
+		return indices;
 	}
 
 	float GetMeanSquaredError(const IndexIterator& permutation, const Cloud& before, const Cloud& after)
@@ -242,9 +266,14 @@ namespace {
 		auto result = GetCorrespondingPoints(input, output);
 		thrust::host_vector<int> copy = result;
 		bool ok = true;
+		int hostArray[size];
 		for (int i = 0; i < size; i++)
+		{
+			hostArray[i] = copy[i];
 			if (copy[i] != size - i - 1)
 				ok = false;
+		}
+		
 
 		printf("Correspondence test [%s]\n", ok ? "OK" : "FAILED");
 	}
@@ -288,7 +317,7 @@ void CudaTest()
 	/****************************/
 	//ALGORITHM
 	/****************************/
-	const auto testCloud = LoadCloud("data/bunny.obj");
+	const auto testCloud = LoadCloud("data/bird.obj");
 	const auto testCorrupted = LoadCloud("data/bird.obj");
 
 	const auto hostBefore = CommonToThrustVector(testCloud);
@@ -299,7 +328,7 @@ void CudaTest()
 
 	Cloud calculatedCloud(hostAfter.size());
 
-	const auto scaleInput = Functors::ScaleTransform(1000.f);
+	const auto scaleInput = Functors::ScaleTransform(5.f);
 	thrust::transform(thrust::device, deviceCloudBefore.begin(), deviceCloudBefore.end(), deviceCloudBefore.begin(), scaleInput);
 	const auto scaleInputCorrupted = Functors::ScaleTransform(5.f);
 	thrust::transform(thrust::device, deviceCloudAfter.begin(), deviceCloudAfter.end(), deviceCloudAfter.begin(), scaleInputCorrupted);
