@@ -50,7 +50,7 @@ namespace Common
 			printf("One or more timers are still running!");
 
 		printf("%s results:\n", timerName.c_str());
-		for (auto stage : stages)
+		for (const auto& stage : stages)
 			printf("%s -> %lldms\n", stage->Name.c_str(), static_cast<long long int>(stage->MilisecondsElpased.count()));
 	}
 
