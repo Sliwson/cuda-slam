@@ -66,10 +66,8 @@ namespace {
 		}
 	}
 
-	IndexIterator GetCorrespondingPoints(const Cloud& before, const Cloud& after)
+	void GetCorrespondingPoints(thrust::device_vector<int>& indices, const Cloud& before, const Cloud& after)
 	{
-		thrust::device_vector<int> indices(before.size());
-
 #ifdef USE_CORRESPONDENCES_KERNEL
 		int* dIndices = thrust::raw_pointer_cast(indices.data());
 		const glm::vec3* dBefore = thrust::raw_pointer_cast(before.data());
@@ -81,12 +79,10 @@ namespace {
 		const int blocksPerGrid = (beforeSize + threadsPerBlock - 1) / threadsPerBlock;
 		FindCorrespondences << <blocksPerGrid, threadsPerBlock >> > (dIndices, dBefore, dAfter, beforeSize, afterSize);
 		cudaDeviceSynchronize();
-#elif
+#else
 		const auto nearestFunctor = Functors::FindNearestIndex(after);
 		thrust::transform(thrust::device, before.begin(), before.end(), indices.begin(), nearestFunctor);
 #endif
-
-		return indices;
 	}
 
 	float GetMeanSquaredError(const IndexIterator& permutation, const Cloud& before, const Cloud& after)
@@ -119,7 +115,7 @@ namespace {
 		return glm::transpose(glm::make_mat3(squareMatrix));
 	}
 
-	glm::mat4 LeastSquaresSVD(const IndexIterator& permutation, const Cloud& before, const Cloud& after, Cloud& alignBefore, Cloud& alignAfter, CudaSvdParams params)
+	glm::mat4 LeastSquaresSVD(const IndexIterator& permutation, const Cloud& before, const Cloud& after, Cloud& alignBefore, Cloud& alignAfter, thrust::device_vector<int>& indices, CudaSvdParams params)
 	{
 		const int size = before.size();
 
@@ -218,6 +214,7 @@ namespace {
 		Cloud workingBefore(size);
 		Cloud alignBefore(size);
 		Cloud alignAfter(size);
+		thrust::device_vector<int> indices(before.size());
 		thrust::copy(thrust::device, before.begin(), before.end(), workingBefore.begin());
 
 		//allocate memory for cuBLAS
@@ -225,12 +222,12 @@ namespace {
 		
 		while (iterations < maxIterations)
 		{
-			auto correspondingPoints = GetCorrespondingPoints(workingBefore, after);
+			GetCorrespondingPoints(indices, workingBefore, after);
 
-			transformationMatrix = LeastSquaresSVD(correspondingPoints, workingBefore, after, alignBefore, alignAfter, params) * transformationMatrix;
+			transformationMatrix = LeastSquaresSVD(indices, workingBefore, after, alignBefore, alignAfter, indices, params) * transformationMatrix;
 
 			TransformCloud(before, workingBefore, transformationMatrix);
-			float error = GetMeanSquaredError(correspondingPoints, workingBefore, after);
+			float error = GetMeanSquaredError(indices, workingBefore, after);
 			printf("Iteration: %d, error: %f\n", iterations, error);
 			if (error < TEST_EPS)
 				break;
@@ -256,6 +253,8 @@ namespace {
 		const int size = 100;
 		thrust::device_vector<glm::vec3> input(size);
 		thrust::device_vector<glm::vec3> output(size);
+		thrust::device_vector<int> result(size);
+
 		for (int i = 0; i < size; i++)
 		{
 			const auto vec = glm::vec3(i);
@@ -263,7 +262,8 @@ namespace {
 			output[size - i - 1] = vec;
 		}
 
-		auto result = GetCorrespondingPoints(input, output);
+
+		GetCorrespondingPoints(result, input, output);
 		thrust::host_vector<int> copy = result;
 		bool ok = true;
 		int hostArray[size];
