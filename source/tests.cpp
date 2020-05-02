@@ -223,10 +223,14 @@ namespace Tests
 		const auto transformedPermutedCloud = GetTransformedCloud(permutedCloud, transform);
 		timer.StopStage("processing");
 
-		//TODO: scale clouds to the same size always so threshold would make sense
-		timer.StartStage("icp1");
-		const auto icpCalculatedTransform1 = CoherentPointDrift::GetRigidCPDTransformationMatrix(transformedPermutedCloud, cloud, &iterations, &error, testEps, 0.1f, true, 30);
-		timer.StopStage("icp1");
+		// parameters:
+		const float weight = 0.7f;
+		const bool const_scale = false;
+		const int max_iterations = 50;
+
+		timer.StartStage("cpd1");
+		const auto icpCalculatedTransform1 = CoherentPointDrift::GetRigidCPDTransformationMatrix(transformedPermutedCloud, cloud, &iterations, &error, testEps, weight, const_scale, max_iterations, testEps);
+		timer.StopStage("cpd1");
 		iterations = 0;
 		error = 1.0f;
 		timer.StartStage("icp2");
@@ -240,7 +244,7 @@ namespace Tests
 		std::cout << "Inverted Transform Matrix" << std::endl;
 		PrintMatrix(glm::inverse(transform));
 
-		std::cout << "ICP1 Matrix" << std::endl;
+		std::cout << "CPD1 Matrix" << std::endl;
 		PrintMatrix(icpCalculatedTransform1.first, icpCalculatedTransform1.second);
 
 		timer.PrintResults();
@@ -308,7 +312,7 @@ namespace Tests
 		const int max_iterations = 50;
 
 		timer.StartStage("rigid-cpd1");
-		const auto icpCalculatedTransform1 = CoherentPointDrift::GetRigidCPDTransformationMatrix(transformedPermutedCloud1, transformedPermutedCloud2, &iterations, &error, testEps, weight, const_scale, max_iterations);
+		const auto icpCalculatedTransform1 = CoherentPointDrift::GetRigidCPDTransformationMatrix(transformedPermutedCloud1, transformedPermutedCloud2, &iterations, &error, testEps, weight, const_scale, max_iterations, testEps);
 		timer.StopStage("rigid-cpd1");
 
 		printf("CPD test (%d iterations) error = %g\n", iterations, error);

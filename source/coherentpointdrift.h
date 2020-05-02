@@ -12,5 +12,6 @@ namespace CoherentPointDrift
 		float eps,
 		float weight,
 		bool const_scale,
-		int maxIterations);
+		int maxIterations,
+		float tolerance);
 }

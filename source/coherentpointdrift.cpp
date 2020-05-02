@@ -79,7 +79,8 @@ namespace CoherentPointDrift
 		float eps,
 		float weight,
 		bool const_scale,
-		int maxIterations)
+		int maxIterations,
+		float tolerance)
 	{
 		*iterations = 0;
 		*error = 1e5;
@@ -90,16 +91,20 @@ namespace CoherentPointDrift
 		//TODO: add check for weight=1
 		weight = std::clamp(weight, 0.0f, 1.0f);
 		const float constant = (std::pow(2 * M_PI * sigmaSquared, (float)DIMENSION * 0.5f) * weight * cloudAfter.size()) / ((1 - weight) * cloudBefore.size());
-		
+		float ntol = tolerance + 10.0f;
+		float l = 0.0f;
 		//std::vector<float> PMatrix = std::vector<float>(cloudBefore.size() * cloudAfter.size());
 		Probabilities probabilities;
 		std::vector<Point_f> transformedCloud = cloudAfter;
 		//EM optimization
-		while (maxIterations == -1 || *iterations < maxIterations)
+		while (*iterations < maxIterations && ntol>tolerance && sigmaSquared > eps)
 		{
 			//E-step
 			//ComputePMatrix2(PMatrix, cloudBefore, transformedCloud, constant, sigmaSquared);
 			probabilities = ComputePMatrix3(cloudBefore, transformedCloud, constant, sigmaSquared);
+
+
+			ntol = std::abs((probabilities.error - l) / probabilities.error);
 
 			//M-step
 			MStep3(probabilities, cloudBefore, cloudAfter, const_scale, &rotationMatrix, &translationVector, &scale, &sigmaSquared);
@@ -112,9 +117,6 @@ namespace CoherentPointDrift
 			printf("Iteration %d, sigmaSquared: %f, scale: %f\nTransformation Matrix:\n", *iterations, sigmaSquared, scale);
 			PrintMatrix(ConvertToTransformationMatrix(scale * rotationMatrix, translationVector));
 			printf("\n");
-
-			if (sigmaSquared < eps)
-				break;
 
 			(*iterations)++;
 			//think about convergence (something with PMatrix)
