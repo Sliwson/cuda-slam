@@ -105,6 +105,17 @@ namespace Common
 		return diffSum / correspondingIndexesBefore.size();
 	}
 
+	float GetMeanSquaredError(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, const std::vector<int>& correspondingIndexes)
+	{
+		float diffSum = 0.0f;
+		for (int i = 0; i < correspondingIndexes.size(); i++)
+		{
+			const auto diff = cloudAfter[i] - cloudBefore[correspondingIndexes[i]];
+			diffSum += diff.LengthSquared();
+		}
+		return diffSum / correspondingIndexes.size();
+	}
+
 	Point_f GetCenterOfMass(const std::vector<Point_f>& cloud)
 	{
 		return std::accumulate(cloud.begin(), cloud.end(), Point_f::Zero()) / (float)cloud.size();

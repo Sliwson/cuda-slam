@@ -100,29 +100,23 @@ namespace CoherentPointDrift
 		while (*iterations < maxIterations && ntol>tolerance && sigmaSquared > eps)
 		{
 			//E-step
-			//ComputePMatrix2(PMatrix, cloudBefore, transformedCloud, constant, sigmaSquared);
 			probabilities = ComputePMatrix3(cloudBefore, transformedCloud, constant, sigmaSquared);
-
 
 			ntol = std::abs((probabilities.error - l) / probabilities.error);
 
 			//M-step
 			MStep3(probabilities, cloudBefore, cloudAfter, const_scale, &rotationMatrix, &translationVector, &scale, &sigmaSquared);
-			//MStep(PMatrix, cloudBefore, cloudAfter, &rotationMatrix, &translationVector, &scale, &sigmaSquared);
 
-			//if doesnt work change this line
 			transformedCloud = GetTransformedCloud(cloudAfter, rotationMatrix, translationVector, scale);
 
-
-			printf("Iteration %d, sigmaSquared: %f, scale: %f\nTransformation Matrix:\n", *iterations, sigmaSquared, scale);
+			printf("Iteration %d, sigmaSquared: %f, dL: %f, scale: %f\nTransformation Matrix:\n", *iterations, sigmaSquared, ntol, scale);
 			PrintMatrix(ConvertToTransformationMatrix(scale * rotationMatrix, translationVector));
 			printf("\n");
 
 			(*iterations)++;
-			//think about convergence (something with PMatrix)
 		}
-		//rotationMatrix *= scale;
-		//
+		if(probabilities.correspondence.size() == transformedCloud.size())
+			*error = GetMeanSquaredError(cloudBefore, transformedCloud, probabilities.correspondence);
 		return std::make_pair(scale * rotationMatrix, translationVector);
 	}
 
