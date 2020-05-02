@@ -49,7 +49,7 @@ namespace Tests
 		int iterations = 0;
 		float error = 1.0f;
 
-		Common::Timer timer("Cpu timer");
+		Timer timer("Cpu timer");
 
 		timer.StartStage("cloud-loading");
 		auto cloud = LoadCloud(objectPath);
@@ -114,12 +114,16 @@ namespace Tests
 		srand(RANDOM_SEED);
 		int iterations = 0;
 		float error = 1.0f;
+		Timer timer("Cpu timer");
 
+		timer.StartStage("cloud-loading");
 		auto cloud1 = LoadCloud(objectPath1);
 		auto cloud2 = LoadCloud(objectPath2);
+		timer.StopStage("cloud-loading");
 
 		printf("First cloud size: %d, Second cloud size: %d\n", cloud1.size(), cloud2.size());
 
+		timer.StartStage("processing");
 		size_t min_size = std::min(cloud1.size(), cloud2.size());
 		cloud1.resize(min_size);
 		cloud2.resize(min_size);		
@@ -153,19 +157,18 @@ namespace Tests
 
 		const auto transformedPermutedCloud1 = GetTransformedCloud(permutedCloud1, transform1);
 		const auto transformedPermutedCloud2 = GetTransformedCloud(permutedCloud2, transform2);
+		timer.StopStage("processing");
 
 		// parameters:
 		const float max_distance = 1000.0f;
 		const int max_iterations = 100;
 
-		auto icp1start = std::chrono::high_resolution_clock::now();
+		timer.StartStage("icp1");
 		const auto icpCalculatedTransform1 = BasicICP::GetBasicICPTransformationMatrix(transformedPermutedCloud1, transformedPermutedCloud2, &iterations, &error, testEps, max_distance, max_iterations);
-		auto icp1end = std::chrono::high_resolution_clock::now();
+		timer.StopStage("icp1");
 
-		std::chrono::duration<double> icp1duration = icp1end - icp1start;
 
 		printf("ICP test (%d iterations) error = %g\n", iterations, error);
-		printf("ICP test 1 duration %f\n", icp1duration.count());
 
 		std::cout << "Transform Matrix 1" << std::endl;
 		PrintMatrix(transform1);
@@ -174,6 +177,8 @@ namespace Tests
 
 		std::cout << "ICP1 Matrix" << std::endl;
 		PrintMatrix(icpCalculatedTransform1.first, icpCalculatedTransform1.second);
+
+		timer.PrintResults();
 
 		Common::Renderer renderer(
 			Common::ShaderType::SimpleModel,
@@ -189,34 +194,19 @@ namespace Tests
 	void RigidCPDTest(const char* objectPath, const int& pointCount, const float& testEps)
 	{
 		srand(RANDOM_SEED);
-		const Point_f corner = { -1, -1, -1 };
-		const Point_f size = { 2, 2, 2 };
 		int iterations = 0;
 		float error = 1.0f;
+		Timer timer("Cpu timer");
 
-		const char* object_path1 = "data/noise_00_bunny.off";
-		const char* object_path2 = "data/noise_25_bunny.off";
-		const char* object_path3 = "data/noise_50_bunny.off";
-		const char* object_path4 = "data/bunny-decapitated.obj";
-
-		//const auto cloud = GetRandomPointCloud(corner, size, 3000);
+		timer.StartStage("cloud-loading");
 		auto cloud = LoadCloud(objectPath);
-		auto cloud1 = LoadCloud(object_path1);
-		auto cloud2 = LoadCloud(object_path2);
-		auto cloud3 = LoadCloud(object_path3);
-		auto cloud4 = LoadCloud(object_path4);
-		printf("Original cloud size: %d, cloud1: %d, cloud2: %d, cloud3: %d, cloud4: %d\n", cloud.size(), cloud1.size(), cloud2.size(), cloud3.size(), cloud4.size());
+		timer.StopStage("cloud-loading");
+		printf("Cloud size: %d\n", cloud.size());
 
+		timer.StartStage("processing");
 		std::transform(cloud.begin(), cloud.end(), cloud.begin(), [](const Point_f& point) { return Point_f{ point.x * 100.f, point.y * 100.f, point.z * 100.f }; });
-		std::transform(cloud1.begin(), cloud1.end(), cloud1.begin(), [](const Point_f& point) { return Point_f{ point.x * 100.f, point.y * 100.f, point.z * 100.f }; });
-		std::transform(cloud2.begin(), cloud2.end(), cloud2.begin(), [](const Point_f& point) { return Point_f{ point.x * 100.f, point.y * 100.f, point.z * 100.f }; });
-		std::transform(cloud3.begin(), cloud3.end(), cloud3.begin(), [](const Point_f& point) { return Point_f{ point.x * 100.f, point.y * 100.f, point.z * 100.f }; });
-		std::transform(cloud4.begin(), cloud4.end(), cloud4.begin(), [](const Point_f& point) { return Point_f{ point.x * 100.f, point.y * 100.f, point.z * 100.f }; });
-		//if (pointCount > 0)
-			//cloud.resize(pointCount);
-
-		//cloud.resize(4000);
-		//cloud4.resize(4000);
+		if (pointCount > 0)
+			cloud.resize(pointCount);
 
 		int cloudSize = cloud.size();
 		printf("Processing %d points\n", cloudSize);
@@ -231,30 +221,19 @@ namespace Tests
 		std::transform(permutedCloud.begin(), permutedCloud.end(), permutedCloud.begin(), [](const Point_f& point) { return Point_f{ point.x * 2.f, point.y * 2.f, point.z * 2.f }; });
 		const auto transformedCloud = GetTransformedCloud(cloud, transform);
 		const auto transformedPermutedCloud = GetTransformedCloud(permutedCloud, transform);
-
-		printf("TransfPermCloudSize: %d\n", transformedPermutedCloud.size());
-		printf("Cloud4Size: %d\n", cloud4.size());
+		timer.StopStage("processing");
 
 		//TODO: scale clouds to the same size always so threshold would make sense
-		auto icp1start = std::chrono::high_resolution_clock::now();
-		const auto icpCalculatedTransform1 = CoherentPointDrift::GetRigidCPDTransformationMatrix(transformedPermutedCloud, cloud3, &iterations, &error, testEps, 0.1f, true, 30);
-		auto icp2start = std::chrono::high_resolution_clock::now();
+		timer.StartStage("icp1");
+		const auto icpCalculatedTransform1 = CoherentPointDrift::GetRigidCPDTransformationMatrix(transformedPermutedCloud, cloud, &iterations, &error, testEps, 0.1f, true, 30);
+		timer.StopStage("icp1");
 		iterations = 0;
 		error = 1.0f;
+		timer.StartStage("icp2");
 		//const auto icpCalculatedTransform2 = CoherentPointDrift::GetRigidCPDTransformationMatrix(cloud, transformedPermutedCloud, &iterations, &error, testEps, 0.0f, 0);
-		auto icp2end = std::chrono::high_resolution_clock::now();
+		timer.StopStage("icp2");
 
-		std::chrono::duration<double> icp1duration = icp2start - icp1start;
-		std::chrono::duration<double> icp2duration = icp2end - icp2start;
-
-		//const auto resultOrdered = TestTransformOrdered(cloud, transformedCloud, transform, testEps);
-		//const auto resultUnordered = TestTransformWithPermutation(cloud, transformedPermutedCloud, permutation, transform, testEps);
-
-		//printf("Ordered cloud test [%s]\n", resultOrdered ? "OK" : "FAIL");
-		//printf("Unordered cloud test [%s]\n", resultUnordered ? "OK" : "FAIL");
 		printf("ICP test (%d iterations) error = %g\n", iterations, error);
-		printf("ICP test 1 duration %f\n", icp1duration.count());
-		printf("ICP test 2 duration %f\n", icp2duration.count());
 
 		std::cout << "Transform Matrix" << std::endl;
 		PrintMatrix(transform);
@@ -264,21 +243,15 @@ namespace Tests
 		std::cout << "ICP1 Matrix" << std::endl;
 		PrintMatrix(icpCalculatedTransform1.first, icpCalculatedTransform1.second);
 
+		timer.PrintResults();
+
 		Common::Renderer renderer(
 			Common::ShaderType::SimpleModel,
-			cloud3, //red
+			cloud, //red
 			transformedPermutedCloud, //green
-			GetTransformedCloud(cloud3, icpCalculatedTransform1.first, icpCalculatedTransform1.second), //yellow
+			GetTransformedCloud(cloud, icpCalculatedTransform1.first, icpCalculatedTransform1.second), //yellow
 			//GetTransformedCloud(cloud, icpCalculatedTransform2.first, icpCalculatedTransform2.second)); //blue
 			std::vector<Point_f>(1)); //green
-
-		//Common::Renderer renderer(
-		//	Common::ShaderType::SimpleModel,
-		//	cloud1, //red
-		//	cloud2, //green
-		//	cloud3, //yellow
-		//	//GetTransformedCloud(cloud, icpCalculatedTransform2.first, icpCalculatedTransform2.second)); //blue
-		//	cloud4); //blue
 
 		renderer.Show();
 	}
@@ -288,12 +261,16 @@ namespace Tests
 		srand(RANDOM_SEED);
 		int iterations = 0;
 		float error = 1.0f;
+		Timer timer("Cpu timer");
 
+		timer.StartStage("cloud-loading");
 		auto cloud1 = LoadCloud(objectPath1);
 		auto cloud2 = LoadCloud(objectPath2);
+		timer.StopStage("cloud-loading");
 
 		printf("First cloud size: %d, Second cloud size: %d\n", cloud1.size(), cloud2.size());
 
+		timer.StartStage("processing");
 		std::transform(cloud1.begin(), cloud1.end(), cloud1.begin(), [](const Point_f& point) { return Point_f{ point.x * 100.f, point.y * 100.f, point.z * 100.f }; });
 		std::transform(cloud2.begin(), cloud2.end(), cloud2.begin(), [](const Point_f& point) { return Point_f{ point.x * 100.f, point.y * 100.f, point.z * 100.f }; });
 		if (pointCount1 > 0)
@@ -306,7 +283,6 @@ namespace Tests
 		printf("Processing (%d, %d) points\n", cloudSize1, cloudSize2);
 
 		// transformation
-
 		const float scale1 = 1.0f;
 		const auto translation_vector1 = glm::vec3(15.0f, 0.0f, 0.0f);
 		const auto rotation_matrix1 = GetRotationMatrix({ 1.0f, 0.4f, -0.3f }, glm::radians(50.0f));
@@ -324,28 +300,28 @@ namespace Tests
 
 		const auto transformedPermutedCloud1 = GetTransformedCloud(permutedCloud1, transform1);
 		const auto transformedPermutedCloud2 = GetTransformedCloud(permutedCloud2, transform2);
+		timer.StopStage("processing");
 
 		// parameters:
 		const float weight = 0.7f;
 		const bool const_scale = false;
 		const int max_iterations = 50;
 
-		auto icp1start = std::chrono::high_resolution_clock::now();
+		timer.StartStage("rigid-cpd1");
 		const auto icpCalculatedTransform1 = CoherentPointDrift::GetRigidCPDTransformationMatrix(transformedPermutedCloud1, transformedPermutedCloud2, &iterations, &error, testEps, weight, const_scale, max_iterations);
-		auto icp1end = std::chrono::high_resolution_clock::now();
+		timer.StopStage("rigid-cpd1");
 
-		std::chrono::duration<double> icp1duration = icp1end - icp1start;
-
-		printf("ICP test (%d iterations) error = %g\n", iterations, error);
-		printf("ICP test 1 duration %f\n", icp1duration.count());
+		printf("CPD test (%d iterations) error = %g\n", iterations, error);
 
 		std::cout << "Transform Matrix 1" << std::endl;
 		PrintMatrix(transform1);
 		std::cout << "Inverted Transform Matrix 1" << std::endl;
 		PrintMatrix(glm::inverse(transform1));
 
-		std::cout << "ICP1 Matrix" << std::endl;
+		std::cout << "CPD1 Matrix" << std::endl;
 		PrintMatrix(icpCalculatedTransform1.first, icpCalculatedTransform1.second);
+
+		timer.PrintResults();
 
 		Common::Renderer renderer(
 			Common::ShaderType::SimpleModel,
