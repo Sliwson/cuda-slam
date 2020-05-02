@@ -25,43 +25,12 @@ namespace CoherentPointDrift
 
 	constexpr int DIMENSION = 3;
 	float CalculateSigmaSquared(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter);
-	void ComputePMatrix(
-		std::vector<float>& PMatrix,
-		const std::vector<Point_f>& cloudBefore,
-		const std::vector<Point_f>& cloudAfter,
-		const float& constant,
-		const float& sigmaSquared,
-		const glm::mat3& rotationMatrix,
-		const glm::vec3& translationVector,
-		const float& scale);
-	void ComputePMatrix2(
-		std::vector<float>& PMatrix,
-		const std::vector<Point_f>& cloudBefore,
-		const std::vector<Point_f>& cloudAfter,
-		const float& constant,
-		const float& sigmaSquared);
-	Probabilities ComputePMatrix3(
+	Probabilities ComputePMatrix(
 		const std::vector<Point_f>& cloudBefore,
 		const std::vector<Point_f>& cloudAfter,
 		const float& constant,
 		const float& sigmaSquared);
 	void MStep(
-		const std::vector<float>& PMatrix,
-		const std::vector<Point_f>& cloudBefore,
-		const std::vector<Point_f>& cloudAfter,
-		glm::mat3* rotationMatrix,
-		glm::vec3* translationVector,
-		float* scale,
-		float* sigmaSquared);
-	void MStep2(
-		const std::vector<float>& PMatrix,
-		const std::vector<Point_f>& cloudBefore,
-		const std::vector<Point_f>& cloudAfter,
-		glm::mat3* rotationMatrix,
-		glm::vec3* translationVector,
-		float* scale,
-		float* sigmaSquared);
-	void MStep3(
 		const Probabilities& probabilities,
 		const std::vector<Point_f>& cloudBefore,
 		const std::vector<Point_f>& cloudAfter,
@@ -100,12 +69,12 @@ namespace CoherentPointDrift
 		while (*iterations < maxIterations && ntol>tolerance && sigmaSquared > eps)
 		{
 			//E-step
-			probabilities = ComputePMatrix3(cloudBefore, transformedCloud, constant, sigmaSquared);
+			probabilities = ComputePMatrix(cloudBefore, transformedCloud, constant, sigmaSquared);
 
 			ntol = std::abs((probabilities.error - l) / probabilities.error);
 
 			//M-step
-			MStep3(probabilities, cloudBefore, cloudAfter, const_scale, &rotationMatrix, &translationVector, &scale, &sigmaSquared);
+			MStep(probabilities, cloudBefore, cloudAfter, const_scale, &rotationMatrix, &translationVector, &scale, &sigmaSquared);
 
 			transformedCloud = GetTransformedCloud(cloudAfter, rotationMatrix, translationVector, scale);
 
@@ -135,66 +104,7 @@ namespace CoherentPointDrift
 		return sum;
 	}
 
-	void ComputePMatrix(
-		std::vector<float>& PMatrix,
-		const std::vector<Point_f>& cloudBefore,
-		const std::vector<Point_f>& cloudAfter,
-		const float& constant, 
-		const float& sigmaSquared,
-		const glm::mat3& rotationMatrix,
-		const glm::vec3& translationVector,
-		const float& scale)
-	{
-		const float multiplier = -0.5f / sigmaSquared;
-		for (size_t x = 0; x < cloudBefore.size(); x++)
-		{
-			float denominator = constant;			
-			for (size_t k = 0; k < cloudAfter.size(); k++)
-			{
-				const auto diffPoint = cloudBefore[x] - TransformPoint(cloudAfter[k], rotationMatrix, translationVector, scale);
-				float index = multiplier * diffPoint.LengthSquared();
-				denominator += std::exp(index);
-			}
-				
-			for (size_t y = 0; y < cloudAfter.size(); y++)
-			{
-				const auto diffPoint = cloudBefore[x] - TransformPoint(cloudAfter[y], rotationMatrix, translationVector, scale);
-				float index = multiplier * diffPoint.LengthSquared();
-				float numerator = std::exp(index);
-				PMatrix[y * cloudBefore.size() + x] = numerator / denominator;
-			}
-		}
-	}
-
-	void ComputePMatrix2(
-		std::vector<float>& PMatrix,
-		const std::vector<Point_f>& cloudBefore,
-		const std::vector<Point_f>& cloudAfter,
-		const float& constant,
-		const float& sigmaSquared)
-	{
-		const float multiplier = -0.5f / sigmaSquared;
-		for (size_t x = 0; x < cloudBefore.size(); x++)
-		{
-			float denominator = constant;
-			for (size_t k = 0; k < cloudAfter.size(); k++)
-			{
-				const auto diffPoint = cloudBefore[x] - cloudAfter[k];
-				float index = multiplier * diffPoint.LengthSquared();
-				denominator += std::exp(index);
-			}
-
-			for (size_t y = 0; y < cloudAfter.size(); y++)
-			{
-				const auto diffPoint = cloudBefore[x] - cloudAfter[y];
-				float index = multiplier * diffPoint.LengthSquared();
-				float numerator = std::exp(index);
-				PMatrix[y * cloudBefore.size() + x] = numerator / denominator;
-			}
-		}
-	}
-
-	Probabilities ComputePMatrix3(
+	Probabilities ComputePMatrix(
 		const std::vector<Point_f>& cloudBefore,
 		const std::vector<Point_f>& cloudAfter,
 		const float& constant,
@@ -240,121 +150,6 @@ namespace CoherentPointDrift
 	}
 
 	void MStep(
-		const std::vector<float>& PMatrix,
-		const std::vector<Point_f>& cloudBefore,
-		const std::vector<Point_f>& cloudAfter,
-		glm::mat3* rotationMatrix, 
-		glm::vec3* translationVector, 
-		float* scale, 
-		float* sigmaSquared)
-	{
-		const float Np = std::accumulate(PMatrix.begin(), PMatrix.end(), 0.0f);
-		const float InvertedNp = 1.0f / Np;
-		printf("Np: %f\n", Np);
-		auto EigenBefore = GetMatrix3XFromPointsVector(cloudBefore);
-		auto EigenAfter = GetMatrix3XFromPointsVector(cloudAfter);
-		const auto EigenPMatrix = GetMatrixXFromPointsVector(PMatrix, cloudAfter.size(), cloudBefore.size());
-		Eigen::Vector3f EigenCenterBefore = InvertedNp * EigenBefore * EigenPMatrix.transpose() * Eigen::VectorXf::Ones(cloudAfter.size());
-		Eigen::Vector3f EigenCenterAfter = InvertedNp * EigenAfter * EigenPMatrix * Eigen::VectorXf::Ones(cloudBefore.size());
-
-		EigenBefore.colwise() -= EigenCenterBefore;
-		EigenAfter.colwise() -= EigenCenterAfter;
-
-		const Eigen::MatrixXf AMatrix = EigenBefore * EigenPMatrix.transpose() * EigenAfter.transpose();
-		printf("Amatrix:\n");
-		PrintMatrix(AMatrix);
-		const Eigen::JacobiSVD<Eigen::MatrixXf> svd = Eigen::JacobiSVD<Eigen::MatrixXf>(AMatrix, Eigen::ComputeThinU | Eigen::ComputeThinV);
-
-		const Eigen::Matrix3f matrixU = svd.matrixU();
-		const Eigen::Matrix3f matrixV = svd.matrixV();
-		const Eigen::Matrix3f matrixVtransposed = matrixV.transpose();
-
-		const Eigen::Matrix3f determinantMatrix = matrixU * matrixVtransposed;
-
-		const Eigen::Matrix3f diag = Eigen::DiagonalMatrix<float, 3>(1, 1, determinantMatrix.determinant());
-
-		const Eigen::Matrix3f EigenRotationMatrix = matrixU * diag * matrixVtransposed;
-
-		const Eigen::Matrix3f EigenScaleNumerator = AMatrix.transpose() * EigenRotationMatrix;
-		//const Eigen::Matrix3f EigenScaleNumerator = svd.singularValues().asDiagonal() * diag;
-
-		float scaleNumerator = EigenScaleNumerator.trace();
-		
-		const Eigen::VectorXf PMatrixDiagonalVector = EigenPMatrix * Eigen::VectorXf::Ones(cloudBefore.size());
-		const Eigen::VectorXf PMatrixTransposedDiagonalVector = EigenPMatrix.transpose() * Eigen::VectorXf::Ones(cloudAfter.size());
-		
-		float scaleDenominator = (EigenAfter * PMatrixDiagonalVector.asDiagonal() * EigenAfter.transpose()).trace();
-
-		*scale = scaleNumerator / scaleDenominator;
-
-		const Eigen::Vector3f EigenTranslationVector = EigenCenterBefore - (*scale) * EigenRotationMatrix * EigenCenterAfter;
-
-		*translationVector = ConvertTranslationVector(EigenTranslationVector);
-
-		const float sigmaSubtrahend = (EigenBefore * PMatrixTransposedDiagonalVector.asDiagonal() * EigenBefore.transpose()).trace();
-
-		*sigmaSquared = InvertedNp / DIMENSION * (sigmaSubtrahend - (*scale) * scaleNumerator);
-
-		*rotationMatrix = ConvertRotationMatrix(EigenRotationMatrix);
-	}
-
-	void MStep2(
-		const std::vector<float>& PMatrix,
-		const std::vector<Point_f>& cloudBefore,
-		const std::vector<Point_f>& cloudAfter,
-		glm::mat3* rotationMatrix,
-		glm::vec3* translationVector,
-		float* scale,
-		float* sigmaSquared)
-	{
-		const float Np = std::accumulate(PMatrix.begin(), PMatrix.end(), 0.0f);
-		const float InvertedNp = 1.0f / Np;
-		printf("Np: %f\n", Np);
-		auto EigenBefore = GetMatrix3XFromPointsVector(cloudBefore);
-		auto EigenAfter = GetMatrix3XFromPointsVector(cloudAfter);
-		const auto EigenPMatrix = GetMatrixXFromPointsVector(PMatrix, cloudAfter.size(), cloudBefore.size());
-		Eigen::Vector3f EigenCenterBefore = InvertedNp * EigenBefore * EigenPMatrix.transpose() * Eigen::VectorXf::Ones(cloudAfter.size());
-		Eigen::Vector3f EigenCenterAfter = InvertedNp * EigenAfter * EigenPMatrix * Eigen::VectorXf::Ones(cloudBefore.size());
-
-		const Eigen::MatrixXf AMatrix = EigenBefore * EigenPMatrix.transpose() * EigenAfter.transpose() - Np * EigenCenterBefore * EigenCenterAfter.transpose();
-		printf("Amatrix:\n");
-		PrintMatrix(AMatrix);
-		const Eigen::JacobiSVD<Eigen::MatrixXf> svd = Eigen::JacobiSVD<Eigen::MatrixXf>(AMatrix, Eigen::ComputeThinU | Eigen::ComputeThinV);
-
-		const Eigen::Matrix3f matrixU = svd.matrixU();
-		const Eigen::Matrix3f matrixV = svd.matrixV();
-		const Eigen::Matrix3f matrixVtransposed = matrixV.transpose();
-
-		const Eigen::Matrix3f determinantMatrix = matrixU * matrixVtransposed;
-
-		const Eigen::Matrix3f diag = Eigen::DiagonalMatrix<float, 3>(1, 1, determinantMatrix.determinant());
-
-		const Eigen::Matrix3f EigenRotationMatrix = matrixU * diag * matrixVtransposed;
-
-		const Eigen::Matrix3f EigenScaleNumerator = AMatrix.transpose() * EigenRotationMatrix;
-		//const Eigen::Matrix3f EigenScaleNumerator = svd.singularValues().asDiagonal() * diag;
-
-		float scaleNumerator = EigenScaleNumerator.trace();
-
-		const Eigen::VectorXf PMatrixDiagonalVector = EigenPMatrix * Eigen::VectorXf::Ones(cloudBefore.size());
-		const Eigen::VectorXf PMatrixTransposedDiagonalVector = EigenPMatrix.transpose() * Eigen::VectorXf::Ones(cloudAfter.size());
-
-		float scaleDenominator = (EigenAfter * PMatrixDiagonalVector.asDiagonal() * EigenAfter.transpose()).trace();
-
-		*scale = scaleNumerator / scaleDenominator;
-
-		const Eigen::Vector3f EigenTranslationVector = EigenCenterBefore - (*scale) * EigenRotationMatrix * EigenCenterAfter;
-
-		*translationVector = ConvertTranslationVector(EigenTranslationVector);
-
-		const float sigmaSubtrahend = (EigenBefore * PMatrixTransposedDiagonalVector.asDiagonal() * EigenBefore.transpose()).trace();
-
-		*sigmaSquared = InvertedNp / DIMENSION * (sigmaSubtrahend - (*scale) * scaleNumerator);
-
-		*rotationMatrix = ConvertRotationMatrix(EigenRotationMatrix);
-	}
-
-	void MStep3(
 		const Probabilities& probabilities,
 		const std::vector<Point_f>& cloudBefore,
 		const std::vector<Point_f>& cloudAfter,
