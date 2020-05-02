@@ -72,6 +72,7 @@ namespace CoherentPointDrift
 			probabilities = ComputePMatrix(cloudBefore, transformedCloud, constant, sigmaSquared);
 
 			ntol = std::abs((probabilities.error - l) / probabilities.error);
+			l = probabilities.error;
 
 			//M-step
 			MStep(probabilities, cloudBefore, cloudAfter, const_scale, &rotationMatrix, &translationVector, &scale, &sigmaSquared);
