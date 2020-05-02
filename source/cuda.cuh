@@ -20,6 +20,8 @@
 #include <cublas_v2.h>
 #include <cusolverDn.h>
 
+#define USE_CORRESPONDENCES_KERNEL
+
 using namespace Common;
 
 void CudaTest();
