@@ -134,6 +134,7 @@
   <ItemGroup>
     <ClInclude Include="source\basicicp.h" />
     <ClInclude Include="source\fgt.h" />
+    <ClInclude Include="source\fgt_model.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

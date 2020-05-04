@@ -213,50 +213,51 @@ namespace CoherentPointDrift
 		int K_param = std::round(std::min({ (float)N, (float)M, 50.0f + sigmaSquaredInit / sigmaSquared }));
 		int p = 6; //Order of truncation (default p = 8)
 
-		//initialize vectors
-		Eigen::VectorXf p = Eigen::VectorXf::Zero(cloudTransformed.size());
-		Eigen::VectorXf p1 = Eigen::VectorXf::Zero(cloudTransformed.size());
-		Eigen::VectorXf p1_max = Eigen::VectorXf::Zero(cloudTransformed.size());
-		Eigen::VectorXf pt1 = Eigen::VectorXf::Zero(cloudBefore.size());
-		Eigen::MatrixXf px = Eigen::MatrixXf::Zero(cloudTransformed.size(), DIMENSION);
-		std::vector<int> correspondece = std::vector<int>(cloudTransformed.size());
+		////initialize vectors
+		//Eigen::VectorXf p = Eigen::VectorXf::Zero(cloudTransformed.size());
+		//Eigen::VectorXf p1 = Eigen::VectorXf::Zero(cloudTransformed.size());
+		//Eigen::VectorXf p1_max = Eigen::VectorXf::Zero(cloudTransformed.size());
+		//Eigen::VectorXf pt1 = Eigen::VectorXf::Zero(cloudBefore.size());
+		//Eigen::MatrixXf px = Eigen::MatrixXf::Zero(cloudTransformed.size(), DIMENSION);
+		//std::vector<int> correspondece = std::vector<int>(cloudTransformed.size());
 
-		//compute pt1 and denomP
-		
-		
+		////compute pt1 and denomP
+		//
+		//
 
 
 
-		float error = 0.0;
-		for (size_t x = 0; x < cloudBefore.size(); x++)
-		{
-			float denominator = 0.0;
-			for (size_t k = 0; k < cloudAfter.size(); k++)
-			{
-				const auto diffPoint = cloudBefore[x] - cloudAfter[k];
-				float index = multiplier * diffPoint.LengthSquared();
-				float value = std::exp(index);
-				p(k) = value;
-				denominator += value;
-			}
-			denominator += constant;
-			pt1(x) = 1.0f - constant / denominator;
-			for (size_t k = 0; k < cloudAfter.size(); k++)
-			{
-				float value = p(k) / denominator;
-				p1(k) += value;
-				px.row(k) += ConvertToEigenVector(cloudBefore[x]) * value;
-				if (value > p1_max(k))
-				{
-					correspondece[k] = x;
-					p1_max(k) = value;
-				}
-			}
-			error -= std::log(denominator);
-		}
-		error += DIMENSION * cloudBefore.size() * std::log(sigmaSquared) / 2;
+		//float error = 0.0;
+		//for (size_t x = 0; x < cloudBefore.size(); x++)
+		//{
+		//	float denominator = 0.0;
+		//	for (size_t k = 0; k < cloudAfter.size(); k++)
+		//	{
+		//		const auto diffPoint = cloudBefore[x] - cloudAfter[k];
+		//		float index = multiplier * diffPoint.LengthSquared();
+		//		float value = std::exp(index);
+		//		p(k) = value;
+		//		denominator += value;
+		//	}
+		//	denominator += constant;
+		//	pt1(x) = 1.0f - constant / denominator;
+		//	for (size_t k = 0; k < cloudAfter.size(); k++)
+		//	{
+		//		float value = p(k) / denominator;
+		//		p1(k) += value;
+		//		px.row(k) += ConvertToEigenVector(cloudBefore[x]) * value;
+		//		if (value > p1_max(k))
+		//		{
+		//			correspondece[k] = x;
+		//			p1_max(k) = value;
+		//		}
+		//	}
+		//	error -= std::log(denominator);
+		//}
+		//error += DIMENSION * cloudBefore.size() * std::log(sigmaSquared) / 2;
 
-		return { p1, pt1, px, error, correspondece };
+		//return { p1, pt1, px, error, correspondece };
+		return Probabilities();
 	}
 
 	Probabilities ComputePMatrixWithFGTTruncated(
