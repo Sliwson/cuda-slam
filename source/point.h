@@ -25,6 +25,19 @@ namespace Common
 			return *this;
 		}
 
+		constexpr T operator[](int index) {
+			switch (index)
+			{
+			case 0:
+				return x;
+			case 1:
+				return y;
+			case 2:
+				return z;
+			}
+			return x;
+		}
+
 		constexpr operator glm::vec3() const {
 			return glm::vec3(x, y, z);
 		}
