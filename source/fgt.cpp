@@ -1,17 +1,10 @@
 #include "fgt.h"
+#include "fgt_model.h"
 
 using namespace Common;
 
 namespace FastGaussTransform
 {
-	struct FGT_Model
-	{
-		// The K center points of the training set (d x K)
-		std::vector<Point_f> xc;
-		// Polynomial coefficient (pd x K), where pd = nchoosek(p + d - 1 , d)
-		Eigen::MatrixXf Ak;
-	};
-
 	//idmax -> zwraca indeks najwiekszego elementu w tablicy idmax(tablica, rozmiar)
 	//ddist -> zwraca sume kwadratow roznic elementow dwoch tablic ddist(tablica1,tablica2,wymiar)
 
@@ -51,11 +44,23 @@ namespace FastGaussTransform
 		auto indx = std::vector<int>(Nx);
 		auto C_k = std::vector<float>(pd);
 
-		Eigen::MatrixXf A_k = Eigen::ArrayXf::Zero(pd, K_param);
+		Eigen::MatrixXf A_k = Eigen::ArrayXXf::Zero(pd, K_param);
 
 		KCenter(cloud, K_param, &xc, &indx);
 		ComputeC_k(p_param, &C_k);
 		ComputeA_k(cloud, weights, xc, C_k, indx, sigma, K_param, p_param, pd, &A_k);
+
+		std::cout << "indx" << std::endl;
+		for (const auto& v : indx)
+		{
+			std::cout << v << std::endl;
+		}
+
+		std::cout << "ck" << std::endl;
+		for (const auto& v : C_k)
+		{
+			std::cout << v << std::endl;
+		}
 
 		return { xc, A_k };
 	}
@@ -66,7 +71,7 @@ namespace FastGaussTransform
 		std::vector<Point_f>* xc,
 		std::vector<int>* indx)
 	{
-		const int Nx = cloud.size();		
+		const int Nx = cloud.size();
 		//auto indxc = std::vector<int>(K_param);
 		auto xboxsz = std::vector<int>(K_param);
 		auto dist_C = std::vector<float>(Nx);
@@ -170,7 +175,56 @@ namespace FastGaussTransform
 		const int& pd,
 		Eigen::MatrixXf* A_k)
 	{
+		const int Nx = cloud.size();
+		const float invertedSigma = 1.0f / sigma;
+		Point_f dx = Point_f::Zero();
+		int k, t, tail, head;
 
+		auto prods = std::vector<float>(pd);
+		auto heads = std::vector<int>(DIMENSION + 1);
+
+		heads[DIMENSION] = std::numeric_limits<int>::max();
+
+		for (int n = 0; n < Nx; n++)
+		{
+			dx = cloud[n] - xc[indx[n]];
+			dx *= invertedSigma;
+
+			prods[0] = std::exp(-dx.LengthSquared());
+
+			for (int i = 0; i < DIMENSION; i++)
+			{
+				heads[i] = 0;
+			}
+
+			for (k = 1, t = 1, tail = 1; k < p_param; k++, tail = t)
+			{
+				for (int i = 0; i < DIMENSION; i++)
+				{
+					head = heads[i];
+					heads[i] = t;
+					float val = dx[i];
+
+					for (int j = head; j < tail; j++, t++)
+					{
+						prods[t] = val * prods[j];
+					}
+				}
+			}
+
+			for (int i = 0; i < pd; i++)
+			{
+				(*A_k)(i, indx[n]) += weights[n] * prods[i];
+			}
+		}
+
+		for (int k = 0; k < K_param; k++)
+		{
+			for (int i = 0; i < pd; i++)
+			{
+				(*A_k)(i, k) *= C_k[i];
+			}
+		}
 	}
 
 	int nchoosek(const int& n, int k)
