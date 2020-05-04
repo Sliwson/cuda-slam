@@ -10,6 +10,16 @@ namespace Common
 
 		constexpr Point<T>(const glm::vec3& vector) : x(vector.x), y(vector.y), z(vector.z) {}
 
+		constexpr Point<T>& operator+=(const Point<T>& point) {
+			*this = *this + point;
+			return *this;
+		}
+
+		constexpr Point<T>& operator*=(const T& scalar) {
+			*this = *this * scalar;
+			return *this;
+		}
+
 		constexpr Point<T>& operator/=(const T& scalar) {
 			*this = *this / scalar;
 			return *this;
@@ -48,6 +58,11 @@ namespace Common
 	template<class T>
 	constexpr Point<T> operator-(const Point<T>& p1, const Point<T>& p2) {
 		return { p1.x - p2.x, p1.y - p2.y, p1.z - p2.z };
+	}
+
+	template<class T>
+	constexpr Point<T> operator*(const Point<T>& p1, const T& scalar) {
+		return { p1.x * scalar, p1.y * scalar, p1.z * scalar };
 	}
 
 	template<class T>
