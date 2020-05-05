@@ -191,7 +191,7 @@ namespace Tests
 		renderer.Show();
 	}
 
-	void RigidCPDTest(const char* objectPath, const int& pointCount, const float& testEps)
+	void RigidCPDTest(const char* objectPath, const int& pointCount, const float& testEps, const int fgt)
 	{
 		srand(RANDOM_SEED);
 		int iterations = 0;
@@ -229,12 +229,12 @@ namespace Tests
 		const int max_iterations = 50;
 
 		timer.StartStage("cpd1");
-		const auto icpCalculatedTransform1 = CoherentPointDrift::GetRigidCPDTransformationMatrix(transformedPermutedCloud, cloud, &iterations, &error, testEps, weight, const_scale, max_iterations, testEps);
+		const auto icpCalculatedTransform1 = CoherentPointDrift::GetRigidCPDTransformationMatrix(transformedPermutedCloud, cloud, &iterations, &error, testEps, weight, const_scale, max_iterations, testEps, fgt);
 		timer.StopStage("cpd1");
 		iterations = 0;
 		error = 1.0f;
 		timer.StartStage("icp2");
-		//const auto icpCalculatedTransform2 = CoherentPointDrift::GetRigidCPDTransformationMatrix(cloud, transformedPermutedCloud, &iterations, &error, testEps, 0.0f, 0);
+		//const auto icpCalculatedTransform2 = CoherentPointDrift::GetRigidCPDTransformationMatrix(cloud, transformedPermutedCloud, &iterations, &error, testEps, weigth, const_scale, max_iterations, testEps, fgt);
 		timer.StopStage("icp2");
 
 		printf("ICP test (%d iterations) error = %g\n", iterations, error);
@@ -260,7 +260,7 @@ namespace Tests
 		renderer.Show();
 	}
 
-	void RigidCPDTest(const char* objectPath1, const char* objectPath2, const int& pointCount1, const int& pointCount2, const float& testEps)
+	void RigidCPDTest(const char* objectPath1, const char* objectPath2, const int& pointCount1, const int& pointCount2, const float& testEps, const int fgt)
 	{
 		srand(RANDOM_SEED);
 		int iterations = 0;
@@ -307,12 +307,13 @@ namespace Tests
 		timer.StopStage("processing");
 
 		// parameters:
-		const float weight = 0.7f;
+		const float weight = 0.5f;
 		const bool const_scale = false;
 		const int max_iterations = 50;
+		const int fgt_local = 0;
 
 		timer.StartStage("rigid-cpd1");
-		const auto icpCalculatedTransform1 = CoherentPointDrift::GetRigidCPDTransformationMatrix(transformedPermutedCloud1, transformedPermutedCloud2, &iterations, &error, testEps, weight, const_scale, max_iterations, testEps);
+		const auto icpCalculatedTransform1 = CoherentPointDrift::GetRigidCPDTransformationMatrix(transformedPermutedCloud1, transformedPermutedCloud2, &iterations, &error, testEps, weight, const_scale, max_iterations, testEps, fgt_local);
 		timer.StopStage("rigid-cpd1");
 
 		printf("CPD test (%d iterations) error = %g\n", iterations, error);
