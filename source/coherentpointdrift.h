@@ -16,5 +16,4 @@ namespace CoherentPointDrift
 		int maxIterations,
 		float tolerance,
 		int fgt = 0);
-	void TestFGT();
 }

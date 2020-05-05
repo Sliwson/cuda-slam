@@ -68,7 +68,6 @@ namespace FastGaussTransform
 		auto heads = std::vector<int>(DIMENSION + 1);
 		auto v = std::vector<float>(Ny);
 
-		
 		heads[DIMENSION] = std::numeric_limits<int>::max();
 
 		for (int m = 0; m < Ny; m++)
