@@ -14,5 +14,7 @@ namespace CoherentPointDrift
 		float weight,
 		bool const_scale,
 		int maxIterations,
-		float tolerance);
+		float tolerance,
+		int fgt = 0);
+	void TestFGT();
 }
