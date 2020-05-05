@@ -22,6 +22,7 @@ namespace Common
 	float GetMeanSquaredError(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, const std::vector<int>& correspondingIndexes);
 	Point_f GetCenterOfMass(const std::vector<Point_f>& cloud);
 	Eigen::Matrix3Xf GetMatrix3XFromPointsVector(const std::vector<Point_f>& points);
+	Eigen::VectorXf GetVextorXFromPointsVector(const std::vector<float>& vector);
 	Eigen::MatrixXf GetMatrixXFromPointsVector(const std::vector<float>& points, const int& rows, const int& cols);
 	Eigen::Vector3f ConvertToEigenVector(const Point_f& point);
 	std::vector<Point_f> GetAlignedCloud(const std::vector<Point_f>& cloud, const Point_f& center_of_mass);

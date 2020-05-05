@@ -134,6 +134,16 @@ namespace Common
 		return result;
 	}
 
+	Eigen::VectorXf GetVextorXFromPointsVector(const std::vector<float>& vector)
+	{
+		Eigen::VectorXf result = Eigen::VectorXf::Zero(vector.size());
+		for (int i = 0; i < vector.size(); i++)
+		{
+			result(i) = vector[i];
+		}
+		return result;
+	}
+
 	Eigen::MatrixXf GetMatrixXFromPointsVector(const std::vector<float>& points, const int& rows, const int& cols)
 	{
 		Eigen::MatrixXf result = Eigen::ArrayXXf::Zero(rows, cols);
