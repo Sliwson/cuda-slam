@@ -5,9 +5,6 @@ using namespace Common;
 
 namespace FastGaussTransform
 {
-	//idmax -> zwraca indeks najwiekszego elementu w tablicy idmax(tablica, rozmiar)
-	//ddist -> zwraca sume kwadratow roznic elementow dwoch tablic ddist(tablica1,tablica2,wymiar)
-
 	void KCenter(
 		const std::vector<Point_f>& cloud,
 		const int& K_param,
@@ -50,19 +47,71 @@ namespace FastGaussTransform
 		ComputeC_k(p_param, &C_k);
 		ComputeA_k(cloud, weights, xc, C_k, indx, sigma, K_param, p_param, pd, &A_k);
 
-		std::cout << "indx" << std::endl;
-		for (const auto& v : indx)
-		{
-			std::cout << v << std::endl;
-		}
-
-		std::cout << "ck" << std::endl;
-		for (const auto& v : C_k)
-		{
-			std::cout << v << std::endl;
-		}
-
 		return { xc, A_k };
+	}
+
+	std::vector<float> ComputeFGTPredict(
+		const std::vector<Common::Point_f>& cloud,
+		const FGT_Model& fgt_model,
+		const float& sigma,
+		const float& e_param,
+		const int& K_param,
+		const int& p_param)
+	{
+		const int Ny = cloud.size();
+		const int pd = fgt_model.Ak.rows();
+		const float invertedSigma = 1.0f / sigma;
+		Point_f dy = Point_f::Zero();
+		int k, t, tail, head, ind;
+
+		auto prods = std::vector<float>(pd);
+		auto heads = std::vector<int>(DIMENSION + 1);
+		auto v = std::vector<float>(Ny);
+
+		
+		heads[DIMENSION] = std::numeric_limits<int>::max();
+
+		for (int m = 0; m < Ny; m++)
+		{
+			float cell_sum = 0.0;
+			for (int kn = 0; kn < K_param; kn++)
+			{
+				ind = kn * pd;
+				for (int i = 0; i < DIMENSION; i++)
+				{
+					heads[i] = 0;
+				}
+
+				dy = cloud[m] - fgt_model.xc[kn];
+				dy *= invertedSigma;
+				const float sum = dy.LengthSquared();
+
+				if (sum > e_param) continue; //skip to next kn
+
+				prods[0] = std::exp(-sum);
+
+				for (k = 1, t = 1, tail = 1; k < p_param; k++, tail = t)
+				{
+					for (int i = 0; i < DIMENSION; i++)
+					{
+						head = heads[i];
+						heads[i] = t;
+						const float val = dy[i];
+						for (int j = head; j < tail; j++, t++)
+						{
+							prods[t] = val * prods[j];
+						}
+					}
+				}
+
+				for (int i = 0; i < pd; i++)
+				{
+					cell_sum += fgt_model.Ak.data()[i + ind] * prods[i];
+				}
+			}
+			v[m] = cell_sum;
+		}
+		return v;
 	}
 
 	void KCenter(
