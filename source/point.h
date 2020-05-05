@@ -25,7 +25,7 @@ namespace Common
 			return *this;
 		}
 
-		constexpr T operator[](int index) {
+		constexpr T operator[](const int& index) const {
 			switch (index)
 			{
 			case 0:
