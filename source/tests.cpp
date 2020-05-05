@@ -310,7 +310,7 @@ namespace Tests
 		const float weight = 0.5f;
 		const bool const_scale = false;
 		const int max_iterations = 50;
-		const int fgt_local = 0;
+		const int fgt_local = 1;
 
 		timer.StartStage("rigid-cpd1");
 		const auto icpCalculatedTransform1 = CoherentPointDrift::GetRigidCPDTransformationMatrix(transformedPermutedCloud1, transformedPermutedCloud2, &iterations, &error, testEps, weight, const_scale, max_iterations, testEps, fgt_local);

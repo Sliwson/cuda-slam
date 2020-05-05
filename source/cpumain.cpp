@@ -16,8 +16,8 @@ const char* object_path8 = "data/noise_50_bunny.off";
 int main()
 {
 	printf("Hello cpu-slam!\n");
-	//Tests::RigidCPDTest(object_path4, object_path5, -1, -1, TEST_EPS, 0);
-	Tests::BasicICPTest(object_path4, object_path5, -1, -1, TEST_EPS);
+	Tests::RigidCPDTest(object_path4, object_path5, -1, -1, TEST_EPS, 2);
+	//Tests::BasicICPTest(object_path4, object_path5, -1, -1, TEST_EPS);
 
 	//CoherentPointDrift::TestFGT();
 	return 0;

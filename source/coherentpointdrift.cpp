@@ -27,14 +27,15 @@ namespace CoherentPointDrift
 	};
 
 	float CalculateSigmaSquared(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter);
-	Probabilities ComputePMatrix(
-		const std::vector<Point_f>& cloudBefore,
-		const std::vector<Point_f>& cloudTransformed,
-		const float& constant,
-		const float& sigmaSquared);
+	//Probabilities ComputePMatrix(
+	//	const std::vector<Point_f>& cloudBefore,
+	//	const std::vector<Point_f>& cloudTransformed,
+	//	const float& constant,
+	//	const float& sigmaSquared);
 	Probabilities ComputePMatrixFast(
 		const std::vector<Point_f>& cloudBefore,
 		const std::vector<Point_f>& cloudTransformed,
+		const float& constant,
 		const float& weight,
 		float* sigmaSquared,
 		const float& sigmaSquaredInit,
@@ -50,12 +51,13 @@ namespace CoherentPointDrift
 		const std::vector<Point_f>& cloud,
 		const std::vector<float>& invDenomP,
 		const int& row);
-	Probabilities ComputePMatrixWithFGTTruncated(
+	Probabilities ComputePMatrix(
 		const std::vector<Point_f>& cloudBefore,
 		const std::vector<Point_f>& cloudTransformed,
-		const float& weight,
+		const float& constant,
 		const float& sigmaSquared,
-		const float& truncate);
+		const bool& doTruncate = false,
+		float truncate = -1.0f);
 	void MStep(
 		const Probabilities& probabilities,
 		const std::vector<Point_f>& cloudBefore,
@@ -89,6 +91,18 @@ namespace CoherentPointDrift
 		float sigmaSquared_init = sigmaSquared;
 		//TODO: add check for weight=1
 		weight = std::clamp(weight, 0.0f, 1.0f);
+
+		if (weight == 0.0f)
+		{
+			//weight = 10 * std::numeric_limits<float>::min();
+			weight = 1e-6f;
+		}
+
+		if (weight == 1.0f)
+		{
+			//outliers = 10 * std::numeric_limits<float>::min();
+			weight = 1.0f - 1e-6f;
+		}
 		const float constant = (std::pow(2 * M_PI * sigmaSquared, (float)DIMENSION * 0.5f) * weight * cloudAfter.size()) / ((1 - weight) * cloudBefore.size());
 		float ntol = tolerance + 10.0f;
 		float l = 0.0f;
@@ -104,7 +118,7 @@ namespace CoherentPointDrift
 			}
 			else
 			{
-				probabilities = ComputePMatrixFast(cloudBefore, transformedCloud, weight, &sigmaSquared, sigmaSquared_init, fgt);
+				probabilities = ComputePMatrixFast(cloudBefore, transformedCloud, constant, weight, &sigmaSquared, sigmaSquared_init, fgt);
 			}
 
 			ntol = std::abs((probabilities.error - l) / probabilities.error);
@@ -195,7 +209,7 @@ namespace CoherentPointDrift
 		int e = 10.0f;
 
 
-		Probabilities prob = ComputePMatrixFast(cloudX, cloudY, 0.3, &sigma, 0.5, 1);
+		Probabilities prob = ComputePMatrixFast(cloudX, cloudY,0.1, 0.3, &sigma, 0.5, 1);
 
 		std::cout << "Vector P1" << std::endl;
 		std::cout << prob.p1 << std::endl;
@@ -225,7 +239,7 @@ namespace CoherentPointDrift
 		return sum;
 	}
 
-	Probabilities ComputePMatrix(
+	/*Probabilities ComputePMatrix(
 		const std::vector<Point_f>& cloudBefore,
 		const std::vector<Point_f>& cloudTransformed,
 		const float& constant,
@@ -265,14 +279,15 @@ namespace CoherentPointDrift
 			}
 			error -= std::log(denominator);
 		}
-		error += DIMENSION * cloudBefore.size() * std::log(sigmaSquared) / 2;
+		error += DIMENSION * cloudBefore.size() * std::log(sigmaSquared) / 2.0f;
 
 		return { p1, pt1, px, error, correspondece };
-	}
+	}*/
 
 	Probabilities ComputePMatrixFast(
 		const std::vector<Point_f>& cloudBefore,
 		const std::vector<Point_f>& cloudTransformed,
+		const float& constant,
 		const float& weight,
 		float* sigmaSquared,
 		const float& sigmaSquaredInit,
@@ -289,7 +304,7 @@ namespace CoherentPointDrift
 			if (*sigmaSquared > 0.015 * sigmaSquaredInit)
 				return ComputePMatrixWithFGT(cloudBefore, cloudTransformed, weight, *sigmaSquared, sigmaSquaredInit);
 			else
-				return ComputePMatrixWithFGTTruncated(cloudBefore, cloudTransformed, weight, *sigmaSquared, 1e-3f);
+				return ComputePMatrix(cloudBefore, cloudTransformed, constant, *sigmaSquared, true, 1e-3f);
 		}
 		return Probabilities();
 	}
@@ -304,10 +319,7 @@ namespace CoherentPointDrift
 		const int N = cloudBefore.size();
 		const int M = cloudTransformed.size();
 
-		const float hsigma = std::sqrt(2.0f * sigmaSquared);
-		float outliers = weight;
-		if (outliers == 0)
-			outliers = 10 * std::numeric_limits<float>::min();
+		const float hsigma = std::sqrt(2.0f * sigmaSquared);	
 
 		//FGT parameters
 		float e_param = 9.0f; //Ratio of far field (default e = 10)
@@ -320,7 +332,7 @@ namespace CoherentPointDrift
 		fgt_model = ComputeFGTModel(cloudTransformed, std::vector<float>(M, 1.0f), hsigma, K_param, p_param);
 		auto Kt1 = ComputeFGTPredict(cloudBefore, fgt_model, hsigma, e_param, K_param, p_param);
 
-		const float ndi = (std::pow(2 * M_PI * sigmaSquared, (float)DIMENSION * 0.5f) * outliers * M) / ((1 - outliers) * N);
+		const float ndi = (std::pow(2 * M_PI * sigmaSquared, (float)DIMENSION * 0.5f) * weight * M) / ((1 - weight) * N);
 
 		//transform Kt1 to 1./denomP
 		auto invDenomP = std::vector<float>(Kt1.size());
@@ -377,15 +389,61 @@ namespace CoherentPointDrift
 		return result;
 	}
 
-	Probabilities ComputePMatrixWithFGTTruncated(
+	Probabilities ComputePMatrix(
 		const std::vector<Point_f>& cloudBefore,
 		const std::vector<Point_f>& cloudTransformed,
-		const float& weight,
+		const float& constant,
 		const float& sigmaSquared,
-		const float& truncate)
+		const bool& doTruncate,
+		float truncate)
 	{
-		//TODO
-		return Probabilities();
+		const float multiplier = -0.5f / sigmaSquared;
+		Eigen::VectorXf p = Eigen::VectorXf::Zero(cloudTransformed.size());
+		Eigen::VectorXf p1 = Eigen::VectorXf::Zero(cloudTransformed.size());
+		//Eigen::VectorXf p1_max = Eigen::VectorXf::Zero(cloudTransformed.size());
+		Eigen::VectorXf pt1 = Eigen::VectorXf::Zero(cloudBefore.size());
+		Eigen::MatrixXf px = Eigen::MatrixXf::Zero(cloudTransformed.size(), DIMENSION);
+		//TODO: maybe delete correspondence
+		std::vector<int> correspondece = std::vector<int>();
+		float error = 0.0;
+		if (doTruncate)
+			truncate = std::log(truncate);
+
+		for (size_t x = 0; x < cloudBefore.size(); x++)
+		{
+			float denominator = 0.0;
+			for (size_t k = 0; k < cloudTransformed.size(); k++)
+			{
+				const auto diffPoint = cloudBefore[x] - cloudTransformed[k];
+				float index = multiplier * diffPoint.LengthSquared();				
+				
+				if (doTruncate && index < truncate)
+				{
+					p(k) = 0.0f;
+				}
+				else
+				{
+					float value = std::exp(index);
+					p(k) = value;
+					denominator += value;
+				}
+			}
+			denominator += constant;
+			pt1(x) = 1.0f - constant / denominator;
+			for (size_t k = 0; k < cloudTransformed.size(); k++)
+			{
+				if (p(k) != 0.0f)
+				{
+					float value = p(k) / denominator;
+					p1(k) += value;
+					px.row(k) += ConvertToEigenVector(cloudBefore[x]) * value;
+				}
+			}
+			error -= std::log(denominator);
+		}
+		error += DIMENSION * cloudBefore.size() * std::log(sigmaSquared) / 2.0f;
+
+		return { p1, pt1, px, error, correspondece };
 	}	
 
 	void MStep(
