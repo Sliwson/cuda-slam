@@ -8,6 +8,7 @@ const char* object_path = "data/bunny.obj";
 int main()
 {
 	printf("Hello cpu-slam!\n");
-	Tests::BasicICPTest(object_path, CLOUD_SIZE, TEST_EPS);
+	Tests::NonIterativeTest(object_path, CLOUD_SIZE, TEST_EPS);
+	//Tests::BasicICPTest(object_path, CLOUD_SIZE, TEST_EPS);
 	return 0;
 }

@@ -119,6 +119,7 @@
   <ItemGroup>
     <ClCompile Include="source\basicicp.cpp" />
     <ClCompile Include="source\cpumain.cpp" />
+    <ClCompile Include="source\noniterative.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="common.vcxproj">
@@ -126,6 +127,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="source\noniterative.h" />
     <ClInclude Include="source\basicicp.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

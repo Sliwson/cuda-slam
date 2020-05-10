@@ -11,4 +11,5 @@ namespace Tests
 	bool TestTransformWithPermutation(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, const std::vector<int>& permutation, const glm::mat3& rotationMatrix, const glm::vec3& translationVector, const float& testEps);
 
 	void BasicICPTest(const char* objectPath, const int& pointCount, const float& testEps);
+	void NonIterativeTest(const char* objectPath, const int& pointCount, const float& testEps);
 }
