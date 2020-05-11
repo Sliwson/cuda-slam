@@ -1,0 +1,73 @@
+\documentclass[titlepage]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{biblatex}
+\usepackage{titling, lipsum}
+\usepackage{graphicx}
+\usepackage{geometry}
+
+\usepackage{hyperref} 
+
+\geometry{
+ a4paper,
+ total={170mm,257mm},
+ margin=1in
+}
+
+\addbibresource{bibliography.bib}
+
+\begin{document}
+\begin{titlepage}
+	{\centering
+	{\scshape\huge Comparison of SLAM methods with CUDA implementation \par}
+	\vspace{1cm}
+	{\scshape\Large Course: Research project - GPU algorithms \par}}
+	
+	\vspace{1cm}
+	\noindent\textbf{Coordinator}: Krzysztof Kaczmarski\\
+	\textbf{Authors}: Michał Rogala, Szymon Stasiak, Mateusz Śliwakowski\\
+	\textbf{Description}: Short description\\
+	\textbf{Code repository}: \href{https://github.com/Sliwson/cuda-slam}{https://github.com/Sliwson/cuda-slam}\\
+	\textbf{Code license}: MIT\\
+	\textbf{Input files}: Point clouds as .obj files\\
+
+	\vfill
+	{\large \today \par}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+\section{Report goals}
+What we will know after reading this document?
+\section{Problem statement}
+Description of the problem, motivating example, killer application, etc.
+\section{Computational method}
+The most important ideas in the algorithm necessary to understand how it works.
+Are there any differences from other methods?
+Are there any novel ideas?
+\section{Program architecture}
+Short description on the modules of the system, requirements, dependencies, etc.
+\section{Input data description}
+File formats, api used to read, dependencies, data sources, etc.
+Is there any institution providing the input data?
+References to public databases.
+\section{Execution, configuration and user guide}
+How can one replicate the experiments?
+Any relevant information and runtime howtos.
+\section{Description of the results}
+Performance of the system for different input data/parameters.
+How we understand the results and why are they correct?
+Can we formulate any conclusions from the experiments?
+\section{Remarks}
+Any remarks to the results and methods.
+\section{Future works}
+What do we want to do in future, improvements.
+
+This is bibliography sample - it was noted in\cite{ms-paper1}.
+
+\newpage
+\printbibliography
+
+\end{document}
+
