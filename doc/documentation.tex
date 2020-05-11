@@ -1,0 +1,48 @@
+\documentclass[titlepage]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{biblatex}
+\usepackage{titling, lipsum}
+\usepackage{graphicx}
+\usepackage{hyperref} 
+
+\addbibresource{bibliography.bib}
+
+\begin{document}
+\begin{titlepage}
+	{\centering
+	{\scshape\huge Comparison of SLAM methods with CUDA implementation \par}
+	\vspace{1cm}
+	{\scshape\Large Course: Research project - GPU algorithms \par}}
+	
+	\vspace{1cm}
+	\noindent\textbf{Coordinator}: Krzysztof Kaczmarski\\
+	\textbf{Authors}: Michał Rogala, Szymon Stasiak, Mateusz Śliwakowski\\
+	\textbf{Description}: Short description\\
+	\textbf{Code repository}: \href{https://github.com/Sliwson/cuda-slam}{https://github.com/Sliwson/cuda-slam}\\
+	\textbf{Code license}: MIT\\
+	\textbf{Input files}: Point clouds as .obj files\\
+
+	\vfill
+	{\large \today \par}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+\section{Report goals}
+\section{Problem statement}
+\section{Computational method}
+\section{Program architecture}
+\section{Input data description}
+\section{Execution, configuration and user guide}
+\section{Description of the results}
+\section{Remarks}
+\section{Futhure wokrs}
+This is bibliography sample - it was noted in\cite{ms-paper1}.
+
+\newpage
+\printbibliography
+
+\end{document}
+
