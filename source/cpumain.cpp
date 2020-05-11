@@ -16,9 +16,12 @@ const char* object_path8 = "data/noise_50_bunny.off";
 int main()
 {
 	printf("Hello cpu-slam!\n");
-	Tests::RigidCPDTest(object_path4, object_path5, -1, -1, TEST_EPS, 2);
+	const float outliers = 0.5f;
+	const bool const_scale = false;
+	const int max_iter = 50;
+	const int fgt = 1; //0-not use fgt, 1-use fgt, 2-hybrid
+	Tests::RigidCPDTest(object_path4, object_path5, -1, -1, TEST_EPS, outliers, const_scale, max_iter, fgt);
 	//Tests::BasicICPTest(object_path4, object_path5, -1, -1, TEST_EPS);
 
-	//CoherentPointDrift::TestFGT();
 	return 0;
 }
