@@ -82,20 +82,13 @@ namespace CoherentPointDrift
 		float scale = 1.0f;
 		float sigmaSquared = CalculateSigmaSquared(cloudBefore, cloudAfter);
 		float sigmaSquared_init = sigmaSquared;
-		//TODO: add check for weight=1
+
 		weight = std::clamp(weight, 0.0f, 1.0f);
-
 		if (weight == 0.0f)
-		{
-			//weight = 10 * std::numeric_limits<float>::min();
 			weight = 1e-6f;
-		}
-
 		if (weight == 1.0f)
-		{
-			//outliers = 10 * std::numeric_limits<float>::min();
 			weight = 1.0f - 1e-6f;
-		}
+
 		const float constant = (std::pow(2 * M_PI * sigmaSquared, (float)DIMENSION * 0.5f) * weight * cloudAfter.size()) / ((1 - weight) * cloudBefore.size());
 		float ntol = tolerance + 10.0f;
 		float l = 0.0f;
@@ -106,13 +99,9 @@ namespace CoherentPointDrift
 		{
 			//E-step
 			if (fgt == 0)
-			{
 				probabilities = ComputePMatrix(cloudBefore, transformedCloud, constant, sigmaSquared);
-			}
 			else
-			{
 				probabilities = ComputePMatrixFast(cloudBefore, transformedCloud, constant, weight, &sigmaSquared, sigmaSquared_init, fgt);
-			}
 
 			ntol = std::abs((probabilities.error - l) / probabilities.error);
 			l = probabilities.error;
@@ -122,10 +111,10 @@ namespace CoherentPointDrift
 
 			transformedCloud = GetTransformedCloud(cloudAfter, rotationMatrix, translationVector, scale);
 
-			printf("Iteration %d, sigmaSquared: %f, dL: %f, scale: %f\nTransformation Matrix:\n", *iterations, sigmaSquared, ntol, scale);
-			PrintMatrix(ConvertToTransformationMatrix(scale * rotationMatrix, translationVector));
-			printf("\n");
-
+			//printf("Iteration %d, sigmaSquared: %f, dL: %f, scale: %f\nTransformation Matrix:\n", *iterations, sigmaSquared, ntol, scale);
+			//PrintMatrix(ConvertToTransformationMatrix(scale * rotationMatrix, translationVector));
+			//printf("\n");
+			(*error) = sigmaSquared;
 			(*iterations)++;
 		}
 		return std::make_pair(scale * rotationMatrix, translationVector);
@@ -205,7 +194,7 @@ namespace CoherentPointDrift
 		//compute P1
 		fgt_model = ComputeFGTModel(cloudBefore, invDenomP, hsigma, K_param, p_param);
 		auto P1_vector = ComputeFGTPredict(cloudTransformed, fgt_model, hsigma, e_param, K_param, p_param);
-		Eigen::VectorXf p1 = GetVextorXFromPointsVector(P1_vector);
+		Eigen::VectorXf p1 = GetVectorXFromPointsVector(P1_vector);
 
 		//compute PX
 		Eigen::MatrixXf px = Eigen::MatrixXf::Zero(cloudTransformed.size(), DIMENSION);
@@ -213,7 +202,7 @@ namespace CoherentPointDrift
 		{
 			fgt_model = ComputeFGTModel(cloudBefore, CalculateWeightsForPX(cloudBefore, invDenomP, i), hsigma, K_param, p_param);
 			auto result_vector = ComputeFGTPredict(cloudTransformed, fgt_model, hsigma, e_param, K_param, p_param);
-			Eigen::VectorXf result_eigen = GetVextorXFromPointsVector(result_vector);
+			Eigen::VectorXf result_eigen = GetVectorXFromPointsVector(result_vector);
 			px.col(i) = result_eigen;
 		}
 

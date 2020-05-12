@@ -134,7 +134,7 @@ namespace Common
 		return result;
 	}
 
-	Eigen::VectorXf GetVextorXFromPointsVector(const std::vector<float>& vector)
+	Eigen::VectorXf GetVectorXFromPointsVector(const std::vector<float>& vector)
 	{
 		Eigen::VectorXf result = Eigen::VectorXf::Zero(vector.size());
 		for (int i = 0; i < vector.size(); i++)

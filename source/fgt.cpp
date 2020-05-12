@@ -136,14 +136,13 @@ namespace FastGaussTransform
 		{
 			const Point_f diff = cloud[i] - cloud[center_ind];
 			dist_C[i] = diff.LengthSquared();
-
 			(*indx)[i] = 0;
 		}
 
 		for (int i = 1; i < K_param; i++)
 		{
-			const auto furthest_point = std::max_element(dist_C.begin(), dist_C.end());
-			center_ind = std::distance(dist_C.begin(), furthest_point);
+			const auto furthestPoint = std::max_element(dist_C.begin(), dist_C.end());
+			center_ind = std::distance(dist_C.begin(), furthestPoint);
 			//indxc[indxc_index++] = center_ind;
 			for (int j = 0; j < Nx; j++)
 			{
@@ -153,7 +152,6 @@ namespace FastGaussTransform
 				if (dist < dist_C[j])
 				{
 					dist_C[j] = dist;
-
 					(*indx)[j] = i;
 				}
 			}
@@ -202,9 +200,7 @@ namespace FastGaussTransform
 				for (int j = head; j < tail; j++, t++)
 				{
 					cinds[t] = (j < heads[i + 1]) ? cinds[j] + 1 : 1;
-
 					(*C_k)[t] = 2.0 * (*C_k)[j];
-
 					(*C_k)[t] /= (double)cinds[t];
 				}
 			}
@@ -282,14 +278,12 @@ namespace FastGaussTransform
 		if (k < n_k)
 		{
 			k = n_k;
-
 			n_k = n - k;
 		}
 
 		for (int i = 1; i <= n_k; i++)
 		{
 			nchsk *= (++k);
-
 			nchsk /= i;
 		}
 
