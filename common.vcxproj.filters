@@ -57,6 +57,7 @@
     <ClInclude Include="source\tests.h" />
     <ClInclude Include="source\testutils.h" />
     <ClInclude Include="source\timer.h" />
+    <ClInclude Include="source\fgttype.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="GUI">

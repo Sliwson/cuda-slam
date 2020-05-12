@@ -32,7 +32,7 @@ namespace CoherentPointDrift
 		const float& weight,
 		float* sigmaSquared,
 		const float& sigmaSquaredInit,
-		const int& fgt);
+		const FGTType& fgt);
 	Probabilities ComputePMatrixWithFGT(
 		const std::vector<Point_f>& cloudBefore,
 		const std::vector<Point_f>& cloudTransformed,
@@ -73,7 +73,7 @@ namespace CoherentPointDrift
 		bool const_scale,
 		int maxIterations,
 		float tolerance,
-		int fgt)
+		FGTType fgt)
 	{
 		*iterations = 0;
 		*error = 1e5;
@@ -98,7 +98,7 @@ namespace CoherentPointDrift
 		while (*iterations < maxIterations && ntol > tolerance && sigmaSquared > eps)
 		{
 			//E-step
-			if (fgt == 0)
+			if (fgt == FGTType::None)
 				probabilities = ComputePMatrix(cloudBefore, transformedCloud, constant, sigmaSquared);
 			else
 				probabilities = ComputePMatrixFast(cloudBefore, transformedCloud, constant, weight, &sigmaSquared, sigmaSquared_init, fgt);
@@ -142,15 +142,15 @@ namespace CoherentPointDrift
 		const float& weight,
 		float* sigmaSquared,
 		const float& sigmaSquaredInit,
-		const int& fgt)
+		const FGTType& fgt)
 	{
-		if (fgt == 1)
+		if (fgt == FGTType::Full)
 		{
 			if (*sigmaSquared < 0.05)
 				*sigmaSquared = 0.05;
 			return ComputePMatrixWithFGT(cloudBefore, cloudTransformed, weight, *sigmaSquared, sigmaSquaredInit);
 		}
-		if (fgt == 2)
+		if (fgt == FGTType::Hybrid)
 		{
 			if (*sigmaSquared > 0.015 * sigmaSquaredInit)
 				return ComputePMatrixWithFGT(cloudBefore, cloudTransformed, weight, *sigmaSquared, sigmaSquaredInit);

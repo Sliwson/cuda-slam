@@ -191,7 +191,14 @@ namespace Tests
 		renderer.Show();
 	}
 
-	void RigidCPDTest(const char* objectPath, const int& pointCount, const float& testEps, const int fgt)
+	void RigidCPDTest(
+		const char* objectPath,
+		const int& pointCount,
+		const float& testEps,
+		const float weight,
+		const bool const_scale,
+		const int max_iterations,
+		const FastGaussTransform::FGTType fgt)
 	{
 		srand(RANDOM_SEED);
 		int iterations = 0;
@@ -222,11 +229,6 @@ namespace Tests
 		const auto transformedCloud = GetTransformedCloud(cloud, transform);
 		const auto transformedPermutedCloud = GetTransformedCloud(permutedCloud, transform);
 		timer.StopStage("processing");
-
-		// parameters:
-		const float weight = 0.7f;
-		const bool const_scale = false;
-		const int max_iterations = 50;
 
 		timer.StartStage("cpd1");
 		const auto icpCalculatedTransform1 = CoherentPointDrift::GetRigidCPDTransformationMatrix(transformedPermutedCloud, cloud, &iterations, &error, testEps, weight, const_scale, max_iterations, testEps, fgt);
@@ -269,7 +271,7 @@ namespace Tests
 		const float weight, 
 		const bool const_scale,
 		const int max_iterations,
-		const int fgt)
+		const FastGaussTransform::FGTType fgt)
 	{
 		srand(RANDOM_SEED);
 		int iterations = 0;

@@ -2,6 +2,7 @@
 #include <utility>
 #include <tuple>
 #include "common.h"
+#include "fgttype.h"
 
 namespace CoherentPointDrift
 {
@@ -15,5 +16,5 @@ namespace CoherentPointDrift
 		bool const_scale,
 		int maxIterations,
 		float tolerance,
-		int fgt = 0);
+		FastGaussTransform::FGTType fgt);
 }

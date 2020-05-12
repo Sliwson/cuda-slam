@@ -19,7 +19,7 @@ int main()
 	const float outliers = 0.5f;
 	const bool const_scale = false;
 	const int max_iter = 50;
-	const int fgt = 1; //0-not use fgt, 1-use fgt, 2-hybrid
+	const auto fgt = FastGaussTransform::FGTType::Full; //None-not use fgt, Full-use fgt, Hybrid-hybrid
 	Tests::RigidCPDTest(objectPathBunnyFaceless, objectPathBunnyTailless, -1, -1, TEST_EPS, outliers, const_scale, max_iter, fgt);
 	//Tests::BasicICPTest(object_path4, object_path5, -1, -1, TEST_EPS);
 
