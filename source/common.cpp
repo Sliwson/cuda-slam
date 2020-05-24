@@ -15,7 +15,7 @@ namespace Common
 			return std::vector<Point_f>();
 	}
 
-	std::vector<Point_f> ResizeCloud(const std::vector<Point_f>& cloud, int step)
+	std::vector<Point_f> ResizeCloudWithStep(const std::vector<Point_f>& cloud, int step)
 	{
 		int size = cloud.size() / step;
 		if (size == 0)
