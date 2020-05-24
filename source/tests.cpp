@@ -114,7 +114,8 @@ namespace Tests
 		srand(RANDOM_SEED);
 		const Point_f corner = { -1, -1, -1 };
 		const Point_f size = { 2, 2, 2 };
-		float error = 1.0f;
+		float errorOrdered = 1.0f;
+		float errorPermuted = 1.0f;
 
 		Common::Timer timer("Cpu timer");
 
@@ -141,22 +142,25 @@ namespace Tests
 		//error = 1.0f;
 
 		timer.StartStage("non-iterative-ordered");
-		const auto orderedCalculatedTransform = NonIterative::GetNonIterativeTransformationMatrix(cloud, transformedCloud, &error);
+		const auto orderedCalculatedTransform = NonIterative::GetNonIterativeTransformationMatrix(cloud, transformedCloud, &errorOrdered);
 		timer.StopStage("non-iterative-ordered");
 
 		timer.StartStage("non-iterative-permuted");
-		const auto permutedCalculatedTransform = NonIterative::GetNonIterativeTransformationMatrix(cloud, transformedPermutedCloud, &error);
+		const auto permutedCalculatedTransform = NonIterative::GetNonIterativeTransformationMatrix(cloud, transformedPermutedCloud, &errorPermuted);
 		timer.StopStage("non-iterative-permuted");
 
-		std::cout << "Transform Matrix" << std::endl;
+		printf("\nTransform Matrix\n");
 		PrintMatrix(transform);
 
-		std::cout << "Result matrix (for ordered test case)" << std::endl;
+		printf("\nResult matrix (for ordered test case)\n");
 		PrintMatrix(orderedCalculatedTransform.first, orderedCalculatedTransform.second);
+		printf("Error: %f\n", errorOrdered);
 
-		std::cout << "Result matrix (for permuted test case)" << std::endl;
+		printf("\nResult matrix (for permuted test case)\n");
 		PrintMatrix(permutedCalculatedTransform.first, permutedCalculatedTransform.second);
+		printf("Error: %f\n", errorPermuted);
 
+		printf("\n");
 		timer.PrintResults();
 
 		Common::Renderer renderer(

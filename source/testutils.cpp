@@ -48,38 +48,12 @@ namespace Tests
 		return glm::mat3(rotation);
 	}
 
-	std::vector<int> GetRandomPermutationVector(int size)
-	{
-		std::vector<int> permutation(size);
-		std::iota(permutation.begin(), permutation.end(), 0);
-		std::shuffle(permutation.begin(), permutation.end(), std::mt19937{ std::random_device{}() });
-		return permutation;
-	}
-
 
 	// Helpers
 	//
-	std::vector<int> InversePermutation(const std::vector<int>& permutation)
-	{
-		auto inversedPermutation = std::vector<int>(permutation.size());
-		for (int i = 0; i < permutation.size(); i++)
-		{
-			inversedPermutation[permutation[i]] = i;
-		}
-		return inversedPermutation;
-	}
-
 	glm::mat3 GetRotationMatrix(const Point_f& rotationAxis, float rotationAngleRadians)
 	{
 		const auto rotation = glm::rotate(glm::mat4(1.0f), rotationAngleRadians, glm::normalize(glm::vec3(rotationAxis)));
 		return glm::mat3(rotation);
-	}
-
-	std::vector<Point_f> ApplyPermutation(const std::vector<Point_f>& input, const std::vector<int>& permutation)
-	{
-		std::vector<Point_f> permutedCloud(input.size());
-		for (int i = 0; i < input.size(); i++)
-			permutedCloud[i] = input[permutation[i]];
-		return permutedCloud;
 	}
 }

@@ -33,4 +33,8 @@ namespace Common
 
 	CorrespondingPointsTuple GetCorrespondingPoints(const std::vector<Common::Point_f>& cloudBefore, const std::vector<Common::Point_f>& cloudAfter, float maxDistanceSquared);
 	std::pair<glm::mat3, glm::vec3> LeastSquaresSVD(const std::vector<Common::Point_f>& cloudBefore, const std::vector<Common::Point_f>& cloudAfter);
+
+	std::vector<int> GetRandomPermutationVector(int size);
+	std::vector<int> InversePermutation(const std::vector<int>& permutation);
+	std::vector<Point_f> ApplyPermutation(const std::vector<Point_f>& input, const std::vector<int>& permutation);
 }
