@@ -10,8 +10,6 @@ using namespace FastGaussTransform;
 
 namespace CoherentPointDrift
 {
-	//TODO: compute error
-
 	struct Probabilities
 	{
 		// The probability matrix, multiplied by the identity vector.
@@ -110,10 +108,6 @@ namespace CoherentPointDrift
 			MStep(probabilities, cloudBefore, cloudAfter, const_scale, &rotationMatrix, &translationVector, &scale, &sigmaSquared);
 
 			transformedCloud = GetTransformedCloud(cloudAfter, rotationMatrix, translationVector, scale);
-
-			//printf("Iteration %d, sigmaSquared: %f, dL: %f, scale: %f\nTransformation Matrix:\n", *iterations, sigmaSquared, ntol, scale);
-			//PrintMatrix(ConvertToTransformationMatrix(scale * rotationMatrix, translationVector));
-			//printf("\n");
 			(*error) = sigmaSquared;
 			(*iterations)++;
 		}
