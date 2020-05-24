@@ -65,4 +65,3 @@ namespace Common
 		return cloud;
 	}
 }
-
