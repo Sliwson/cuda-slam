@@ -41,10 +41,8 @@ namespace Tests
 
 	glm::mat3 GetRandomRotationMatrix(float rotationRangeRadians)
 	{
-		//const auto angle = GetRandomFloat(0, rotationRangeRadians);
-		const auto angle = rotationRangeRadians;
-		const auto rotation = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(1.0f));
-		//const auto rotation = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(GetRandomPoint(Point_f::Zero(), Point_f::One())));
+		const auto angle = GetRandomFloat(0, rotationRangeRadians);
+		const auto rotation = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(GetRandomPoint(Point_f::Zero(), Point_f::One())));
 		return glm::mat3(rotation);
 	}
 
