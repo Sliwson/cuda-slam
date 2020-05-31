@@ -6,7 +6,7 @@ using namespace Common;
 
 namespace NonIterative
 {
-	std::pair<glm::mat3, glm::vec3> GetNonIterativeSlamResult(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, float* error)
+	std::pair<glm::mat3, glm::vec3> GetSingleNonIterativeSlamResult(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, float* error)
 	{
 		*error = 1e5;
 		glm::mat3 rotationMatrix = glm::mat3(1.0f);
@@ -40,7 +40,7 @@ namespace NonIterative
 		return std::make_pair(rotationMatrix, translationVector);
 	}
 
-	std::pair<glm::mat3, glm::vec3> GetNonIterativeTransformationMatrix(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, float* error)
+	std::pair<glm::mat3, glm::vec3> GetNonIterativeTransformationMatrix(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, float* error, float eps, int maxRepetitions)
 	{
 		int cloudSize = std::min(cloudBefore.size(), cloudAfter.size());
 		std::pair<glm::mat3, glm::vec3> result;
@@ -48,21 +48,23 @@ namespace NonIterative
 		float minError = std::numeric_limits<float>::max();
 		std::pair<glm::mat3, glm::vec3> bestTransformation;
 
-		for (int i = 0; i < 20; i++)
+		for (int i = 0; i < maxRepetitions; i++)
 		{
 			const auto permutation = GetRandomPermutationVector(cloudSize);
 			const auto permutedBefore = ApplyPermutation(cloudBefore, permutation);
 			const auto permutedAfter = ApplyPermutation(cloudAfter, permutation);
 
-			result = GetNonIterativeSlamResult(permutedBefore, permutedAfter, error);
+			result = GetSingleNonIterativeSlamResult(permutedBefore, permutedAfter, error);
 			if (*error < minError)
 			{
 				minError = *error;
 				bestTransformation = result;
+
+				if (minError <= eps)
+					return bestTransformation;
 			}
 		}
 
 		*error = minError;
-		return bestTransformation;
 	}
 }

@@ -24,7 +24,7 @@ int main()
 	//Tests::RigidCPDTest(objectPathBunnyFaceless, objectPathBunnyTailless, -1, -1, TEST_EPS, outliers, const_scale, max_iter, fgt);
 	//Tests::BasicICPTest(object_path4, object_path5, -1, -1, TEST_EPS);
 
-	Tests::NonIterativeTest(objectPathRose, -1, TEST_EPS);
+	Tests::NonIterativeTest(objectPathRose, -1, TEST_EPS, 20);
 	//Tests::BasicICPTest(object_path, CLOUD_SIZE, TEST_EPS);
 	return 0;
 }

@@ -352,7 +352,7 @@ namespace Tests
 	}
 
 	// Randomly transform first pointCount points from 3d object loaded from objectPath using non iterative slam
-	void NonIterativeTest(const char* objectPath, const int& pointCount, const float& testEps)
+	void NonIterativeTest(const char* objectPath, const int& pointCount, const float& testEps, const int& maxRepetitions)
 	{
 		srand(RANDOM_SEED);
 		const Point_f corner = { -1, -1, -1 };
@@ -385,11 +385,11 @@ namespace Tests
 		//error = 1.0f;
 
 		timer.StartStage("non-iterative-ordered");
-		const auto orderedCalculatedTransform = NonIterative::GetNonIterativeTransformationMatrix(cloud, transformedCloud, &errorOrdered);
+		const auto orderedCalculatedTransform = NonIterative::GetNonIterativeTransformationMatrix(cloud, transformedCloud, &errorOrdered, testEps, maxRepetitions);
 		timer.StopStage("non-iterative-ordered");
 
 		timer.StartStage("non-iterative-permuted");
-		const auto permutedCalculatedTransform = NonIterative::GetNonIterativeTransformationMatrix(cloud, transformedPermutedCloud, &errorPermuted);
+		const auto permutedCalculatedTransform = NonIterative::GetNonIterativeTransformationMatrix(cloud, transformedPermutedCloud, &errorPermuted, testEps, maxRepetitions);
 		timer.StopStage("non-iterative-permuted");
 
 		printf("\nTransform Matrix\n");

@@ -38,5 +38,5 @@ namespace Tests
 		const FastGaussTransform::FGTType fgt);
 
 
-	void NonIterativeTest(const char* objectPath, const int& pointCount, const float& testEps);
+	void NonIterativeTest(const char* objectPath, const int& pointCount, const float& testEps, const int& maxRepetitions);
 }
