@@ -7,12 +7,8 @@ using namespace Common;
 
 namespace NonIterative
 {
-	std::pair<glm::mat3, glm::vec3> GetSingleNonIterativeSlamResult(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, float* error, const std::vector<Point_f>& subcloudForComparison, float maxDistanceForComparison)
+	NonIterativeSlamResult GetSingleNonIterativeSlamResult(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter)
 	{
-		Timer timer("timer");
-		timer.StartStage("SVD");
-
-		*error = 1e5;
 		glm::mat3 rotationMatrix = glm::mat3(1.0f);
 		glm::vec3 translationVector = glm::vec3(0.0f);
 		std::vector<Point_f> transformedCloud = cloudBefore;
@@ -38,55 +34,113 @@ namespace NonIterative
 
 		rotationMatrix = ConvertRotationMatrix(rotation);
 		translationVector = glm::vec3(centerAfter) - (rotationMatrix * centerBefore);
-		timer.StopStage("SVD");
 
-		timer.StartStage("Correspon");
-		float oldError = GetMeanSquaredError(alignedBefore, alignedAfter, rotationMatrix);
-		std::vector<Point_f> transformedSubcloud = GetTransformedCloud(subcloudForComparison, rotationMatrix, translationVector);
-		CorrespondingPointsTuple correspondingPoints = GetCorrespondingPoints(transformedSubcloud, cloudAfter, maxDistanceForComparison);
-		*error = GetMeanSquaredError(std::get<0>(correspondingPoints), std::get<1>(correspondingPoints));
-		printf("Error: %f (old: %f)\n", *error, oldError);
-		timer.StopStage("Correspon");
-
-		timer.PrintResults();
-		return std::make_pair(rotationMatrix, translationVector);
+		float error = GetMeanSquaredError(alignedBefore, alignedAfter, rotationMatrix);
+		return NonIterativeSlamResult(rotationMatrix, translationVector, cloudAfter, error);
 	}
 
-	std::pair<glm::mat3, glm::vec3> GetNonIterativeTransformationMatrix(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, float* error, float eps, int maxRepetitions)
+	std::pair<glm::mat3, glm::vec3> GetNonIterativeTransformationMatrix(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, float* error, float eps, int maxRepetitions, const NonIterative::NonIterativeApproximation& calculationType, int subcloudSize)
 	{
 		int cloudSize = std::min(cloudBefore.size(), cloudAfter.size());
-		std::pair<glm::mat3, glm::vec3> transformationResult;
 
 		std::pair<glm::mat3, glm::vec3> bestTransformation;
 		float minError = std::numeric_limits<float>::max();
 
-		std::vector<int> subcloudIndices = GetRandomPermutationVector(1000);
-		std::vector<Point_f> subcloudVertices = GetSubcloud(cloudBefore, subcloudIndices);
-		assert(subcloudVertices.size() == 1000);
+		// Get subcloud for comparison
+		if (subcloudSize == -1)
+			subcloudSize = cloudBefore.size();
+		std::vector<int> subcloudIndices = GetRandomPermutationVector(subcloudSize);
+		std::vector<Point_f>subcloudVertices = GetSubcloud(cloudBefore, subcloudIndices);
 		const float maxDistanceForComparison = 1e6;
 
+		// Run NonIterative SLAM for multiple permutations and return the best fit
+		std::vector<NonIterativeSlamResult> bestResults;
 		for (int i = 0; i < maxRepetitions; i++)
 		{
 			const auto permutation = GetRandomPermutationVector(cloudSize);
 			const auto permutedBefore = ApplyPermutation(cloudBefore, permutation);
 			const auto permutedAfter = ApplyPermutation(cloudAfter, permutation);
 
-			transformationResult = GetSingleNonIterativeSlamResult(permutedBefore, permutedAfter, error, subcloudVertices, maxDistanceForComparison);
-			if (*error < minError)
+			NonIterativeSlamResult transformationResult = GetSingleNonIterativeSlamResult(permutedBefore, permutedAfter);
+			*error = transformationResult.getApproximatedError();
+			// If not using approximation, calculate error for selected subcloud
+			if (calculationType == NonIterativeApproximation::None)
 			{
-				minError = *error;
-				bestTransformation = transformationResult;
+				std::vector<Point_f> transformedSubcloud = GetTransformedCloud(subcloudVertices, transformationResult.getRotationMatrix(), transformationResult.getTranslationVector());
+				CorrespondingPointsTuple correspondingPoints = GetCorrespondingPoints(transformedSubcloud, permutedAfter, maxDistanceForComparison);
+				*error = GetMeanSquaredError(std::get<0>(correspondingPoints), std::get<1>(correspondingPoints));
 
-				if (minError <= eps)
+				if (*error < minError)
 				{
-					printf("Iterations: %d\n", i);
-					return bestTransformation;
+					minError = *error;
+					bestTransformation = transformationResult.getTransformation();
+
+					if (minError <= eps)
+					{
+						return bestTransformation;
+					}
+				}
+			}
+			// If using hybrid approximation, select 5 best fits for further analysis
+			else if (calculationType == NonIterativeApproximation::Hybrid)
+			{
+				StoreResultIfOptimal(bestResults, transformationResult, 5);
+			}
+			// If using full approximation, select the best result for further error calculation
+			else if(calculationType == NonIterativeApproximation::Full)
+			{
+				StoreResultIfOptimal(bestResults, transformationResult, 1);
+			}
+		}
+
+		// If using hybrid approximation, select best result
+		// If using full approximation, calculate exact error for the best result
+		if (calculationType != NonIterativeApproximation::None)
+		{
+			minError = std::numeric_limits<float>::max();
+			for (int i = 0; i < bestResults.size(); i++)
+			{
+				std::vector<Point_f> transformedSubcloud = GetTransformedCloud(subcloudVertices, bestResults[i].getRotationMatrix(), bestResults[i].getTranslationVector());
+				CorrespondingPointsTuple correspondingPoints = GetCorrespondingPoints(transformedSubcloud, bestResults[i].getCloudAfter(), maxDistanceForComparison);
+				*error = GetMeanSquaredError(std::get<0>(correspondingPoints), std::get<1>(correspondingPoints));
+
+				if (*error < minError)
+				{
+					minError = *error;
+					bestTransformation = bestResults[i].getTransformation();
+
+					if (minError <= eps)
+					{
+						return bestTransformation;
+					}
 				}
 			}
 		}
 
 		*error = minError;
-		printf("Iterations: %d\n", maxRepetitions);
 		return bestTransformation;
+	}
+
+	void StoreResultIfOptimal(std::vector<NonIterativeSlamResult>& results, const NonIterativeSlamResult& newResult, const int desiredLength)
+	{
+		int length = results.size();
+		if (length == 0 && desiredLength > 0)
+		{
+			results.push_back(newResult);
+			return;
+		}
+
+		for (int i = 0; i < length; i++)
+		{
+			if (newResult.getApproximatedError() < results[i].getApproximatedError())
+			{
+				results.insert(results.begin() + i, newResult);
+				if (results.size() > desiredLength)
+				{
+					results.resize(desiredLength);
+					return;
+				} 
+			}
+		}
 	}
 }

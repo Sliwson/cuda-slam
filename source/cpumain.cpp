@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "tests.h"
 #include "coherentpointdrift.h"
+#include "noniterative.h"
 
 constexpr float TEST_EPS = 1e-6f;
 constexpr int CLOUD_SIZE = 3000;
@@ -24,7 +25,8 @@ int main()
 	//Tests::RigidCPDTest(objectPathBunnyFaceless, objectPathBunnyTailless, -1, -1, TEST_EPS, outliers, const_scale, max_iter, fgt);
 	//Tests::BasicICPTest(object_path4, object_path5, -1, -1, TEST_EPS);
 
-	Tests::NonIterativeTest(objectPathRose, -1, TEST_EPS, 20);
+	const auto type = NonIterative::NonIterativeApproximation::None;
+	Tests::NonIterativeTest(objectPathBunny, -1, TEST_EPS, 20, type, CLOUD_SIZE);
 	//Tests::BasicICPTest(object_path, CLOUD_SIZE, TEST_EPS);
 	return 0;
 }
