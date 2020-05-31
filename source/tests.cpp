@@ -408,10 +408,10 @@ namespace Tests
 
 		Common::Renderer renderer(
 			Common::ShaderType::SimpleModel,
-			cloud, //grey
-			transformedCloud, //blue
-			GetTransformedCloud(cloud, permutedCalculatedTransform.first, permutedCalculatedTransform.second), //red
-			GetTransformedCloud(cloud, orderedCalculatedTransform.first, orderedCalculatedTransform.second)); //green
+			cloud, //red
+			transformedCloud, //green
+			GetTransformedCloud(cloud, permutedCalculatedTransform.first, permutedCalculatedTransform.second), //yellow
+			GetTransformedCloud(cloud, orderedCalculatedTransform.first, orderedCalculatedTransform.second)); //blue
 
 		renderer.Show();
 	}

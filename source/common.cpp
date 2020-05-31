@@ -15,6 +15,17 @@ namespace Common
 			return std::vector<Point_f>();
 	}
 
+	std::vector<Point_f> GetSubcloud(const std::vector<Point_f>& cloud, const std::vector<int>& indices)
+	{
+		if (indices.size() >= cloud.size())
+			return cloud;
+
+		std::vector<Point_f> subcloud(indices.size());
+		std::transform(indices.begin(), indices.end(), subcloud.begin(), [&cloud](size_t pos) { return cloud[pos]; });
+
+		return subcloud;
+	}
+
 	std::vector<Point_f> ResizeCloudWithStep(const std::vector<Point_f>& cloud, int step)
 	{
 		int size = cloud.size() / step;
@@ -105,16 +116,27 @@ namespace Common
 		return diffSum / correspondingIndexesBefore.size();
 	}
 
-	float GetMeanSquaredError(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, const std::vector<int>& correspondingIndexes)
+	float GetMeanSquaredError(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter)
 	{
 		float diffSum = 0.0f;
-		for (int i = 0; i < correspondingIndexes.size(); i++)
+		for (int i = 0; i < cloudBefore.size(); i++)
 		{
-			const auto diff = cloudAfter[i] - cloudBefore[correspondingIndexes[i]];
+			const auto diff = cloudAfter[i] - cloudBefore[i];
 			diffSum += diff.LengthSquared();
 		}
-		return diffSum / correspondingIndexes.size();
+		return diffSum / cloudBefore.size();
 	}
+
+	//float GetMeanSquaredError(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, const std::vector<int>& correspondingIndexes)
+	//{
+	//	float diffSum = 0.0f;
+	//	for (int i = 0; i < correspondingIndexes.size(); i++)
+	//	{
+	//		const auto diff = cloudAfter[i] - cloudBefore[correspondingIndexes[i]];
+	//		diffSum += diff.LengthSquared();
+	//	}
+	//	return diffSum / correspondingIndexes.size();
+	//}
 
 	Point_f GetCenterOfMass(const std::vector<Point_f>& cloud)
 	{
