@@ -2,6 +2,7 @@
 #include "timer.h"
 #include "basicicp.h"
 #include "coherentpointdrift.h"
+#include "noniterative.h"
 #include "renderer.h"
 #include "shadertype.h"
 #include "testutils.h"
@@ -346,6 +347,71 @@ namespace Tests
 			GetTransformedCloud(transformedPermutedCloud2, icpCalculatedTransform1.first, icpCalculatedTransform1.second), //yellow
 			//GetTransformedCloud(cloud, icpCalculatedTransform2.first, icpCalculatedTransform2.second)); //blue
 			std::vector<Point_f>(1)); //green
+
+		renderer.Show();
+	}
+
+	// Randomly transform first pointCount points from 3d object loaded from objectPath using non iterative slam
+	void NonIterativeTest(const char* objectPath, const int& pointCount, const float& testEps, const int& maxRepetitions, const NonIterative::NonIterativeApproximation& calculationType, const int& subcloudSize)
+	{
+		srand(RANDOM_SEED);
+		const Point_f corner = { -1, -1, -1 };
+		const Point_f size = { 2, 2, 2 };
+		float errorOrdered = 1.0f;
+		float errorPermuted = 1.0f;
+
+		Common::Timer timer("Cpu timer");
+
+		timer.StartStage("cloud-loading");
+		auto cloud = LoadCloud(objectPath);
+		timer.StopStage("cloud-loading");
+
+		std::transform(cloud.begin(), cloud.end(), cloud.begin(), [](const Point_f& point) { return Point_f{ point.x * 100.f, point.y * 100.f, point.z * 100.f }; });
+		if (pointCount > 0)
+			cloud.resize(pointCount);
+
+		int cloudSize = cloud.size();
+		printf("Processing %d points\n", cloudSize);
+		timer.StartStage("processing");
+
+		const auto transform = GetRandomTransformMatrix({ 0.f, 0.f, 0.f }, { 10.0f, 10.0f, 10.0f }, glm::radians(35.f));
+		const auto permutation = GetRandomPermutationVector(cloudSize);
+		const auto permutedCloud = ApplyPermutation(cloud, permutation);
+		const auto transformedCloud = GetTransformedCloud(cloud, transform);
+		const auto transformedPermutedCloud = GetTransformedCloud(permutedCloud, transform);
+
+		timer.StopStage("processing");
+
+		//error = 1.0f;
+
+		timer.StartStage("non-iterative-ordered");
+		const auto orderedCalculatedTransform = NonIterative::GetNonIterativeTransformationMatrix(cloud, transformedCloud, &errorOrdered, testEps, maxRepetitions, calculationType, subcloudSize);
+		timer.StopStage("non-iterative-ordered");
+
+		timer.StartStage("non-iterative-permuted");
+		const auto permutedCalculatedTransform = NonIterative::GetNonIterativeTransformationMatrix(cloud, transformedPermutedCloud, &errorPermuted, testEps, maxRepetitions, calculationType, subcloudSize);
+		timer.StopStage("non-iterative-permuted");
+
+		printf("\nTransform Matrix\n");
+		PrintMatrix(transform);
+
+		printf("\nResult matrix (for ordered test case)\n");
+		PrintMatrix(orderedCalculatedTransform.first, orderedCalculatedTransform.second);
+		printf("Error: %f\n", errorOrdered);
+
+		printf("\nResult matrix (for permuted test case)\n");
+		PrintMatrix(permutedCalculatedTransform.first, permutedCalculatedTransform.second);
+		printf("Error: %f\n", errorPermuted);
+
+		printf("\n");
+		timer.PrintResults();
+
+		Common::Renderer renderer(
+			Common::ShaderType::SimpleModel,
+			cloud, //red
+			transformedCloud, //green
+			GetTransformedCloud(cloud, permutedCalculatedTransform.first, permutedCalculatedTransform.second), //yellow
+			GetTransformedCloud(cloud, orderedCalculatedTransform.first, orderedCalculatedTransform.second)); //blue
 
 		renderer.Show();
 	}

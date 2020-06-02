@@ -125,6 +125,7 @@
     <ClCompile Include="source\coherentpointdrift.h" />
     <ClCompile Include="source\cpumain.cpp" />
     <ClCompile Include="source\fgt.cpp" />
+    <ClCompile Include="source\noniterative.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="common.vcxproj">
@@ -132,6 +133,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="source\noniterative.h" />
     <ClInclude Include="source\basicicp.h" />
     <ClInclude Include="source\fgt.h" />
     <ClInclude Include="source\fgt_model.h" />

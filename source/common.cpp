@@ -15,6 +15,17 @@ namespace Common
 			return std::vector<Point_f>();
 	}
 
+	std::vector<Point_f> GetSubcloud(const std::vector<Point_f>& cloud, const std::vector<int>& indices)
+	{
+		if (indices.size() >= cloud.size())
+			return cloud;
+
+		std::vector<Point_f> subcloud(indices.size());
+		std::transform(indices.begin(), indices.end(), subcloud.begin(), [&cloud](size_t pos) { return cloud[pos]; });
+
+		return subcloud;
+	}
+
 	std::vector<Point_f> ResizeCloudWithStep(const std::vector<Point_f>& cloud, int step)
 	{
 		int size = cloud.size() / step;
@@ -105,16 +116,27 @@ namespace Common
 		return diffSum / correspondingIndexesBefore.size();
 	}
 
-	float GetMeanSquaredError(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, const std::vector<int>& correspondingIndexes)
+	float GetMeanSquaredError(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter)
 	{
 		float diffSum = 0.0f;
-		for (int i = 0; i < correspondingIndexes.size(); i++)
+		for (int i = 0; i < cloudBefore.size(); i++)
 		{
-			const auto diff = cloudAfter[i] - cloudBefore[correspondingIndexes[i]];
+			const auto diff = cloudAfter[i] - cloudBefore[i];
 			diffSum += diff.LengthSquared();
 		}
-		return diffSum / correspondingIndexes.size();
+		return diffSum / cloudBefore.size();
 	}
+
+	//float GetMeanSquaredError(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, const std::vector<int>& correspondingIndexes)
+	//{
+	//	float diffSum = 0.0f;
+	//	for (int i = 0; i < correspondingIndexes.size(); i++)
+	//	{
+	//		const auto diff = cloudAfter[i] - cloudBefore[correspondingIndexes[i]];
+	//		diffSum += diff.LengthSquared();
+	//	}
+	//	return diffSum / correspondingIndexes.size();
+	//}
 
 	Point_f GetCenterOfMass(const std::vector<Point_f>& cloud)
 	{
@@ -304,5 +326,31 @@ namespace Common
 		glm::vec3 translationVectorGLM = glm::vec3(centerAfter) - (rotationMatrixGLM * centerBefore);
 
 		return std::make_pair(rotationMatrixGLM, translationVectorGLM);
+	}
+
+	std::vector<int> GetRandomPermutationVector(int size)
+	{
+		std::vector<int> permutation(size);
+		std::iota(permutation.begin(), permutation.end(), 0);
+		std::shuffle(permutation.begin(), permutation.end(), std::mt19937{ std::random_device{}() });
+		return permutation;
+	}
+
+	std::vector<int> InversePermutation(const std::vector<int>& permutation)
+	{
+		auto inversedPermutation = std::vector<int>(permutation.size());
+		for (int i = 0; i < permutation.size(); i++)
+		{
+			inversedPermutation[permutation[i]] = i;
+		}
+		return inversedPermutation;
+	}
+
+	std::vector<Point_f> ApplyPermutation(const std::vector<Point_f>& input, const std::vector<int>& permutation)
+	{
+		std::vector<Point_f> permutedCloud(input.size());
+		for (int i = 0; i < input.size(); i++)
+			permutedCloud[i] = input[permutation[i]];
+		return permutedCloud;
 	}
 }

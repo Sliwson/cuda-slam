@@ -8,6 +8,11 @@ namespace FastGaussTransform
 	enum class FGTType;
 }
 
+namespace NonIterative
+{
+	enum class NonIterativeApproximation;
+}
+
 namespace Tests
 {
 	bool TestTransformOrdered(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, const glm::mat4& matrix, const float& testEps);
@@ -36,4 +41,7 @@ namespace Tests
 		const bool const_scale,
 		const int max_iterations,
 		const FastGaussTransform::FGTType fgt);
+
+
+	void NonIterativeTest(const char* objectPath, const int& pointCount, const float& testEps, const int& maxRepetitions, const NonIterative::NonIterativeApproximation& calculationType, const int& subcloudSize);
 }
