@@ -26,6 +26,7 @@
     </ClCompile>
     <ClCompile Include="source\tests.cpp" />
     <ClCompile Include="source\testutils.cpp" />
+    <ClCompile Include="source\timer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\loader.h" />
@@ -55,6 +56,9 @@
     <ClInclude Include="source\_common.h" />
     <ClInclude Include="source\tests.h" />
     <ClInclude Include="source\testutils.h" />
+    <ClInclude Include="source\timer.h" />
+    <ClInclude Include="source\fgttype.h" />
+    <ClInclude Include="source\noniterative_type.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="GUI">

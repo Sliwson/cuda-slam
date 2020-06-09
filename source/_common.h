@@ -9,12 +9,14 @@
 #endif
 
 #include <vector>
+#include <map>
 #include <filesystem>
 #include <algorithm>
 #include <stdio.h>
 #include <numeric>
 #include <random>
 #include <iostream>
+#include <functional>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -23,5 +25,6 @@
 
 namespace Common
 {
+	constexpr int DIMENSION = 3;
 	using Point_f = Point<float>;
 }

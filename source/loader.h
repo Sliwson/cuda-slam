@@ -25,4 +25,3 @@ namespace Common
 		std::vector<std::vector<Point_f>> clouds;
 	};
 }
-  

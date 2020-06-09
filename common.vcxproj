@@ -30,12 +30,15 @@
     <ClCompile Include="source\shaderfactory.cpp" />
     <ClCompile Include="source\tests.cpp" />
     <ClCompile Include="source\testutils.cpp" />
+    <ClCompile Include="source\timer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\camera.h" />
+    <ClInclude Include="source\fgttype.h" />
     <ClInclude Include="source\Icosphere.h" />
     <ClInclude Include="source\loader.h" />
     <ClInclude Include="source\moveablecamera.h" />
+    <ClInclude Include="source\noniterative_type.h" />
     <ClInclude Include="source\point.h" />
     <ClInclude Include="source\common.h" />
     <ClInclude Include="source\renderer.h" />
@@ -44,6 +47,7 @@
     <ClInclude Include="source\shadertype.h" />
     <ClInclude Include="source\tests.h" />
     <ClInclude Include="source\testutils.h" />
+    <ClInclude Include="source\timer.h" />
     <ClInclude Include="source\_common.h" />
   </ItemGroup>
   <ItemGroup>
