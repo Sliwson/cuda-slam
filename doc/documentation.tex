@@ -67,40 +67,73 @@ Another popular application is mapping real life environments to digital equival
 
 \begin{figure}[H]
 \includegraphics[width=\textwidth]{ms-img2.jpg}
-\caption{Example 3D .obj file}
+\caption{3D laser scan}
 \end{figure}
 
 \section{Computational method}
-The most important ideas in the algorithm necessary to understand how it works.
-Are there any differences from other methods?
-Are there any novel ideas?
+%The most important ideas in the algorithm necessary to understand how it works.
+%Are there any differences from other methods?
+%Are there any novel ideas?
+
+\subsection{Iterative Closest Point}
+The most widely described and most popular method for solving SLAM problem is Iterative Closest Point algorithm. The main idea of the algorithm is stated below \cite{ms-pres1}:
+\begin{enumerate}
+\item Determine corresponding points.
+\item Calculate translation and rotation using Singular Value Decomposition.
+\item Apply calculated rotation and translation to the point cloud.
+\item Compute Mean Squared Error.
+\item If error decreased and it is greater than given threshold repeat all the steps.
+\end{enumerate}
+
+Various modifications have been proposed to this algorithm (such as sampling point sets, weighting the correspondences or rejecting outliers). However, in this project we focused on the base version of the method as it is good enough for comparison with the other algorithms.
+
+\subsection{Noniterative Closest Point}
+
+\subsection{Coherent Point Drift}
+
 \section{Program architecture}
 Short description on the modules of the system, requirements, dependencies, etc.
+
 \section{Input data description}
 %File formats, api used to read, dependencies, data sources, etc.
 %Is there any institution providing the input data?
 %References to public databases.
 
-As we wanted to keep the input simple we decided to use .obj files as the point clouds. It is easy to find multiple different models in this format which allowed us to test the algorithms on multiple distinctive samples. Furthermore, one can edit .obj files using for example \textit{Blender} to add noise or even cut off part of the cloud. 
+As we wanted to keep the input simple we decided to use .obj files as the point clouds. It is easy to find multiple different models in this format which allowed us to test the algorithms on multiple distinctive samples. Furthermore, one can edit .obj files using for example \textit{Blender} to add noise or even cut off part of the cloud. We found that method most convenient to simulate real life conditions as 3D scanners data has to be processed using methods that are beyond the scope of our work.
 
 \begin{figure}[H]
 \includegraphics[width=\textwidth]{ms-bunny.png}
-\caption{3D laser scan}
+\caption{Sample .obj file}
 \end{figure}
 
 \section{Execution, configuration and user guide}
 How can one replicate the experiments?
 Any relevant information and runtime howtos.
+
 \section{Description of the results}
-Performance of the system for different input data/parameters.
-How we understand the results and why are they correct?
-Can we formulate any conclusions from the experiments?
+%Performance of the system for different input data/parameters.
+%How we understand the results and why are they correct?
+%Can we formulate any conclusions from the experiments?
+
+\subsection{Speed}
+
+\subsection{Stability}
+
+\subsection{Noise and outliers tolerance}
+
+\subsection{Convergence ranges}
+
 \section{Remarks}
 Any remarks to the results and methods.
-\section{Future works}
-What do we want to do in future, improvements.
 
-This is bibliography sample - it was noted in\cite{ms-paper1}.
+\section{Future works}
+%What do we want to do in future, improvements.
+
+\subsection{Iterative Closest Point}
+We implemented a solid ground base for development of ICP algorithm. There are a lot of ways it can be improved but the most important would be enhancing performance of correspondences step as it is critical for the whole method execution time. 
+
+\subsection{Common improvements}
+The key to performant SLAM for big clouds is sampling. We haven't covered it in our work as it is a broad topic and mostly dependent of the specific application of the algorithm. Although, there is no contraindication to use sampled clouds as the input of our program so everybody can make their own experiments in that field.
 
 \newpage
 \printbibliography
