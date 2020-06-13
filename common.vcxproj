@@ -30,9 +30,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\camera.h" />
+    <ClInclude Include="source\fgttype.h" />
     <ClInclude Include="source\Icosphere.h" />
     <ClInclude Include="source\loader.h" />
     <ClInclude Include="source\moveablecamera.h" />
+    <ClInclude Include="source\noniterative_type.h" />
     <ClInclude Include="source\point.h" />
     <ClInclude Include="source\common.h" />
     <ClInclude Include="source\renderer.h" />

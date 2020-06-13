@@ -25,5 +25,6 @@
 
 namespace Common
 {
+	constexpr int DIMENSION = 3;
 	using Point_f = Point<float>;
 }

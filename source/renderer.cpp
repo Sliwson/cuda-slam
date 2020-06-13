@@ -1,5 +1,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <string>
+#include <algorithm>
 
 #include "renderer.h"
 #include "moveablecamera.h"
@@ -407,13 +408,13 @@ namespace Common
 		switch (index)
 		{
 		case 0://origin
-			return glm::vec3(0.8f, 0.8f, 0.8f);
-		case 1://result
-			return glm::vec3(0.0f, 0.0f, 1.0f);
-		case 2://cpu
 			return glm::vec3(1.0f, 0.0f, 0.0f);
-		case 3://gpu
+		case 1://result
 			return glm::vec3(0.0f, 1.0f, 0.0f);
+		case 2://cpu
+			return glm::vec3(1.0f, 1.0f, 0.0f);
+		case 3://gpu
+			return glm::vec3(0.0f, 0.0f, 1.0f);
 		default:
 			return glm::vec3(0.8f, 0.8f, 0.8f);
 		}
