@@ -8,6 +8,10 @@
       <Configuration>Debug</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="FastDebug50|x64">
+      <Configuration>FastDebug50</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="FastDebug|x64">
       <Configuration>FastDebug</Configuration>
       <Platform>x64</Platform>
@@ -50,6 +54,9 @@
     <UseDebugLibraries>true</UseDebugLibraries>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)'=='FastDebug'">
+    <UseDebugLibraries>true</UseDebugLibraries>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='FastDebug50'">
     <UseDebugLibraries>true</UseDebugLibraries>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)'=='Release'">
@@ -121,6 +128,23 @@
     </Link>
     <CudaCompile>
       <CodeGeneration>compute_75,sm_75</CodeGeneration>
+      <Runtime>MDd</Runtime>
+      <TargetMachinePlatform>64</TargetMachinePlatform>
+    </CudaCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='FastDebug50'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='FastDebug50|x64'">stdcpp17</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
+      <ShowProgress Condition="'$(Configuration)|$(Platform)'=='FastDebug50|x64'">NotSet</ShowProgress>
+    </Link>
+    <CudaCompile>
+      <CodeGeneration>compute_50,sm_50</CodeGeneration>
       <Runtime>MDd</Runtime>
       <TargetMachinePlatform>64</TargetMachinePlatform>
     </CudaCompile>
