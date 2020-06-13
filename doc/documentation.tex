@@ -4,9 +4,12 @@
 \usepackage{biblatex}
 \usepackage{titling, lipsum}
 \usepackage{graphicx}
+\usepackage{indentfirst}
 \usepackage{geometry}
-
 \usepackage{hyperref} 
+\usepackage{float}
+
+\graphicspath{{./images/}}
 
 \geometry{
  a4paper,
@@ -39,9 +42,33 @@
 \newpage
 
 \section{Report goals}
-What we will know after reading this document?
+%What we will know after reading this document?
+
+The report is devoted to a research of SLAM methods using CUDA technology. We want to give a brief introduction what SLAM is and what are its applications. After reading the document you should know three different methods of approaching the problem, their advantages and disadvantages. The cornerstone of the work is answering the question - how well these methods can be converted to GPU architecture and how much will we gain?
+
 \section{Problem statement}
-Description of the problem, motivating example, killer application, etc.
+%Description of the problem, motivating example, killer application, etc.
+
+\subsection{Theoretical background}
+\textbf{Simultaneous localization and mapping} (in short SLAM) is the computational problem of constructing or updating a map of an unknown environment while simultaneously keeping track of an agent's location within it \cite{ms-wiki1}. In theory the problem can be simplified to more mathematical definition - given two point sets $P_1 = \{x_1,\dots, x_n\}$ and $P_2=\{y_1, \dots, y_n\}$ find translation $t$ and rotation $R$ that minimizes the Mean Square Error:
+$$MSE(R, t) = \frac{1}{N}\sum_{i=1}{N}(x_i - Ry_i - t)^2$$
+
+The reality, unfortunately, is much more complicated. Sizes of point sets might differ, clouds are unordered and noise points can occur.
+
+\subsection{Applications}
+The main field of SLAM application is robotics. There are a lot of machines that utilizes this algorithm to keep track of the space in which they are moving. The most popular are autonomous vacuum cleaners such as presented below.
+
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{ms-img1.png}
+\caption{Autonomous vacuum cleaner}
+\end{figure}
+
+Another popular application is mapping real life environments to digital equivalents. The programs produce \textit{Geospatial mappings} which can be later processed and analysed. Variety of different devices is used such as hand scanners, drone scanners or even satellites. Due to rapid technological progress nowadays, even smartphone cameras can be used to perform simple environmental scan.
+
+\begin{figure}[H]\includegraphics[width=\textwidth]{ms-img2.jpg}
+\caption{3D laser scan}
+\end{figure}
+
 \section{Computational method}
 The most important ideas in the algorithm necessary to understand how it works.
 Are there any differences from other methods?
