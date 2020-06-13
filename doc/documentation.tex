@@ -65,8 +65,9 @@ The main field of SLAM application is robotics. There are a lot of machines that
 
 Another popular application is mapping real life environments to digital equivalents. The programs produce \textit{Geospatial mappings} which can be later processed and analysed. Variety of different devices is used such as hand scanners, drone scanners or even satellites. Due to rapid technological progress nowadays, even smartphone cameras can be used to perform simple environmental scan.
 
-\begin{figure}[H]\includegraphics[width=\textwidth]{ms-img2.jpg}
-\caption{3D laser scan}
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{ms-img2.jpg}
+\caption{Example 3D .obj file}
 \end{figure}
 
 \section{Computational method}
@@ -76,9 +77,17 @@ Are there any novel ideas?
 \section{Program architecture}
 Short description on the modules of the system, requirements, dependencies, etc.
 \section{Input data description}
-File formats, api used to read, dependencies, data sources, etc.
-Is there any institution providing the input data?
-References to public databases.
+%File formats, api used to read, dependencies, data sources, etc.
+%Is there any institution providing the input data?
+%References to public databases.
+
+As we wanted to keep the input simple we decided to use .obj files as the point clouds. It is easy to find multiple different models in this format which allowed us to test the algorithms on multiple distinctive samples. Furthermore, one can edit .obj files using for example \textit{Blender} to add noise or even cut off part of the cloud. 
+
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{ms-bunny.png}
+\caption{3D laser scan}
+\end{figure}
+
 \section{Execution, configuration and user guide}
 How can one replicate the experiments?
 Any relevant information and runtime howtos.
