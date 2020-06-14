@@ -27,8 +27,8 @@
 	{\scshape\Large Course: Research project - GPU algorithms \par}}
 	
 	\vspace{1cm}
-	\noindent\textbf{Coordinator}: Krzysztof Kaczmarski\\
-	\textbf{Authors}: Michał Rogala, Szymon Stasiak, Mateusz Śliwakowski\\
+	\noindent\textbf{Coordinator}: Kaczmarski Krzysztof\\
+	\textbf{Authors}: Rogala Michał, Stasiak Szymon, Śliwakowski Mateusz\\
 	\textbf{Description}: This document covers three different SLAM methods with an emphasis on CUDA \mbox{implementation}\\
 	\textbf{Code repository}: \href{https://github.com/Sliwson/cuda-slam}{https://github.com/Sliwson/cuda-slam}\\
 	\textbf{Code license}: MIT\\
@@ -50,7 +50,7 @@ The report is devoted to a research of SLAM methods using CUDA technology. We wa
 %Description of the problem, motivating example, killer application, etc.
 
 \subsection{Theoretical background}
-\textbf{Simultaneous localization and mapping} (in short SLAM) is the computational problem of constructing or updating a map of an unknown environment while simultaneously keeping track of an agent's location within it \cite{ms-wiki1}. In theory the problem can be simplified to more mathematical definition - given two point sets $P_1 = \{x_1,\dots, x_n\}$ and $P_2=\{y_1, \dots, y_n\}$ find translation $t$ and rotation $R$ that minimizes the Mean Square Error:
+\textbf{Simultaneous localization and mapping} (in short SLAM) is the computational problem of constructing or updating a map of an unknown environment while simultaneously keeping track of an agent's location within it \cite{ms-wiki1}. In theory the problem can be simplified to more mathematical definition - given two point sets $P_1 = \{x_1,\dots, x_n\}$ and $P_2=\{y_1, \dots, y_n\}$ find translation $t$ and rotation $R$ that minimizes the mean square error:
 $$MSE(R, t) = \frac{1}{N}\sum_{i=1}{N}(x_i - Ry_i - t)^2$$
 
 The reality, unfortunately, is much more complicated. Sizes of point sets might differ, clouds are unordered and noise points can occur.
