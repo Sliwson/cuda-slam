@@ -25,3 +25,4 @@
 using namespace Common;
 
 void CudaTest();
+void CudaTest2();

@@ -2,6 +2,7 @@
 
 int main()
 {
-	CudaTest();
+	CudaTest2();
+	//CudaTest();
 	return 0;
 }
