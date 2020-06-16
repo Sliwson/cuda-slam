@@ -205,8 +205,7 @@ namespace {
 		CudaSvdParams params(cloud.size(), cloud.size());
 
 		// Align array
-		const auto deviceCentroid = CalculateCentroid(cloud);
-		cudaMemcpy(&centroid, &deviceCentroid, sizeof(deviceCentroid), cudaMemcpyDeviceToHost);
+		centroid = CalculateCentroid(cloud);
 		GetAlignedCloud(cloud, alignCloud);
 
 		// Create counting iterators
