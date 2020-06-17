@@ -39,7 +39,7 @@ namespace NonIterative
 		return NonIterativeSlamResult(rotationMatrix, translationVector, cloudAfter, error);
 	}
 
-	std::pair<glm::mat3, glm::vec3> GetNonIterativeTransformationMatrix(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, float* error, float eps, int maxRepetitions, const NonIterative::NonIterativeApproximation& calculationType, int subcloudSize)
+	std::pair<glm::mat3, glm::vec3> GetNonIterativeTransformationMatrix(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, int* repetitions, float* error, float eps, int maxRepetitions, const NonIterative::NonIterativeApproximation& calculationType, int subcloudSize)
 	{
 		int cloudSize = std::min(cloudBefore.size(), cloudAfter.size());
 
@@ -52,6 +52,7 @@ namespace NonIterative
 		std::vector<int> subcloudIndices = GetRandomPermutationVector(subcloudSize);
 		std::vector<Point_f>subcloudVertices = GetSubcloud(cloudBefore, subcloudIndices);
 		const float maxDistanceForComparison = 1e6;
+		*repetitions = maxRepetitions;
 
 		// Run NonIterative SLAM for multiple permutations and return the best fit
 		std::vector<NonIterativeSlamResult> bestResults;
@@ -77,6 +78,7 @@ namespace NonIterative
 
 					if (minError <= eps)
 					{
+						*repetitions = i;
 						return bestTransformation;
 					}
 				}

@@ -61,6 +61,7 @@ namespace NonIterative
 	std::pair<glm::mat3, glm::vec3> GetNonIterativeTransformationMatrix(
 		const std::vector<Point_f>& cloudBefore, 
 		const std::vector<Point_f>& cloudAfter, 
+		int* repetitions,
 		float* error, 
 		float eps, 
 		int maxRepetitions, 
