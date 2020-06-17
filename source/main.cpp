@@ -2,7 +2,7 @@
 
 int main()
 {
-	CudaTest2();
+	NonIterativeCudaTest();
 	//CudaTest();
 	return 0;
 }

@@ -4,20 +4,21 @@
 
 struct CudaSvdParams
 {
-	CudaSvdParams(int beforeLength, int afterLength)
+	CudaSvdParams(int beforeLength, int afterLength, int m, int n)
+		:m(m), n(n)
 	{
-		cudaMalloc(&workBefore, beforeLength * 3 * sizeof(float));
-		cudaMalloc(&workAfter, afterLength * 3 * sizeof(float));
-		cudaMalloc(&multiplyResult, 3 * 3 * sizeof(float));
+		cudaMalloc(&workBefore, beforeLength * n * sizeof(float));
+		cudaMalloc(&workAfter, afterLength * n * sizeof(float));
+		cudaMalloc(&multiplyResult, n * m * sizeof(float));
 		cublasCreate(&multiplyHandle);
 
 		cudaMalloc(&devInfo, sizeof(int));
-		cudaMalloc(&S, 9 * sizeof(float));
-		cudaMalloc(&VT, 9 * sizeof(float));
-		cudaMalloc(&U, 9 * sizeof(float));
+		cudaMalloc(&S, n * n * sizeof(float));
+		cudaMalloc(&VT, n * n * sizeof(float));
+		cudaMalloc(&U, m * m * sizeof(float));
 		cusolverDnCreate(&solverHandle);
-		
-		cusolverDnDgesvd_bufferSize(solverHandle, 3, 3, &workSize);
+
+		cusolverDnDgesvd_bufferSize(solverHandle, m, n, &workSize);
 		cudaMalloc(&work, workSize * sizeof(float));
 	}
 
@@ -49,5 +50,7 @@ struct CudaSvdParams
 	float* work = nullptr;
 	int* devInfo = nullptr;
 	int workSize = 0;
+	int m = 0;
+	int n = 0;
 	cusolverDnHandle_t solverHandle = nullptr;
 };

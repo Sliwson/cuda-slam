@@ -25,4 +25,4 @@
 using namespace Common;
 
 void CudaTest();
-void CudaTest2();
+void NonIterativeCudaTest();

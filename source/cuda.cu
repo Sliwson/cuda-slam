@@ -158,7 +158,7 @@ namespace {
 		cudaMemcpy(params.multiplyResult, transposed, 9 * sizeof(float), cudaMemcpyHostToDevice);
 
 		//svd
-		cusolverDnSgesvd(params.solverHandle, 'A', 'A', 3, 3, params.multiplyResult, 3, params.S, params.U, 3, params.VT, 3, params.work, params.workSize, nullptr, params.devInfo);
+		cusolverDnSgesvd(params.solverHandle, 'A', 'A', params.m, params.n, params.multiplyResult, params.m, params.S, params.U, params.m, params.VT, params.n, params.work, params.workSize, nullptr, params.devInfo);
 		int svdResultInfo = 0;
 		cudaMemcpy(&svdResultInfo, params.devInfo, sizeof(int), cudaMemcpyDeviceToHost);
 		if (svdResultInfo != 0)
@@ -202,7 +202,7 @@ namespace {
 	glm::mat3 GetSVDMatrixU(const Cloud& cloud, Cloud& alignCloud, glm::vec3& centroid)
 	{
 		// Allocate memory for cuBLAS
-		CudaSvdParams params(cloud.size(), cloud.size());
+		CudaSvdParams params(cloud.size(), cloud.size(), cloud.size(), 3);
 
 		// Align array
 		centroid = CalculateCentroid(cloud);
@@ -215,27 +215,24 @@ namespace {
 		// Create array for SVD
 		const auto beforeZipBegin = thrust::make_zip_iterator(thrust::make_tuple(countingBegin, alignCloud.begin()));
 		const auto beforeZipEnd = thrust::make_zip_iterator(thrust::make_tuple(countingEnd, alignCloud.end()));
-		auto convertBefore = Functors::GlmToCuBlas(false, cloud.size(), params.workBefore);
+		auto convertBefore = Functors::GlmToCuBlas(true, cloud.size(), params.workBefore);
 		thrust::for_each(thrust::device, beforeZipBegin, beforeZipEnd, convertBefore);
 
 		// Apply SVD for array
-		cusolverDnSgesvd(params.solverHandle, 'A', 'N', 3, cloud.size(), params.workBefore, 3, params.S, params.U, 3, params.VT, 3, params.work, params.workSize, nullptr, params.devInfo);
+		cusolverDnSgesvd(params.solverHandle, 'N', 'A', params.m, params.n, params.workBefore, params.m, params.S, params.U, params.m, params.VT, params.n, params.work, params.workSize, nullptr, params.devInfo);
 		int svdResultInfo = 0;
 		cudaMemcpy(&svdResultInfo, params.devInfo, sizeof(int), cudaMemcpyDeviceToHost);
 		if (svdResultInfo != 0)
 			printf("Svd execution failed!\n");
 
 		// Convert SVD result to glm
-		float hostU[9];
-		cudaMemcpy(hostU, params.U, 9 * sizeof(float), cudaMemcpyDeviceToHost);
+		float result[9];
+		// Use V^T matrix instead of U as we pass transposed matrix to cusolver
+		// A = U * S * V => A^T = V^T * S^T * U^T => U(A^T)  = V^T (more or less :) )
+		cudaMemcpy(result, params.VT, 9 * sizeof(float), cudaMemcpyDeviceToHost);
 
 		params.Free();
-		return glm::transpose(CreateGlmMatrix(hostU));
-		////revert signs to match svd cpu solution
-		//for (int i = 0; i < 3; i++)
-		//{
-		//	gU[1][i] = -gU[1][i];
-		//}
+		return CreateGlmMatrix(result);
 	}
 
 	glm::mat4 CudaICP(const Cloud& before, const Cloud& after)
@@ -257,7 +254,7 @@ namespace {
 		thrust::copy(thrust::device, before.begin(), before.end(), workingBefore.begin());
 
 		//allocate memory for cuBLAS
-		CudaSvdParams params(size, size);
+		CudaSvdParams params(size, size, 3, 3);
 		
 		while (iterations < maxIterations)
 		{
@@ -296,47 +293,37 @@ namespace {
 		int iterations = 0;
 		glm::mat4 transformationMatrix(1.0f);
 
-		//do not change before vector - copy it for calculations
-		const int size = std::max(before.size(), after.size());
-		Cloud workingBefore(before.size());
 		Cloud alignBefore(before.size());
-		glm::vec3 hostCentroidBefore;
 		Cloud alignAfter(after.size());
-		glm::vec3 hostCentroidAfter;
 		thrust::device_vector<int> indices(before.size());
-		thrust::copy(thrust::device, before.begin(), before.end(), workingBefore.begin());
+		glm::vec3 centroidBefore, centroidAfter;
 
-		auto uMatrixBefore = GetSVDMatrixU(workingBefore, alignBefore, hostCentroidBefore);
-		auto uMatrixAfter = GetSVDMatrixU(after, alignAfter, hostCentroidAfter);
+		auto uMatrixBefore = GetSVDMatrixU(before, alignBefore, centroidBefore);
+		auto uMatrixAfter = GetSVDMatrixU(after, alignAfter, centroidAfter);
 
 		auto rotationMatrix = uMatrixAfter * glm::transpose(uMatrixBefore);
-		auto translationVector = glm::vec3(hostCentroidAfter) - (rotationMatrix * hostCentroidBefore);
+		auto translationVector = glm::vec3(centroidAfter) - (rotationMatrix * centroidBefore);
 
-		float error = GetMeanSquaredError(indices, workingBefore, after);
+		float error = GetMeanSquaredError(indices, before, after);
 
-		//while (iterations < maxIterations)
-		//{
-		//	GetCorrespondingPoints(indices, workingBefore, after);
+		for (int i = 0; i < 3; i++)
+			for (int j = 0; j < 3; j++)
+				transformationMatrix[i][j] = rotationMatrix[i][j];
 
-		//	transformationMatrix = LeastSquaresSVD(indices, workingBefore, after, alignBefore, alignAfter, params) * transformationMatrix;
+		transformationMatrix[3][0] = translationVector.x;
+		transformationMatrix[3][1] = translationVector.y;
+		transformationMatrix[3][2] = translationVector.z;
+		transformationMatrix[3][3] = 1.0f;
 
-		//	TransformCloud(before, workingBefore, transformationMatrix);
-		//	float error = GetMeanSquaredError(indices, workingBefore, after);
-		//	printf("Iteration: %d, error: %f\n", iterations, error);
-		//	if (error < TEST_EPS)
-		//		break;
-
-		//	if (error > previousError)
-		//	{
-		//		printf("Error has increased, aborting\n");
-		//		transformationMatrix = previousTransformationMatrix;
-		//		break;
-		//	}
-
-		//	previousTransformationMatrix = transformationMatrix;
-		//	previousError = error;
-		//	iterations++;
-		//}
+		// TODO: Remove this debug print for result transformation
+		for (int i = 0; i < 4; i++)
+		{
+			for (int j = 0; j < 4; j++)
+			{
+				printf("%f\t", transformationMatrix[i][j]);
+			}
+			printf("\n");
+		}
 
 		return transformationMatrix;
 	}
@@ -380,7 +367,7 @@ namespace {
 			ones[i] = 1.f;
 
 
-		CudaSvdParams params(size, size);
+		CudaSvdParams params(size, size, 3, 3);
 		cudaMemcpy(params.workBefore, ones, 3 * size * sizeof(float), cudaMemcpyHostToDevice);
 		cudaMemcpy(params.workAfter, ones, 3 * size * sizeof(float), cudaMemcpyHostToDevice);
 
@@ -399,7 +386,7 @@ namespace {
 	}	
 }
 
-void CudaTest2()
+void NonIterativeCudaTest()
 {
 	/****************************/
 	//TESTS
@@ -426,6 +413,16 @@ void CudaTest2()
 	thrust::transform(thrust::device, deviceCloudAfter.begin(), deviceCloudAfter.end(), deviceCloudAfter.begin(), scaleInputCorrupted);
 
 	const auto sampleTransform = glm::rotate(glm::translate(glm::mat4(1), { 0.05f, 0.05f, 0.05f }), glm::radians(5.f), { 0.5f, 0.5f, 0.5f });
+	// TODO: Remove this debug print for sample transformation
+	for (int i = 0; i < 4; i++)
+	{
+		for (int j = 0; j < 4; j++)
+		{
+			printf("%f\t", sampleTransform[i][j]);
+		}
+		printf("\n");
+	}
+	printf("\n");
 	TransformCloud(deviceCloudAfter, deviceCloudAfter, sampleTransform);
 
 	auto start = std::chrono::high_resolution_clock::now();
