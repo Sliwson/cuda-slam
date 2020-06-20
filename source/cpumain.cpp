@@ -26,7 +26,7 @@ int main()
 	//Tests::BasicICPTest(object_path4, object_path5, -1, -1, TEST_EPS);
 
 	const auto type = NonIterative::NonIterativeApproximation::None;
-	Tests::NonIterativeTest(objectPathBunny, -1, TEST_EPS, 20, type, CLOUD_SIZE);
-	//Tests::BasicICPTest(object_path, CLOUD_SIZE, TEST_EPS);
+//	Tests::NonIterativeTest(objectPathBunny, -1, TEST_EPS, 20, type, CLOUD_SIZE);
+	Tests::BasicICPTest(objectPathBunny, CLOUD_SIZE, TEST_EPS);
 	return 0;
 }

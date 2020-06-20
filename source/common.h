@@ -49,7 +49,7 @@ namespace Common
 	void PrintMatrix(const glm::mat3& matrix);
 	void PrintMatrix(const glm::mat3& matrix, const glm::vec3& vector);
 
-	CorrespondingPointsTuple GetCorrespondingPoints(const std::vector<Common::Point_f>& cloudBefore, const std::vector<Common::Point_f>& cloudAfter, float maxDistanceSquared);
+	CorrespondingPointsTuple GetCorrespondingPoints(const std::vector<Common::Point_f>& cloudBefore, const std::vector<Common::Point_f>& cloudAfter, float maxDistanceSquared, bool parallel);
 
 	std::pair<glm::mat3, glm::vec3> LeastSquaresSVD(const std::vector<Common::Point_f>& cloudBefore, const std::vector<Common::Point_f>& cloudAfter);
 

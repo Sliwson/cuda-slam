@@ -3,6 +3,7 @@
 
 #include "common.h"
 #include "loader.h"
+#include <thread>
 
 namespace Common
 {
@@ -289,6 +290,82 @@ namespace Common
 		correspondingIndexesAfter.resize(correspondingCount);
 
 		return std::make_tuple(correspondingFromCloudBefore, correspondingFromCloudAfter, correspondingIndexesBefore, correspondingIndexesAfter);
+	}
+
+	CorrespondingPointsTuple GetCorrespondingPointsParallel(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, float maxDistanceSquared)
+	{
+		const auto threadCount = std::thread::hardware_concurrency();
+		std::vector<std::thread> workerThreads;
+
+		const auto get_correspondence_idx = [](Point_f sourcePoint, const std::vector<Point_f>& targetCloud) {
+			int closestIndex = -1;
+			float closestDistance = std::numeric_limits<float>::max();
+
+			for (int j = 0; j < targetCloud.size(); j++)
+			{
+				float distance = (targetCloud[j] - sourcePoint).LengthSquared();
+
+				if (distance < closestDistance)
+				{
+					closestDistance = distance;
+					closestIndex = j;
+				}
+			}
+
+			return closestIndex;
+		};
+
+		std::vector<int> correspondingIndices(cloudBefore.size());
+
+		const auto calculate_correspondences = [&](int beginIndex, int endIndex) {
+			for (int i = beginIndex; i < endIndex; i++)
+				correspondingIndices[i] = get_correspondence_idx(cloudBefore[i], cloudAfter);
+		};
+
+		const auto threadWorkLength = cloudBefore.size() / threadCount;
+		for (int i = 0; i < threadCount - 1; i++)
+			workerThreads.push_back(std::thread(calculate_correspondences, i * threadWorkLength, (i + 1) * threadWorkLength));
+
+		workerThreads.push_back(std::thread(calculate_correspondences, (threadCount - 1) * threadWorkLength, cloudBefore.size()));
+
+		for (int i = 0; i < threadCount; i++)
+			workerThreads[i].join();
+
+		std::vector<Point_f> correspondingFromCloudBefore(cloudBefore.size());
+		std::vector<Point_f> correspondingFromCloudAfter(cloudBefore.size());
+		std::vector<int> correspondingIndexesBefore(cloudBefore.size());
+		std::vector<int> correspondingIndexesAfter(cloudBefore.size());
+		int correspondingCount = 0;
+
+		for (int i = 0; i < cloudBefore.size(); i++)
+		{
+			const auto closestIndex = correspondingIndices[i];
+			const auto distance = (cloudBefore[i] - cloudAfter[closestIndex]).LengthSquared();
+			if (distance < maxDistanceSquared)
+			{
+				correspondingFromCloudBefore[correspondingCount] = cloudBefore[i];
+				correspondingFromCloudAfter[correspondingCount] = cloudAfter[closestIndex];
+				correspondingIndexesBefore[correspondingCount] = i;
+				correspondingIndexesAfter[correspondingCount] = closestIndex;
+
+				correspondingCount++;
+			}
+		}
+
+		correspondingFromCloudBefore.resize(correspondingCount);
+		correspondingFromCloudAfter.resize(correspondingCount);
+		correspondingIndexesBefore.resize(correspondingCount);
+		correspondingIndexesAfter.resize(correspondingCount);
+
+		return std::make_tuple(correspondingFromCloudBefore, correspondingFromCloudAfter, correspondingIndexesBefore, correspondingIndexesAfter);
+	}
+
+	CorrespondingPointsTuple GetCorrespondingPoints(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, float maxDistanceSquared, bool parallel)
+	{
+		if (parallel)
+			return GetCorrespondingPointsParallel(cloudBefore, cloudAfter, maxDistanceSquared);
+		else
+			return GetCorrespondingPoints(cloudBefore, cloudAfter, maxDistanceSquared);
 	}
 
 	std::pair<glm::mat3, glm::vec3> LeastSquaresSVD(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter)

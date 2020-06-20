@@ -67,7 +67,7 @@ namespace NonIterative
 			if (calculationType == NonIterativeApproximation::None)
 			{
 				std::vector<Point_f> transformedSubcloud = GetTransformedCloud(subcloudVertices, transformationResult.getRotationMatrix(), transformationResult.getTranslationVector());
-				CorrespondingPointsTuple correspondingPoints = GetCorrespondingPoints(transformedSubcloud, permutedAfter, maxDistanceForComparison);
+				CorrespondingPointsTuple correspondingPoints = GetCorrespondingPoints(transformedSubcloud, permutedAfter, maxDistanceForComparison, true);
 				*error = GetMeanSquaredError(std::get<0>(correspondingPoints), std::get<1>(correspondingPoints));
 
 				if (*error < minError)
@@ -101,7 +101,7 @@ namespace NonIterative
 			for (int i = 0; i < bestResults.size(); i++)
 			{
 				std::vector<Point_f> transformedSubcloud = GetTransformedCloud(subcloudVertices, bestResults[i].getRotationMatrix(), bestResults[i].getTranslationVector());
-				CorrespondingPointsTuple correspondingPoints = GetCorrespondingPoints(transformedSubcloud, bestResults[i].getCloudAfter(), maxDistanceForComparison);
+				CorrespondingPointsTuple correspondingPoints = GetCorrespondingPoints(transformedSubcloud, bestResults[i].getCloudAfter(), maxDistanceForComparison, true);
 				*error = GetMeanSquaredError(std::get<0>(correspondingPoints), std::get<1>(correspondingPoints));
 
 				if (*error < minError)

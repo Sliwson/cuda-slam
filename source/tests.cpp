@@ -77,13 +77,13 @@ namespace Tests
 		iterations = 0;
 		error = 1.0f;
 
-		timer.StartStage("icp1");
-		const auto icpCalculatedTransform1 = BasicICP::GetBasicICPTransformationMatrix(cloud, transformedPermutedCloud, &iterations, &error, testEps, 25.0f, 5);
-		timer.StopStage("icp1");
+		timer.StartStage("icp1-sequential");
+		const auto icpCalculatedTransform1 = BasicICP::GetBasicICPTransformationMatrix(cloud, transformedPermutedCloud, &iterations, &error, testEps, 1000.f, 100, false);
+		timer.StopStage("icp1-sequential");
 
-		timer.StartStage("icp2");
-		const auto icpCalculatedTransform2 = BasicICP::GetBasicICPTransformationMatrix(cloud, transformedPermutedCloud, &iterations, &error, testEps, 1000.0f, 100);
-		timer.StopStage("icp2");
+		timer.StartStage("icp2-parallel");
+		const auto icpCalculatedTransform2 = BasicICP::GetBasicICPTransformationMatrix(cloud, transformedPermutedCloud, &iterations, &error, testEps, 1000.f, 100, true);
+		timer.StopStage("icp2-parallel");
 
 		const auto resultOrdered = TestTransformOrdered(cloud, transformedCloud, transform, testEps);
 		const auto resultUnordered = TestTransformWithPermutation(cloud, transformedPermutedCloud, permutation, transform, testEps);
