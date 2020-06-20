@@ -4,7 +4,7 @@
 #include "noniterative.h"
 
 constexpr float TEST_EPS = 1e-6f;
-constexpr int CLOUD_SIZE = 3000;
+constexpr int CLOUD_SIZE = 10000;
 const char* objectPathBunny = "data/bunny.obj";
 const char* objectPathBunnyDecapitated = "data/bunny-decapitated.obj";
 const char* objectPathBunnyHead = "data/bunny-head.obj";

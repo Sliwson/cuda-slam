@@ -95,6 +95,9 @@ namespace Tests
 		std::cout << "Transform Matrix" << std::endl;
 		PrintMatrix(transform);
 
+		std::cout << "ICP1 Matrix" << std::endl;
+		PrintMatrix(icpCalculatedTransform1.first, icpCalculatedTransform1.second);
+
 		std::cout << "ICP2 Matrix" << std::endl;
 		PrintMatrix(icpCalculatedTransform2.first, icpCalculatedTransform2.second);
 
