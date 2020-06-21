@@ -16,13 +16,15 @@ namespace Common
 			return std::vector<Point_f>();
 	}
 
-	std::vector<Point_f> GetSubcloud(const std::vector<Point_f>& cloud, const std::vector<int>& indices)
+	std::vector<Point_f> GetSubcloud(const std::vector<Point_f>& cloud, int subcloudSize)
 	{
-		if (indices.size() >= cloud.size())
+		if (subcloudSize >= cloud.size())
 			return cloud;
+		std::vector<int> subcloudIndices = GetRandomPermutationVector(cloud.size());
+		subcloudIndices.resize(subcloudSize);
 
-		std::vector<Point_f> subcloud(indices.size());
-		std::transform(indices.begin(), indices.end(), subcloud.begin(), [&cloud](size_t pos) { return cloud[pos]; });
+		std::vector<Point_f> subcloud(subcloudIndices.size());
+		std::transform(subcloudIndices.begin(), subcloudIndices.end(), subcloud.begin(), [&cloud](size_t pos) { return cloud[pos]; });
 
 		return subcloud;
 	}
@@ -427,7 +429,8 @@ namespace Common
 	{
 		std::vector<Point_f> permutedCloud(input.size());
 		for (int i = 0; i < input.size(); i++)
-			permutedCloud[i] = input[permutation[i]];
+			permutedCloud[i] = i < permutation.size() ? input[permutation[i]] : input[i];
+
 		return permutedCloud;
 	}
 }

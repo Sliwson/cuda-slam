@@ -47,10 +47,7 @@ namespace NonIterative
 		float minError = std::numeric_limits<float>::max();
 
 		// Get subcloud for comparison
-		if (subcloudSize == -1)
-			subcloudSize = cloudBefore.size();
-		std::vector<int> subcloudIndices = GetRandomPermutationVector(subcloudSize);
-		std::vector<Point_f>subcloudVertices = GetSubcloud(cloudBefore, subcloudIndices);
+		std::vector<Point_f>subcloudVertices = GetSubcloud(cloudBefore, subcloudSize);
 		const float maxDistanceForComparison = 1e6;
 
 		// Run NonIterative SLAM for multiple permutations and return the best fit

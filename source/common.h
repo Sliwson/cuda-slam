@@ -10,7 +10,7 @@ namespace Common
 	typedef std::tuple<std::vector<Point_f>, std::vector<Point_f>, std::vector<int>, std::vector<int>> CorrespondingPointsTuple;
 
 	std::vector<Point_f> LoadCloud(const std::string& path);
-	std::vector<Point_f> GetSubcloud(const std::vector<Point_f>& cloud, const std::vector<int>& indices);
+	std::vector<Point_f> GetSubcloud(const std::vector<Point_f>& cloud, int subcloudSize);
 	std::vector<Point_f> ResizeCloudWithStep(const std::vector<Point_f>& cloud, int step);
 
 	[[deprecated("Replaced by version with rotation matrix and translation vector")]]
