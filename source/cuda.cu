@@ -284,7 +284,7 @@ namespace {
 		return transformationMatrix;
 	}
 
-	glm::mat4 CudaNonIterative(const Cloud& before, const Cloud& after)
+	glm::mat4 CudaSingleNonIterativeSlam(const Cloud& before, const Cloud& after, const Cloud& subcloud)
 	{
 		const int maxIterations = 60;
 		const float TEST_EPS = 1e-5;
@@ -303,8 +303,6 @@ namespace {
 
 		auto rotationMatrix = uMatrixAfter * glm::transpose(uMatrixBefore);
 		auto translationVector = glm::vec3(centroidAfter) - (rotationMatrix * centroidBefore);
-
-		float error = GetMeanSquaredError(indices, before, after);
 
 		for (int i = 0; i < 3; i++)
 			for (int j = 0; j < 3; j++)
@@ -325,7 +323,35 @@ namespace {
 			printf("\n");
 		}
 
+		Cloud workingSubcloud(subcloud.size());
+		TransformCloud(subcloud, workingSubcloud, transformationMatrix);
+		GetCorrespondingPoints(indices, workingSubcloud, after);
+		float error = GetMeanSquaredError(indices, workingSubcloud, after);
+		printf("Error: %f \n", error);
+
 		return transformationMatrix;
+	}
+
+	glm::mat4 CudaNonIterative(const Cloud& before, const Cloud& after, const int maxRepetitions, const int cpuThreadsCount)
+	{
+		int batchesCount = maxRepetitions / cpuThreadsCount;
+		int lastBatchSize = maxRepetitions % cpuThreadsCount;
+		glm::mat4 transformResult(1.0f);
+
+		// Get subcloud
+		for (int i = 0; i < batchesCount; i++)
+		{
+			// Run cpu threads count
+		}
+
+		if (lastBatchSize != 0)
+		{
+			// Run lastBatchSize threads 
+		}
+
+
+
+		return transformResult;
 	}
 
 	void CorrespondencesTest()
@@ -398,6 +424,10 @@ void NonIterativeCudaTest()
 	/****************************/
 	const auto testCloud = LoadCloud("data/bunny.obj");
 	const auto testCorrupted = LoadCloud("data/bunny.obj");
+	const int maxRepetitions = 20;
+	const int cpuThreadsCount = (int)std::thread::hardware_concurrency();
+	//testCloud.resize(19000);
+	//testCorrupted.resize(19000);
 
 	const auto hostBefore = CommonToThrustVector(testCloud);
 	const auto hostAfter = CommonToThrustVector(testCorrupted);
@@ -426,7 +456,7 @@ void NonIterativeCudaTest()
 	TransformCloud(deviceCloudAfter, deviceCloudAfter, sampleTransform);
 
 	auto start = std::chrono::high_resolution_clock::now();
-	const auto result = CudaNonIterative(deviceCloudBefore, deviceCloudAfter);
+	const auto result = CudaNonIterative(deviceCloudBefore, deviceCloudAfter, maxRepetitions, cpuThreadsCount);
 	auto stop = std::chrono::high_resolution_clock::now();
 	printf("Size: %d points, duration: %dms\n", testCloud.size(), std::chrono::duration_cast<std::chrono::milliseconds>(stop - start));
 
