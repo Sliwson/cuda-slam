@@ -252,7 +252,7 @@ namespace Common
 		PrintMatrix(transform);
 	}
 
-	CorrespondingPointsTuple GetCorrespondingPoints(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, float maxDistanceSquared)
+	CorrespondingPointsTuple GetCorrespondingPointsSequential(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, float maxDistanceSquared)
 	{
 		std::vector<Point_f> correspondingFromCloudBefore(cloudBefore.size());
 		std::vector<Point_f> correspondingFromCloudAfter(cloudBefore.size());
@@ -367,7 +367,7 @@ namespace Common
 		if (parallel)
 			return GetCorrespondingPointsParallel(cloudBefore, cloudAfter, maxDistanceSquared);
 		else
-			return GetCorrespondingPoints(cloudBefore, cloudAfter, maxDistanceSquared);
+			return GetCorrespondingPointsSequential(cloudBefore, cloudAfter, maxDistanceSquared);
 	}
 
 	std::pair<glm::mat3, glm::vec3> LeastSquaresSVD(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter)
