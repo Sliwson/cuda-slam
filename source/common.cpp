@@ -1,9 +1,10 @@
 #include <chrono>
 #include <tuple>
+#include <thread>
+#include <array>
 
 #include "common.h"
 #include "loader.h"
-#include <thread>
 
 namespace Common
 {
@@ -20,6 +21,7 @@ namespace Common
 	{
 		if (subcloudSize >= cloud.size())
 			return cloud;
+
 		std::vector<int> subcloudIndices = GetRandomPermutationVector(cloud.size());
 		subcloudIndices.resize(subcloudSize);
 
@@ -27,20 +29,6 @@ namespace Common
 		std::transform(subcloudIndices.begin(), subcloudIndices.end(), subcloud.begin(), [&cloud](size_t pos) { return cloud[pos]; });
 
 		return subcloud;
-	}
-
-	std::vector<Point_f> ResizeCloudWithStep(const std::vector<Point_f>& cloud, int step)
-	{
-		int size = cloud.size() / step;
-		if (size == 0)
-			return cloud;
-		std::vector<Point_f> result = std::vector<Point_f>(size);
-		size_t i = 0, j = 0;
-		for (i = 0, j = 0; i < cloud.size(); i += step, j++);
-		{
-			result[j] = cloud[i];
-		}
-		return result;
 	}
 
 	Point_f TransformPoint(const Point_f& point, const glm::mat4& transformationMatrix)
@@ -59,6 +47,30 @@ namespace Common
 	{
 		const glm::vec3 result = scale * (rotationMatrix * point) + translationVector;
 		return Point_f(result);
+	}
+
+	std::vector<Point_f> NormalizeCloud(const std::vector<Point_f>& cloud, float size)
+	{
+		const auto get_minmax = [&](auto selector) {
+			 return std::minmax(cloud.begin(), cloud.end(), [selector](auto p1, auto p2) { return selector(p1) < selector(p2); });
+		};
+
+		const auto [xMin, xMax] = get_minmax([](auto p) { return p->x; });
+		const auto [yMin, yMax] = get_minmax([](auto p) { return p->y; });
+		const auto [zMin, zMax] = get_minmax([](auto p) { return p->z; });
+
+		const std::array<float, 3> spans = { xMax->x - xMin->x, yMax->y - yMin->y, zMax->z - zMin->z };
+		const auto max = std::max(spans.begin(), spans.end());
+
+		if (*max == 0)
+			return cloud;
+
+		const auto scale = size / *max;
+
+		auto outputCloud = std::vector<Point_f>(cloud.size());
+		std::transform(cloud.begin(), cloud.end(), outputCloud.begin(), [scale](auto p) { return p * scale; });
+
+		return outputCloud;
 	}
 
 	std::vector<Point_f> GetTransformedCloud(const std::vector<Point_f>& cloud, const glm::mat4& matrix)
