@@ -65,6 +65,7 @@ namespace NonIterative
 		float eps, 
 		int maxRepetitions, 
 		const NonIterative::NonIterativeApproximation& calculationType, 
+		bool parallel = false,
 		int subcloudSize = -1);
 
 	void StoreResultIfOptimal(std::vector<NonIterativeSlamResult>& results, const NonIterativeSlamResult& newResult, int desiredLength);

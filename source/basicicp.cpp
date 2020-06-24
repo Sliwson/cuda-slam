@@ -8,7 +8,7 @@ using namespace Common;
 
 namespace BasicICP
 {
-	std::pair<glm::mat3, glm::vec3> GetBasicICPTransformationMatrix(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, int* iterations, float* error, float eps, float maxDistanceSquared, int maxIterations)
+	std::pair<glm::mat3, glm::vec3> GetBasicICPTransformationMatrix(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, int* iterations, float* error, float eps, float maxDistanceSquared, int maxIterations, bool parallel)
 	{
 		*iterations = 0;
 		*error = 1e5;
@@ -20,7 +20,7 @@ namespace BasicICP
 		while (maxIterations == -1 || *iterations < maxIterations)
 		{
 			// get corresponding points
-			correspondingPoints = GetCorrespondingPoints(transformedCloud, cloudAfter, maxDistanceSquared);
+			correspondingPoints = GetCorrespondingPoints(transformedCloud, cloudAfter, maxDistanceSquared, parallel);
 			if (std::get<0>(correspondingPoints).size() == 0)
 				break;
 
