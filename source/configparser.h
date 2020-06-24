@@ -42,4 +42,6 @@ public:
 
 private:
 
+	void LoadConfigFromFile(const std::string& path);
+
 };
