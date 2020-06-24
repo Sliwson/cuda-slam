@@ -202,7 +202,7 @@ namespace {
 	glm::mat3 GetSVDMatrixU(const Cloud& cloud, Cloud& alignCloud, glm::vec3& centroid)
 	{
 		// Allocate memory for cuBLAS
-		CudaSvdParams params(cloud.size(), cloud.size(), cloud.size(), 3);
+		CudaSvdParams params(cloud.size(), cloud.size(), cloud.size(), 3, false);
 
 		// Align array
 		centroid = CalculateCentroid(cloud);
@@ -284,14 +284,14 @@ namespace {
 		return transformationMatrix;
 	}
 
-	glm::mat4 CudaSingleNonIterativeSlam(const Cloud& before, const Cloud& after, const Cloud& subcloud)
+	void CudaSingleNonIterativeSlam(const Cloud& before, const Cloud& after, const Cloud& subcloud, float &error, glm::mat4 &transformationMatrix)
 	{
 		const int maxIterations = 60;
 		const float TEST_EPS = 1e-5;
 		float previousError = std::numeric_limits<float>::max();
 
 		int iterations = 0;
-		glm::mat4 transformationMatrix(1.0f);
+		transformationMatrix = glm::mat4(1.0f);
 
 		Cloud alignBefore(before.size());
 		Cloud alignAfter(after.size());
@@ -313,43 +313,81 @@ namespace {
 		transformationMatrix[3][2] = translationVector.z;
 		transformationMatrix[3][3] = 1.0f;
 
-		// TODO: Remove this debug print for result transformation
-		for (int i = 0; i < 4; i++)
-		{
-			for (int j = 0; j < 4; j++)
-			{
-				printf("%f\t", transformationMatrix[i][j]);
-			}
-			printf("\n");
-		}
-
 		Cloud workingSubcloud(subcloud.size());
 		TransformCloud(subcloud, workingSubcloud, transformationMatrix);
 		GetCorrespondingPoints(indices, workingSubcloud, after);
-		float error = GetMeanSquaredError(indices, workingSubcloud, after);
-		printf("Error: %f \n", error);
-
-		return transformationMatrix;
+		error = GetMeanSquaredError(indices, workingSubcloud, after);
 	}
 
-	glm::mat4 CudaNonIterative(const Cloud& before, const Cloud& after, const int maxRepetitions, const int cpuThreadsCount)
+	Cloud GetSubcloud(const Cloud& cloud, int subcloudSize)
 	{
-		int batchesCount = maxRepetitions / cpuThreadsCount;
-		int lastBatchSize = maxRepetitions % cpuThreadsCount;
+		if (subcloudSize >= cloud.size())
+			return cloud;
+		std::vector<int> subcloudIndices = GetRandomPermutationVector(cloud.size());
+		subcloudIndices.resize(subcloudSize);
+		thrust::device_vector<int> indices(subcloudIndices);
+
+		Cloud subcloud(subcloudIndices.size());
+		const auto getSubcloudFunctor = Functors::Permutation(cloud);
+		thrust::transform(thrust::device, indices.begin(), indices.end(), subcloud.begin(), getSubcloudFunctor);
+
+		return subcloud;
+	}
+
+	glm::mat4 CudaNonIterative(const Cloud& before, const Cloud& after, int* repetitions, float* error, float eps, int maxRepetitions, int cpuThreadsCount, const int subcloudSize)
+	{
 		glm::mat4 transformResult(1.0f);
+		*error = std::numeric_limits<float>::max();
 
 		// Get subcloud
-		for (int i = 0; i < batchesCount; i++)
+		const Cloud subcloud = GetSubcloud(before, subcloudSize);
+
+		int batchesCount = maxRepetitions / cpuThreadsCount;
+		int lastBatchSize = maxRepetitions % cpuThreadsCount;
+		int threadsToRun = cpuThreadsCount;
+		std::vector<std::thread> workerThreads(cpuThreadsCount);
+		std::vector<float> errors(cpuThreadsCount);
+		std::vector<glm::mat4> resultMatrix(cpuThreadsCount);
+
+		const auto thread_work = [&](int index) {
+			CudaSingleNonIterativeSlam(before, after, subcloud, errors[index], resultMatrix[index]);
+		};
+
+		for (int i = 0; i <= batchesCount; i++)
 		{
-			// Run cpu threads count
+			if (i == batchesCount)
+			{
+				if (lastBatchSize != 0)
+					threadsToRun = lastBatchSize;
+				else
+					break;
+			}
+
+			// Run CPU threads
+			for (int j = 0; j < threadsToRun; j++)
+				workerThreads[j] = std::thread(thread_work, j);
+
+			// Wait for threads to finish
+			for (int j = 0; j < threadsToRun; j++)
+				workerThreads[j].join();
+
+			// Process the results
+			*repetitions += threadsToRun;
+			for (int j = 0; j < threadsToRun; j++)
+			{
+				if (errors[j] <= eps)
+				{
+					*error = errors[j];
+					return resultMatrix[j];
+				}
+				
+				if (errors[j] < *error)
+				{
+					*error = errors[j];
+					transformResult = resultMatrix[j];
+				}
+			}
 		}
-
-		if (lastBatchSize != 0)
-		{
-			// Run lastBatchSize threads 
-		}
-
-
 
 		return transformResult;
 	}
@@ -424,7 +462,11 @@ void NonIterativeCudaTest()
 	/****************************/
 	const auto testCloud = LoadCloud("data/bunny.obj");
 	const auto testCorrupted = LoadCloud("data/bunny.obj");
+	int repetitions;
+	float error;
 	const int maxRepetitions = 20;
+	const int subcloudSize = 1000;
+	const float eps = 1e-5;
 	const int cpuThreadsCount = (int)std::thread::hardware_concurrency();
 	//testCloud.resize(19000);
 	//testCorrupted.resize(19000);
@@ -456,7 +498,7 @@ void NonIterativeCudaTest()
 	TransformCloud(deviceCloudAfter, deviceCloudAfter, sampleTransform);
 
 	auto start = std::chrono::high_resolution_clock::now();
-	const auto result = CudaNonIterative(deviceCloudBefore, deviceCloudAfter, maxRepetitions, cpuThreadsCount);
+	const auto result = CudaNonIterative(deviceCloudBefore, deviceCloudAfter, &repetitions, &error, eps, maxRepetitions, cpuThreadsCount, subcloudSize);
 	auto stop = std::chrono::high_resolution_clock::now();
 	printf("Size: %d points, duration: %dms\n", testCloud.size(), std::chrono::duration_cast<std::chrono::milliseconds>(stop - start));
 

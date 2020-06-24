@@ -119,5 +119,21 @@ namespace Functors {
 		float* output = nullptr;
 		int length = 0;
 	};
+
+	struct Permutation : thrust::unary_function<int, glm::vec3>
+	{
+		Permutation(const thrust::device_vector<glm::vec3>& sourceCloud)
+		{
+			this->sourceCloud = thrust::raw_pointer_cast(sourceCloud.data());
+		}
+
+		__device__ __host__ glm::vec3 operator()(const int& index)
+		{
+			return sourceCloud[index];
+		}
+
+	private:
+		const glm::vec3* sourceCloud;
+	};
 }
 
