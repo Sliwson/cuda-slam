@@ -44,7 +44,9 @@ namespace NonIterative
 	std::pair<glm::mat3, glm::vec3> GetNonIterativeTransformationMatrixParallel(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, float* error, float eps, int maxRepetitions, const NonIterative::NonIterativeApproximation& calculationType, int subcloudSize)
 	{
 		std::pair<glm::mat3, glm::vec3> bestTransformation;
-		float minError = std::numeric_limits<float>::max();
+		
+		//TODO: implement
+		/*float minError = std::numeric_limits<float>::max();
 
 		// Get subcloud for comparison
 		if (subcloudSize == -1)
@@ -63,7 +65,7 @@ namespace NonIterative
 			const auto permutedAfter = ApplyPermutation(cloudAfter, permutationAfter);
 		};
 
-		/*
+		
 		// Run NonIterative SLAM for multiple permutations and return the best fit
 		std::vector<NonIterativeSlamResult> bestResults;
 		for (int i = 0; i < maxRepetitions; i++)
