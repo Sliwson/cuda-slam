@@ -32,6 +32,7 @@ namespace Common
 	Point_f TransformPoint(const Point_f& point, const glm::mat3& rotationMatrix, const glm::vec3& translationVector, const float& scale);
 
 	// Mean squared error helpers
+	// Given clouds should be in corresponding orders and cloudAfter cannot have bigger size than cloudBefore
 	[[deprecated("Replaced by version with rotation matrix and translation vector")]]
 	float GetMeanSquaredError(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, const glm::mat4& matrix);
 	float GetMeanSquaredError(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, const glm::mat3& rotationMatrix, const glm::vec3& translationVector);
