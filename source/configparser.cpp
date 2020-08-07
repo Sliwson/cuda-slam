@@ -17,12 +17,12 @@ ConfigParser::ConfigParser(int argc, char** argv)
 		const std::string path = { argv[0] };
 		if (std::filesystem::exists(path))
 		{
-			printf("Loading config from: %s\n");
+			printf("Loading config from: %s\n", path.c_str());
 			LoadConfigFromFile(path);
 		}
 		else
 		{
-			printf("File: %s does not exist, loading default config\n");
+			printf("File: %s does not exist, loading default config\n", path.c_str());
 			LoadConfigFromFile(defaultPath);
 		}
 	}
