@@ -349,8 +349,23 @@ namespace {
 		std::vector<float> errors(cpuThreadsCount);
 		std::vector<glm::mat4> resultMatrix(cpuThreadsCount);
 
+		// Create copy for each thread
+		std::vector<Cloud> workingBefore(cpuThreadsCount);
+		std::vector<Cloud> workingAfter(cpuThreadsCount);
+		std::vector<Cloud> workingSubcloud(cpuThreadsCount);
+		for (int i = 0; i < cpuThreadsCount; i++)
+		{
+			workingBefore[i] = Cloud(before.size());
+			workingAfter[i] = Cloud(after.size());
+			workingSubcloud[i] = Cloud(subcloud.size());
+
+			thrust::copy(thrust::device, before.begin(), before.end(), workingBefore[i].begin());
+			thrust::copy(thrust::device, after.begin(), after.end(), workingAfter[i].begin());
+			thrust::copy(thrust::device, subcloud.begin(), subcloud.end(), workingSubcloud[i].begin());
+		}
+
 		const auto thread_work = [&](int index) {
-			CudaSingleNonIterativeSlam(before, after, subcloud, errors[index], resultMatrix[index]);
+			CudaSingleNonIterativeSlam(workingBefore[index], workingAfter[index], workingSubcloud[index], errors[index], resultMatrix[index]);
 		};
 
 		for (int i = 0; i <= batchesCount; i++)
