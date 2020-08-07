@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="source\configparser.cpp" />
     <ClCompile Include="source\camera.cpp" />
     <ClCompile Include="source\common.cpp" />
     <ClCompile Include="source\glad.c" />
@@ -33,6 +34,7 @@
     <ClCompile Include="source\timer.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="source\configparser.h" />
     <ClInclude Include="source\camera.h" />
     <ClInclude Include="source\fgttype.h" />
     <ClInclude Include="source\Icosphere.h" />
@@ -51,6 +53,8 @@
     <ClInclude Include="source\_common.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="config\default.json" />
+    <None Include="config\schema.json" />
     <None Include="source\shaders\fragmentshader.frag" />
     <None Include="source\shaders\vertexshader.vert" />
   </ItemGroup>

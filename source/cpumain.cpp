@@ -15,9 +15,10 @@ const char* objectPathBunnyNoise25 = "data/noise_25_bunny.off";
 const char* objectPathBunnyNoise50 = "data/noise_50_bunny.off";
 const char* objectPathRose = "data/rose.obj";
 
-int main()
+int main(int argc, char** argv)
 {
 	printf("Hello cpu-slam!\n");
+
 	//const float outliers = 0.5f;
 	//const bool const_scale = false;
 	//const int max_iter = 50;
