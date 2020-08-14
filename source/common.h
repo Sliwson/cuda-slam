@@ -4,6 +4,7 @@
 
 #include "renderer.h"
 #include "shadertype.h"
+#include "configparser.h"
 
 namespace Common
 {

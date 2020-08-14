@@ -1,47 +1,58 @@
 #pragma once
 #include "_common.h"
+#include <nlohmann/json.hpp>
 
-enum class ComputationMethod
+namespace Common 
 {
-	Icp,
-	NoniterativeIcp,
-	Cpd
-};
+	enum class ComputationMethod
+	{
+		Icp,
+		NoniterativeIcp,
+		Cpd
+	};
 
-enum class ExecutionPolicy
-{
-	Sequential,
-	Parallel
-};
+	enum class ExecutionPolicy
+	{
+		Sequential,
+		Parallel
+	};
 
-class ConfigParser
-{
-public:
-	ConfigParser(int argc, char** argv);
+	class ConfigParser
+	{
+	public:
+		ConfigParser(int argc, char** argv);
 
-	ConfigParser(ConfigParser&) = delete;
-	ConfigParser(ConfigParser&&) = delete;
+		ConfigParser(ConfigParser&) = delete;
+		ConfigParser(ConfigParser&&) = delete;
 
-	std::string GetBeforeCloudPath() const;
-	std::string GetAfterCloudPath() const;
+		bool IsCorrect() const { return correct; }
 
-	ComputationMethod GetComputationMethod() const;
-	ExecutionPolicy GetExecutionPolicy() const;
+		std::string GetBeforeCloudPath() const;
+		std::string GetAfterCloudPath() const;
 
-	std::vector<int> GetMethodAdditionalParamsInt() const;
-	std::vector<float> GetMethodAdditionalParamsFloat() const;
+		ComputationMethod GetComputationMethod() const;
+		ExecutionPolicy GetExecutionPolicy() const;
 
-	/// Returns detailed transform given by user
-	std::optional<std::pair<glm::mat3, glm::vec3>> GetTransformation() const;
+		std::vector<int> GetMethodAdditionalParamsInt() const;
+		std::vector<float> GetMethodAdditionalParamsFloat() const;
 
-	/// Returns translation, rotation parameter pair
-	std::optional<std::pair<float, float>> GetTransformationParameters() const;
+		/// Returns detailed transform given by user
+		std::optional<std::pair<glm::mat3, glm::vec3>> GetTransformation() const;
 
-	std::optional<int> GetBeforeCloudResize() const;
-	std::optional<int> GetAfterCloudResize() const;
+		/// Returns translation, rotation parameter pair
+		std::optional<std::pair<float, float>> GetTransformationParameters() const;
 
-private:
+		std::optional<int> GetBeforeCloudResize() const;
+		std::optional<int> GetAfterCloudResize() const;
 
-	void LoadConfigFromFile(const std::string& path);
+	private:
 
-};
+		void LoadConfigFromFile(const std::string& path);
+		void ParseMethod(const nlohmann::json& parsed);
+		void ParseExecutionPolicy(nlohmann::json parsed);
+		void ParseCloudPaths(nlohmann::json parsed);
+
+		bool correct = true;
+
+	};
+}

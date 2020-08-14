@@ -2,6 +2,7 @@
 #include "tests.h"
 #include "coherentpointdrift.h"
 #include "noniterative.h"
+#include "common.h"
 
 constexpr float TEST_EPS = 1e-6f;
 constexpr int CLOUD_SIZE = 10000;
@@ -17,6 +18,13 @@ const char* objectPathRose = "data/rose.obj";
 
 int main(int argc, char** argv)
 {
+	auto config = Common::ConfigParser(argc, argv);
+	if (!config.IsCorrect())
+	{
+		printf("Aborting\n");
+		return -1;
+	}
+
 	printf("Hello cpu-slam!\n");
 
 	//const float outliers = 0.5f;
