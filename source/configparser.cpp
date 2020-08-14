@@ -44,9 +44,24 @@ namespace Common
 		auto content = std::string((std::istreambuf_iterator<char>(stream)), std::istreambuf_iterator<char>());
 		stream.close();
 
-		auto parsed = nlohmann::json::parse(content);
-		ParseMethod(parsed);
-		ParseCloudPaths(parsed);
+		try {
+			auto parsed = nlohmann::json::parse(content);
+			ParseMethod(parsed);
+			ParseCloudPaths(parsed);
+			ParseExecutionPolicy(parsed);
+
+			ValidateConfiguration();
+		}
+		catch (std::exception ex)
+		{
+			printf("Parsing error: %s\n", ex.what());
+			correct = false;
+		}
+		catch (...)
+		{
+			printf("Parsing error: unknown exception\n");
+			correct = false;
+		}
 	}
 
 	void ConfigParser::ParseMethod(const nlohmann::json& parsed)
@@ -76,11 +91,43 @@ namespace Common
 	void ConfigParser::ParseCloudPaths(const nlohmann::json& parsed)
 	{
 		auto beforePathOpt = ParseRequired<std::string>(parsed, "before-path");
-		auto afterPathOpt = ParseRequired<std::string>(parsed, "afger-path");
+		auto afterPathOpt = ParseRequired<std::string>(parsed, "after-path");
 		if (!beforePathOpt.has_value() || !afterPathOpt.has_value())
 			return;
 	
 		beforePath = beforePathOpt.value();
 		afterPath = afterPathOpt.value();
+	}
+
+	void ConfigParser::ParseExecutionPolicy(const nlohmann::json& parsed)
+	{
+		auto method = ParseOptional<std::string>(parsed, "policy");
+		if (!method.has_value())
+			return;
+
+		const std::map<std::string, ExecutionPolicy> mapping = {
+			{ "parallel", ExecutionPolicy::Parallel },
+			{ "sequential", ExecutionPolicy::Sequential }
+		};
+
+		const auto methodStr = method.value();
+		if (auto result = mapping.find(methodStr); result != mapping.end())
+		{
+			executionPolicy = result->second;
+		}
+		else
+		{
+			printf("Parsing warning: Execution policy %s not supported\n", methodStr.c_str());
+			correct = false;
+		}
+	}
+
+	void ConfigParser::ValidateConfiguration()
+	{
+		if (!transformation.has_value() && !transformationParameters.has_value())
+		{
+			printf("Parsing error: transformation or transformation parameters have to be provided\n");
+			correct = false;
+		}
 	}
 }
