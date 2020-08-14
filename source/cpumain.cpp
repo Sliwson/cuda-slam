@@ -26,6 +26,7 @@ int main(int argc, char** argv)
 	}
 
 	printf("Hello cpu-slam!\n");
+	return 0;
 
 	//const float outliers = 0.5f;
 	//const bool const_scale = false;

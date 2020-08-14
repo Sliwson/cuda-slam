@@ -42,13 +42,45 @@ namespace Common
 	{
 		auto stream = std::ifstream(path);
 		auto content = std::string((std::istreambuf_iterator<char>(stream)), std::istreambuf_iterator<char>());
-		auto parsed = nlohmann::json::parse(content);
+		stream.close();
 
+		auto parsed = nlohmann::json::parse(content);
 		ParseMethod(parsed);
+		ParseCloudPaths(parsed);
 	}
 
 	void ConfigParser::ParseMethod(const nlohmann::json& parsed)
 	{
-		auto method = parsed["method"];
+		auto method = ParseRequired<std::string>(parsed, "method");
+		if (!method.has_value())
+			return;
+
+		const std::map<std::string, ComputationMethod> mapping = {
+			{ "icp", ComputationMethod::Icp },
+			{ "nicp", ComputationMethod::NoniterativeIcp },
+			{ "cpd", ComputationMethod::Cpd }
+		};
+
+		const auto methodStr = method.value();
+		if (auto result = mapping.find(methodStr); result != mapping.end())
+		{
+			computationMethod = result->second;
+		}
+		else
+		{
+			printf("Parsing error: Computational method %s not supported\n", methodStr.c_str());
+			correct = false;
+		}
+	}
+		
+	void ConfigParser::ParseCloudPaths(const nlohmann::json& parsed)
+	{
+		auto beforePathOpt = ParseRequired<std::string>(parsed, "before-path");
+		auto afterPathOpt = ParseRequired<std::string>(parsed, "afger-path");
+		if (!beforePathOpt.has_value() || !afterPathOpt.has_value())
+			return;
+	
+		beforePath = beforePathOpt.value();
+		afterPath = afterPathOpt.value();
 	}
 }
