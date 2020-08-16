@@ -122,6 +122,43 @@ namespace Common
 		}
 	}
 
+	void ConfigParser::ParseTransformation(const nlohmann::json& parsed)
+	{
+		bool loadedTransformation = false;
+		try
+		{
+			auto translation = parsed["translation"];
+			auto rotation = parsed["rotation"];
+			loadedTransformation = true;
+
+			if (translation.size() != 3 || rotation.size() != 9)
+			{
+				printf("Parsing error: Wrong translation or rotation size\n");
+				correct = false;
+				return;
+			}
+
+			glm::mat3 rotationMatrix;
+			for (int y = 0; y < 3; y++)
+				for (int x = 0; x < 3; x++)
+					rotationMatrix[y][x] = rotation[y * 3 + x].get<float>();
+
+			glm::vec3 translationVector;
+			for (int i = 0; i < 3; i++)
+				translationVector[i] = translation[i].get<float>();
+
+			config.Transformation = std::make_pair(rotationMatrix, translationVector);
+		}
+		catch (...) 
+		{
+			if (loadedTransformation)
+			{
+				printf("Parsing error: Error parsing translation or rotation parameter\n");
+				correct = false;
+			}
+		}
+	}
+
 	void ConfigParser::ValidateConfiguration()
 	{
 		if (!config.Transformation.has_value() && !config.TransformationParameters.has_value())
