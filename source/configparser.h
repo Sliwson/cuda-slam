@@ -21,6 +21,7 @@ namespace Common
 		void ParseExecutionPolicy(const nlohmann::json& parsed);
 		void ParseTransformation(const nlohmann::json& parsed);
 		void ParseTransformationParameters(const nlohmann::json& parsed);
+		void ParseAdditionalParameters(const nlohmann::json& parsed);
 
 		void ValidateConfiguration();
 

@@ -26,7 +26,8 @@ int main(int argc, char** argv)
 	}
 
 	printf("Hello cpu-slam!\n");
-	auto configuraton = configParser.GetConfiguration();
+	auto configuration = configParser.GetConfiguration();
+	configuration.Print();
 	return 0;
 
 	//const float outliers = 0.5f;

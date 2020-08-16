@@ -183,6 +183,11 @@ namespace Common
 		}
 	}
 
+	void ConfigParser::ParseAdditionalParameters(const nlohmann::json& parsed)
+	{
+		config.MaxIterations = ParseOptional<int>(parsed, "max-iterations");
+	}
+
 	void ConfigParser::ValidateConfiguration()
 	{
 		if (!config.Transformation.has_value() && !config.TransformationParameters.has_value())
