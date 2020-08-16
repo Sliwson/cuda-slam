@@ -159,6 +159,30 @@ namespace Common
 		}
 	}
 
+	void ConfigParser::ParseTransformationParameters(const nlohmann::json& parsed)
+	{
+		bool loadedParams = false;
+		try
+		{
+			auto translationRange = parsed["translation-range"];
+			auto rotationRange = parsed["rotation-range"];
+			loadedParams = true;
+
+			auto translationRangeValue = translationRange.get<float>();
+			auto rotationRangeValue = rotationRange.get<float>();
+
+			config.TransformationParameters = std::make_pair(rotationRangeValue, translationRangeValue);
+		}
+		catch (...) 
+		{
+			if (loadedParams)
+			{
+				printf("Parsing error: Error parsing translation-range or rotation-range parameter\n");
+				correct = false;
+			}
+		}
+	}
+
 	void ConfigParser::ValidateConfiguration()
 	{
 		if (!config.Transformation.has_value() && !config.TransformationParameters.has_value())

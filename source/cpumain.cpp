@@ -18,14 +18,15 @@ const char* objectPathRose = "data/rose.obj";
 
 int main(int argc, char** argv)
 {
-	auto config = Common::ConfigParser(argc, argv);
-	if (!config.IsCorrect())
+	auto configParser = Common::ConfigParser(argc, argv);
+	if (!configParser.IsCorrect())
 	{
 		printf("Aborting\n");
 		return -1;
 	}
 
 	printf("Hello cpu-slam!\n");
+	auto configuraton = configParser.GetConfiguration();
 	return 0;
 
 	//const float outliers = 0.5f;
