@@ -49,6 +49,9 @@ namespace Common
 			ParseMethod(parsed);
 			ParseCloudPaths(parsed);
 			ParseExecutionPolicy(parsed);
+			ParseTransformation(parsed);
+			ParseTransformationParameters(parsed);
+			ParseAdditionalParameters(parsed);
 
 			ValidateConfiguration();
 		}
@@ -124,12 +127,13 @@ namespace Common
 
 	void ConfigParser::ParseTransformation(const nlohmann::json& parsed)
 	{
-		bool loadedTransformation = false;
-		try
+		auto translationIt = parsed.find("translation");
+		auto rotationIt = parsed.find("rotation");
+
+		if (translationIt != parsed.end() && rotationIt != parsed.end())
 		{
 			auto translation = parsed["translation"];
 			auto rotation = parsed["rotation"];
-			loadedTransformation = true;
 
 			if (translation.size() != 3 || rotation.size() != 9)
 			{
@@ -138,20 +142,20 @@ namespace Common
 				return;
 			}
 
-			glm::mat3 rotationMatrix;
-			for (int y = 0; y < 3; y++)
-				for (int x = 0; x < 3; x++)
-					rotationMatrix[y][x] = rotation[y * 3 + x].get<float>();
+			try 
+			{
+				glm::mat3 rotationMatrix;
+				for (int y = 0; y < 3; y++)
+					for (int x = 0; x < 3; x++)
+						rotationMatrix[y][x] = rotation[y * 3 + x].get<float>();
 
-			glm::vec3 translationVector;
-			for (int i = 0; i < 3; i++)
-				translationVector[i] = translation[i].get<float>();
+				glm::vec3 translationVector;
+				for (int i = 0; i < 3; i++)
+					translationVector[i] = translation[i].get<float>();
 
-			config.Transformation = std::make_pair(rotationMatrix, translationVector);
-		}
-		catch (...) 
-		{
-			if (loadedTransformation)
+				config.Transformation = std::make_pair(rotationMatrix, translationVector);
+			}
+			catch (...)
 			{
 				printf("Parsing error: Error parsing translation or rotation parameter\n");
 				correct = false;
@@ -161,21 +165,22 @@ namespace Common
 
 	void ConfigParser::ParseTransformationParameters(const nlohmann::json& parsed)
 	{
-		bool loadedParams = false;
-		try
-		{
-			auto translationRange = parsed["translation-range"];
-			auto rotationRange = parsed["rotation-range"];
-			loadedParams = true;
+		auto translationIt = parsed.find("translation-range");
+		auto rotationIt = parsed.find("rotation-range");
 
-			auto translationRangeValue = translationRange.get<float>();
-			auto rotationRangeValue = rotationRange.get<float>();
-
-			config.TransformationParameters = std::make_pair(rotationRangeValue, translationRangeValue);
-		}
-		catch (...) 
+		if (translationIt != parsed.end() && rotationIt != parsed.end())
 		{
-			if (loadedParams)
+			try 
+			{
+				auto translationRange = parsed["translation-range"];
+				auto rotationRange = parsed["rotation-range"];
+
+				auto translationRangeValue = translationRange.get<float>();
+				auto rotationRangeValue = rotationRange.get<float>();
+
+				config.TransformationParameters = std::make_pair(rotationRangeValue, translationRangeValue);
+			}
+			catch (...)
 			{
 				printf("Parsing error: Error parsing translation-range or rotation-range parameter\n");
 				correct = false;

@@ -37,12 +37,12 @@ namespace Common
 	template<typename T>
 	inline std::optional<T> ConfigParser::ParseOptional(const nlohmann::json& parsed, std::string name)
 	{
-		try
+		if (parsed.find(name) != parsed.end())
 		{
 			auto prop = parsed[name];
 			return prop.get<T>();
 		}
-		catch (...)
+		else
 		{
 			return std::nullopt;
 		}
