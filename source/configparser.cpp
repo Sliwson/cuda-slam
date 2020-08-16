@@ -79,7 +79,7 @@ namespace Common
 		const auto methodStr = method.value();
 		if (auto result = mapping.find(methodStr); result != mapping.end())
 		{
-			computationMethod = result->second;
+			config.ComputationMethod = result->second;
 		}
 		else
 		{
@@ -95,8 +95,8 @@ namespace Common
 		if (!beforePathOpt.has_value() || !afterPathOpt.has_value())
 			return;
 	
-		beforePath = beforePathOpt.value();
-		afterPath = afterPathOpt.value();
+		config.BeforePath = beforePathOpt.value();
+		config.AfterPath = afterPathOpt.value();
 	}
 
 	void ConfigParser::ParseExecutionPolicy(const nlohmann::json& parsed)
@@ -113,7 +113,7 @@ namespace Common
 		const auto methodStr = method.value();
 		if (auto result = mapping.find(methodStr); result != mapping.end())
 		{
-			executionPolicy = result->second;
+			config.ExecutionPolicy = result->second;
 		}
 		else
 		{
@@ -124,7 +124,7 @@ namespace Common
 
 	void ConfigParser::ValidateConfiguration()
 	{
-		if (!transformation.has_value() && !transformationParameters.has_value())
+		if (!config.Transformation.has_value() && !config.TransformationParameters.has_value())
 		{
 			printf("Parsing error: transformation or transformation parameters have to be provided\n");
 			correct = false;
