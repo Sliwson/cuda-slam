@@ -145,9 +145,9 @@ namespace Common
 			try 
 			{
 				glm::mat3 rotationMatrix;
-				for (int y = 0; y < 3; y++)
-					for (int x = 0; x < 3; x++)
-						rotationMatrix[y][x] = rotation[y * 3 + x].get<float>();
+				for (int x = 0; x < 3; x++)
+					for (int y = 0; y < 3; y++)
+						rotationMatrix[y][x] = rotation[x * 3 + y].get<float>();
 
 				glm::vec3 translationVector;
 				for (int i = 0; i < 3; i++)
