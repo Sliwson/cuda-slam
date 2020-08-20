@@ -2,6 +2,11 @@
 
 #include "_common.h"
 #include "common.h"
+#include "fgttype.h"
+
+#include <algorithm>
+#define _USE_MATH_DEFINES
+#include <math.h>
 
 #include <chrono>
 

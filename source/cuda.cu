@@ -7,6 +7,18 @@ namespace {
 	typedef thrust::device_vector<int> IndexIterator;
 	typedef thrust::permutation_iterator<Cloud, IndexIterator> Permutation;
 
+	struct Probabilities
+	{
+		// The probability matrix, multiplied by the identity vector.
+		typedef thrust::device_vector<float> p1;
+		// The probability matrix, transposed, multiplied by the identity vector.
+		typedef thrust::device_vector<float> pt1;
+		// The probability matrix multiplied by the fixed(cloud before) points.
+		thrust::device_vector<glm::vec3> px;
+		// The total error.
+		float error;
+	};
+
 	thrust::host_vector<glm::vec3> CommonToThrustVector(const std::vector<Common::Point_f>& vec)
 	{
 		thrust::host_vector<glm::vec3> hostCloud(vec.size());
@@ -37,7 +49,7 @@ namespace {
 		const auto functor = Functors::MatrixTransform(transform);
 		thrust::transform(thrust::device, vec.begin(), vec.end(), out.begin(), functor);
 	}
-	
+
 	__device__ float GetDistanceSquared(const glm::vec3& first, const glm::vec3& second)
 	{
 		const auto d = second - first;
@@ -61,7 +73,7 @@ namespace {
 					nearestIdx = i;
 				}
 			}
-			
+
 			result[targetIdx] = nearestIdx;
 		}
 	}
@@ -122,7 +134,7 @@ namespace {
 		//align arrays
 		const auto centroidBefore = CalculateCentroid(before);
 		GetAlignedCloud(before, alignBefore);
-		
+
 		auto permutationIteratorBegin = thrust::make_permutation_iterator(after.begin(), permutation.begin());
 		auto permutationIteratorEnd = thrust::make_permutation_iterator(after.end(), permutation.end());
 		thrust::copy(thrust::device, permutationIteratorBegin, permutationIteratorEnd, alignAfter.begin());
@@ -181,7 +193,7 @@ namespace {
 		}
 
 		const float determinant = glm::determinant(gU * gVT);
-		const auto diagonal = glm::diagonal3x3(glm::vec3 { 1.f, 1.f, determinant });
+		const auto diagonal = glm::diagonal3x3(glm::vec3{ 1.f, 1.f, determinant });
 		const auto rotation = gU * diagonal * gVT;
 
 		const auto translation = centroidAfter - rotation * centroidBefore;
@@ -219,7 +231,7 @@ namespace {
 
 		//allocate memory for cuBLAS
 		CudaSvdParams params(size, size);
-		
+
 		while (iterations < maxIterations)
 		{
 			GetCorrespondingPoints(indices, workingBefore, after);
@@ -243,9 +255,79 @@ namespace {
 			previousError = error;
 			iterations++;
 		}
-		
+
 		params.Free();
 		return transformationMatrix;
+	}
+
+	float CalculateSigmaSquared(const Cloud& cloudBefore, const Cloud& cloudAfter)
+	{
+		Cloud partialSum;
+		if (cloudBefore.size() > cloudAfter.size())
+		{
+			partialSum = Cloud(cloudBefore.size());
+			const auto functor = Functors::CalculateSigmaSquaredInRow(cloudAfter);
+			thrust::transform(thrust::device, cloudBefore.begin(), cloudBefore.end(), partialSum.begin(), functor);
+		}
+		else
+		{
+			partialSum = Cloud(cloudAfter.size());
+			const auto functor = Functors::CalculateSigmaSquaredInRow(cloudBefore);
+			thrust::transform(thrust::device, cloudAfter.begin(), cloudAfter.end(), partialSum.begin(), functor);
+		}
+		return thrust::reduce(thrust::device, partialSum.begin(), partialSum.end(), 0.0f) / (float)(3 * cloudBefore.size() * cloudAfter.size());
+	}
+
+	glm::mat4 CudaCPD(
+		const Cloud& cloudBefore,
+		const Cloud& cloudAfter,
+		int* iterations,
+		float* error,
+		float eps,
+		float weight,
+		bool const_scale,
+		int maxIterations,
+		float tolerance,
+		FastGaussTransform::FGTType fgt)
+	{
+		*iterations = 0;
+		*error = 1e5;
+		glm::mat3 rotationMatrix = glm::mat3(1.0f);
+		glm::vec3 translationVector = glm::vec3(0.0f);
+		float scale = 1.0f;
+		float sigmaSquared = CalculateSigmaSquared(cloudBefore, cloudAfter);
+		float sigmaSquared_init = sigmaSquared;
+
+		weight = std::clamp(weight, 0.0f, 1.0f);
+		if (weight == 0.0f)
+			weight = 1e-6f;
+		if (weight == 1.0f)
+			weight = 1.0f - 1e-6f;
+
+		const float constant = (std::pow(2 * M_PI * sigmaSquared, (float)DIMENSION * 0.5f) * weight * cloudAfter.size()) / ((1 - weight) * cloudBefore.size());
+		float ntol = tolerance + 10.0f;
+		float l = 0.0f;
+		Probabilities probabilities;
+		Cloud transformedCloud = cloudAfter;
+		//EM optimization
+		while (*iterations < maxIterations && ntol > tolerance && sigmaSquared > eps)
+		{
+			//E-step
+			if (fgt == FGTType::None)
+				probabilities = ComputePMatrix(cloudBefore, transformedCloud, constant, sigmaSquared);
+			else
+				probabilities = ComputePMatrixFast(cloudBefore, transformedCloud, constant, weight, &sigmaSquared, sigmaSquared_init, fgt);
+
+			ntol = std::abs((probabilities.error - l) / probabilities.error);
+			l = probabilities.error;
+
+			//M-step
+			MStep(probabilities, cloudBefore, cloudAfter, const_scale, &rotationMatrix, &translationVector, &scale, &sigmaSquared);
+
+			transformedCloud = GetTransformedCloud(cloudAfter, rotationMatrix, translationVector, scale);
+			(*error) = sigmaSquared;
+			(*iterations)++;
+		}
 	}
 
 	void CorrespondencesTest()
@@ -262,7 +344,6 @@ namespace {
 			output[size - i - 1] = vec;
 		}
 
-
 		GetCorrespondingPoints(result, input, output);
 		thrust::host_vector<int> copy = result;
 		bool ok = true;
@@ -273,7 +354,6 @@ namespace {
 			if (copy[i] != size - i - 1)
 				ok = false;
 		}
-		
 
 		printf("Correspondence test [%s]\n", ok ? "OK" : "FAILED");
 	}
@@ -285,7 +365,6 @@ namespace {
 		float ones[3 * size];
 		for (int i = 0; i < 3 * size; i++)
 			ones[i] = 1.f;
-
 
 		CudaSvdParams params(size, size);
 		cudaMemcpy(params.workBefore, ones, 3 * size * sizeof(float), cudaMemcpyHostToDevice);
@@ -303,7 +382,7 @@ namespace {
 
 		printf("Multiplication test [%s]\n", ok ? "OK" : "FAILED");
 		params.Free();
-	}	
+	}
 }
 
 void CudaTest()
@@ -344,11 +423,11 @@ void CudaTest()
 	TransformCloud(deviceCloudBefore, calculatedCloud, result);
 
 	Common::Renderer renderer(
-			Common::ShaderType::SimpleModel,
-			ThrustToCommonVector(deviceCloudBefore), //grey
-			ThrustToCommonVector(deviceCloudAfter), //blue
-			ThrustToCommonVector(calculatedCloud), //red
-			std::vector<Point_f>(1));
+		Common::ShaderType::SimpleModel,
+		ThrustToCommonVector(deviceCloudBefore), //grey
+		ThrustToCommonVector(deviceCloudAfter), //blue
+		ThrustToCommonVector(calculatedCloud), //red
+		std::vector<Point_f>(1));
 
 	renderer.Show();
 }

@@ -119,5 +119,35 @@ namespace Functors {
 		float* output = nullptr;
 		int length = 0;
 	};
+
+	struct CalculateSigmaSquaredInRow : thrust::unary_function<glm::vec3, float>
+	{
+		CalculateSigmaSquaredInRow(const thrust::device_vector<glm::vec3>& cloud)
+		{
+			this->cloud = thrust::raw_pointer_cast(cloud.data());
+			this->cloudSize = cloud.size();
+		}
+
+		__device__ float operator()(const glm::vec3& vector)
+		{
+			float sum = 0.0f;
+			for (int i = 0; i < cloudSize; i++)
+			{
+				sum += GetDistanceSquared(vector, cloud[i]);
+			}
+
+			return sum;
+		}
+
+	private:
+		__device__ __host__ float GetDistanceSquared(const glm::vec3& first, const glm::vec3& second)
+		{
+			const auto d = second - first;
+			return d.x * d.x + d.y * d.y + d.z * d.z;
+		}
+
+		const glm::vec3* cloud;
+		int cloudSize;
+	};
 }
 
