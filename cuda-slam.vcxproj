@@ -22,15 +22,15 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="cpdcuda.cu" />
-    <CudaCompile Include="functors.cu" />
+    <CudaCompile Include="source\cpdcuda.cu" />
     <CudaCompile Include="source\cuda.cu" />
+    <CudaCompile Include="source\functors.cu" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="cpdcuda.cuh" />
+    <ClInclude Include="source\cpdcuda.cuh" />
     <ClInclude Include="source\cuda.cuh" />
     <ClInclude Include="source\functors.cuh" />
     <ClInclude Include="source\svdparams.cuh" />
