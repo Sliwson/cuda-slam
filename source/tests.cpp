@@ -202,7 +202,7 @@ namespace Tests
 		const float weight,
 		const bool const_scale,
 		const int max_iterations,
-		const Common::ApproximationType fgt)
+		const FastGaussTransform::ApproximationType fgt)
 	{
 		srand(RANDOM_SEED);
 		int iterations = 0;
@@ -272,7 +272,7 @@ namespace Tests
 		const float weight,
 		const bool const_scale,
 		const int max_iterations,
-		const Common::ApproximationType fgt)
+		const FastGaussTransform::ApproximationType fgt)
 	{
 		srand(RANDOM_SEED);
 		int iterations = 0;
@@ -340,7 +340,7 @@ namespace Tests
 		const float weight, 
 		const bool const_scale,
 		const int max_iterations,
-		const Common::ApproximationType fgt)
+		const FastGaussTransform::ApproximationType fgt)
 	{
 		srand(RANDOM_SEED);
 		int iterations = 0;
@@ -420,7 +420,7 @@ namespace Tests
 	}
 
 	// Randomly transform first pointCount points from 3d object loaded from objectPath using non iterative slam
-	void NonIterativeTest(const char* objectPath, const int& pointCount, const float& testEps, const int& maxRepetitions, const Common::ApproximationType& calculationType, const int& subcloudSize)
+	void NonIterativeTest(const char* objectPath, const int& pointCount, const float& testEps, const int& maxRepetitions, const NonIterative::ApproximationType& calculationType, const int& subcloudSize)
 	{
 		srand(RANDOM_SEED);
 		const Point_f corner = { -1, -1, -1 };
