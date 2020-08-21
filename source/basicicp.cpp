@@ -28,8 +28,6 @@ namespace BasicICP
 
 	std::pair<glm::mat3, glm::vec3> GetBasicICPTransformationMatrix(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, int* iterations, float* error, float eps, float maxDistanceSquared, int maxIterations, bool parallel)
 	{
-		constexpr auto iterationTreshold = 50;
-
 		*iterations = 0;
 		*error = 1e5;
 		glm::mat3 rotationMatrix = glm::mat3(1.0f);
@@ -37,7 +35,7 @@ namespace BasicICP
 		std::tuple<std::vector<Point_f>, std::vector<Point_f>, std::vector<int>, std::vector<int>> correspondingPoints;
 		std::vector<Point_f> transformedCloud = cloudBefore;
 
-		while ((maxIterations == -1 && *iterations < iterationTreshold) || *iterations < maxIterations)
+		while (maxIterations == -1  || *iterations < maxIterations)
 		{
 			// get corresponding points
 			correspondingPoints = GetCorrespondingPoints(transformedCloud, cloudAfter, maxDistanceSquared, parallel);
