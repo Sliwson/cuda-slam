@@ -63,6 +63,7 @@ void Common::Configuration::Print()
 		printf("Cloud resize: %d\n", CloudResize.value());
 
 	printf("Show visualisation: %s\n", std::to_string(ShowVisualisation).c_str());
+	printf("Max distance squared: %f\n", MaxDistanceSquared);
 
 	printf("===============================\n");
 }

@@ -46,7 +46,10 @@
       "type": "integer"
     },
     "show-visualisation": {
-      "type":  "boolean"
+      "type": "boolean"
+    },
+    "max-distance-squared": {
+      "type": "number"
     }
   }
 }

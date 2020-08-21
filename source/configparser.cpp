@@ -194,6 +194,11 @@ namespace Common
 
 		config.CloudResize = ParseOptional<int>(parsed, "cloud-resize");
 
+		config.MaxDistanceSquared = [this, &parsed]() {
+			auto opt = ParseOptional<float>(parsed, "max-distance-squared");
+			return opt.has_value() ? opt.value() : 1.f;
+		}();
+
 		config.ShowVisualisation = [this, &parsed]() {
 			auto opt = ParseOptional<bool>(parsed, "show-visualisation");
 			return opt.has_value() ? opt.value() : false;

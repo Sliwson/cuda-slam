@@ -32,6 +32,7 @@ namespace Common
 
 		//optional parameters with default values
 		bool ShowVisualisation = false;
+		float MaxDistanceSquared = 1.f;
 
 		void Print();
 	};

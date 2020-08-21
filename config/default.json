@@ -2,6 +2,7 @@
   "before-path": "data/bunny.obj",
   "after-path": "data/bunny.obj",
   "method": "icp",
+  "max-distance-squared": 400,
   "policy": "parallel",
   "translation": [ 1.0, 1.0, 1.0 ],
   "rotation": [
