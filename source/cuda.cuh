@@ -21,6 +21,7 @@
 #include <thrust/sequence.h>
 #include <thrust/iterator/permutation_iterator.h>
 #include <thrust/transform_reduce.h>
+#include <thrust/functional.h>
 
 #include <cublas_v2.h>
 #include <cusolverDn.h>
