@@ -5,6 +5,7 @@
 #include "basicicp.h"
 #include "common.h"
 #include "configparser.h"
+#include "configuration.h"
 
 int main(int argc, char** argv)
 {
@@ -15,7 +16,7 @@ int main(int argc, char** argv)
 		return -1;
 	}
 
-	auto configuration = configParser.GetConfiguration();
+	Common::Configuration configuration = configParser.GetConfiguration();
 	configuration.Print();
 
 	auto [before, after] = Common::GetCloudsFromConfig(configuration);

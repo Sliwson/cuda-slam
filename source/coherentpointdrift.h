@@ -4,7 +4,7 @@
 #include "common.h"
 
 namespace Common {
-	class Configuration;
+	struct Configuration;
 }
 
 namespace CoherentPointDrift

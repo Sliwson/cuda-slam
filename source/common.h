@@ -7,10 +7,9 @@
 #include "renderer.h"
 #include "shadertype.h"
 
-class Configuration;
-
 namespace Common
 {
+	struct Configuration;
 	constexpr float CLOUD_BOUNDARY = 100.f;
 
 	typedef std::tuple<std::vector<Point_f>, std::vector<Point_f>, std::vector<int>, std::vector<int>> CorrespondingPointsTuple;
