@@ -37,7 +37,7 @@ namespace Tests
 		const float weight,
 		const bool const_scale,
 		const int max_iterations,
-		const FastGaussTransform::FGTType fgt);
+		const FastGaussTransform::ApproximationType fgt);
 	void RigidCPDTest(
 		const char* objectPath1,
 		const char* objectPath2,
