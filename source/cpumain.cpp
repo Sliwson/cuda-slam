@@ -2,6 +2,7 @@
 #include "tests.h"
 #include "coherentpointdrift.h"
 #include "noniterative.h"
+#include "basicicp.h"
 #include "common.h"
 
 int main(int argc, char** argv)
@@ -19,6 +20,18 @@ int main(int argc, char** argv)
 	auto [before, after] = Common::GetCloudsFromConfig(configuration);
 
 	//calculate
+	auto result = [&, beforeCloud = before, afterCloud = after]() {
+		switch (configuration.ComputationMethod) {
+			case Common::ComputationMethod::Icp:
+				return BasicICP::CalculateICPWithConfiguration(beforeCloud, afterCloud, configuration);
+			case Common::ComputationMethod::Cpd:
+				return BasicICP::CalculateICPWithConfiguration(beforeCloud, afterCloud, configuration);
+			case Common::ComputationMethod::NoniterativeIcp:
+				return BasicICP::CalculateICPWithConfiguration(beforeCloud, afterCloud, configuration);
+		}
+	}();
+
+	auto resultCloud = Common::GetTransformedCloud(before, result.first, result.second);
 
 	// visualisation
 	if (configuration.ShowVisualisation)
@@ -27,7 +40,7 @@ int main(int argc, char** argv)
 			Common::ShaderType::SimpleModel,
 			before,
 			after,
-			after,
+			resultCloud,
 			{ Point_f::Zero() }
 		);
 
