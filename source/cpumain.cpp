@@ -25,7 +25,7 @@ int main(int argc, char** argv)
 			case Common::ComputationMethod::Icp:
 				return BasicICP::CalculateICPWithConfiguration(beforeCloud, afterCloud, configuration);
 			case Common::ComputationMethod::Cpd:
-				return BasicICP::CalculateICPWithConfiguration(beforeCloud, afterCloud, configuration);
+				return NonIterative::CalculateNonIterativeWithConfiguration(beforeCloud, afterCloud, configuration);
 			case Common::ComputationMethod::NoniterativeIcp:
 				return BasicICP::CalculateICPWithConfiguration(beforeCloud, afterCloud, configuration);
 		}
