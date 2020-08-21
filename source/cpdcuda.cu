@@ -89,7 +89,7 @@ namespace
 		bool const_scale,
 		int maxIterations,
 		float tolerance,
-		FastGaussTransform::FGTType fgt)
+		Common::ApproximationType fgt)
 	{
 		*iterations = 0;
 		*error = 1e5;
@@ -151,7 +151,7 @@ void CPDTest()
 	const float weight = 0.0f;
 	const bool const_scale = false;
 	const int max_iterations = 50;
-	const FastGaussTransform::FGTType fgt = FastGaussTransform::FGTType::None;
+	const Common::ApproximationType fgt = Common::ApproximationType::None;
 
 	srand(666);
 	int iterations = 0;
