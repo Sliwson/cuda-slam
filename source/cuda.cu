@@ -1,4 +1,3 @@
-#include "cuda.cuh"
 #include "functors.cuh"
 #include "svdparams.cuh"
 #include "timer.h"
