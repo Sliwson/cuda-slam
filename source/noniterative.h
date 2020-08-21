@@ -2,7 +2,7 @@
 #include <utility>
 #include <tuple>
 #include "common.h"
-#include "noniterative_type.h"
+#include "configuration.h"
 
 using namespace Common;
 
@@ -54,6 +54,11 @@ namespace NonIterative
 
 
 
+	std::pair<glm::mat3, glm::vec3> CalculateNonIterativeWithConfiguration(
+		const std::vector<Point_f>& cloudBefore,
+		const std::vector<Point_f>& cloudAfter,
+		Common::Configuration config);
+
 	NonIterativeSlamResult GetSingleNonIterativeSlamResult(
 		const std::vector<Point_f>& cloudBefore,
 		const std::vector<Point_f>& cloudAfter);
@@ -64,7 +69,7 @@ namespace NonIterative
 		float* error, 
 		float eps, 
 		int maxRepetitions, 
-		const NonIterative::NonIterativeApproximation& calculationType, 
+		const ApproximationType& calculationType, 
 		bool parallel = false,
 		int subcloudSize = -1);
 

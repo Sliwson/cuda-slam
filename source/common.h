@@ -1,4 +1,5 @@
 #pragma once
+
 #pragma warning(disable : 4996)
 #include <Eigen/Dense>
 #include "_common.h"
@@ -8,6 +9,9 @@
 
 namespace Common
 {
+	struct Configuration;
+	constexpr float CLOUD_BOUNDARY = 100.f;
+
 	typedef std::tuple<std::vector<Point_f>, std::vector<Point_f>, std::vector<int>, std::vector<int>> CorrespondingPointsTuple;
 
 	/// Loads point cloud from .obj file
@@ -19,6 +23,9 @@ namespace Common
 
 	/// Normalizes the input cloud so it fits in cube with side of given size 
 	std::vector<Point_f> NormalizeCloud(const std::vector<Point_f>& cloud, float size);
+
+	/// Loads clouds and applies modifications according to configuration
+	std::pair<std::vector<Point_f>, std::vector<Point_f>> GetCloudsFromConfig(Configuration config);
 
 	// Transform cloud helpers
 	[[deprecated("Replaced by version with rotation matrix and translation vector")]]

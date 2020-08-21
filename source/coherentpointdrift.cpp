@@ -4,12 +4,15 @@
 #include "coherentpointdrift.h"
 #include "fgt.h"
 #include "fgt_model.h"
+#include "configuration.h"
 
 using namespace Common;
 using namespace FastGaussTransform;
 
 namespace CoherentPointDrift
 {
+	constexpr auto CPD_EPS = 1e-5;
+
 	struct Probabilities
 	{
 		// The probability matrix, multiplied by the identity vector.
@@ -30,7 +33,7 @@ namespace CoherentPointDrift
 		const float& weight,
 		float* sigmaSquared,
 		const float& sigmaSquaredInit,
-		const FGTType& fgt);
+		const ApproximationType& fgt);
 	Probabilities ComputePMatrixWithFGT(
 		const std::vector<Point_f>& cloudBefore,
 		const std::vector<Point_f>& cloudTransformed,
@@ -59,6 +62,20 @@ namespace CoherentPointDrift
 		float* scale,
 		float* sigmaSquared);
 
+	std::pair<glm::mat3, glm::vec3> CalculateCpdWithConfiguration(
+		const std::vector<Common::Point_f>& cloudBefore,
+		const std::vector<Common::Point_f>& cloudAfter,
+		Common::Configuration config)
+	{
+		auto maxIterations = config.MaxIterations.has_value() ? config.MaxIterations.value() : -1;
+
+		int iterations = 0;
+		float error = 0;
+
+		auto result = GetRigidCPDTransformationMatrix(cloudBefore, cloudAfter, &iterations, &error, CPD_EPS, config.CpdWeight, false, maxIterations, CPD_EPS, config.ApproximationType);
+		return result;
+	}
+
 	//[0, 1, 2] if > 0, then use FGT. case 1: FGT with fixing sigma after it gets too small(faster, but the result can be rough)
 	//case 2: FGT, followed by truncated Gaussian approximation(can be quite slow after switching to the truncated kernels, but more accurate than case 1)
 	std::pair<glm::mat3, glm::vec3> GetRigidCPDTransformationMatrix(
@@ -71,7 +88,7 @@ namespace CoherentPointDrift
 		bool const_scale,
 		int maxIterations,
 		float tolerance,
-		FGTType fgt)
+		ApproximationType fgt)
 	{
 		*iterations = 0;
 		*error = 1e5;
@@ -96,7 +113,7 @@ namespace CoherentPointDrift
 		while (*iterations < maxIterations && ntol > tolerance && sigmaSquared > eps)
 		{
 			//E-step
-			if (fgt == FGTType::None)
+			if (fgt == ApproximationType::None)
 				probabilities = ComputePMatrix(cloudBefore, transformedCloud, constant, sigmaSquared);
 			else
 				probabilities = ComputePMatrixFast(cloudBefore, transformedCloud, constant, weight, &sigmaSquared, sigmaSquared_init, fgt);
@@ -136,15 +153,15 @@ namespace CoherentPointDrift
 		const float& weight,
 		float* sigmaSquared,
 		const float& sigmaSquaredInit,
-		const FGTType& fgt)
+		const ApproximationType& fgt)
 	{
-		if (fgt == FGTType::Full)
+		if (fgt == ApproximationType::Full)
 		{
 			if (*sigmaSquared < 0.05)
 				*sigmaSquared = 0.05;
 			return ComputePMatrixWithFGT(cloudBefore, cloudTransformed, weight, *sigmaSquared, sigmaSquaredInit);
 		}
-		if (fgt == FGTType::Hybrid)
+		if (fgt == ApproximationType::Hybrid)
 		{
 			if (*sigmaSquared > 0.015 * sigmaSquaredInit)
 				return ComputePMatrixWithFGT(cloudBefore, cloudTransformed, weight, *sigmaSquared, sigmaSquaredInit);

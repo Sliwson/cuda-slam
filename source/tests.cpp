@@ -202,7 +202,7 @@ namespace Tests
 		const float weight,
 		const bool const_scale,
 		const int max_iterations,
-		const FastGaussTransform::FGTType fgt)
+		const FastGaussTransform::ApproximationType fgt)
 	{
 		srand(RANDOM_SEED);
 		int iterations = 0;
@@ -235,7 +235,7 @@ namespace Tests
 		timer.StopStage("processing");
 
 		timer.StartStage("cpd1");
-		const auto icpCalculatedTransform1 = CoherentPointDrift::GetRigidCPDTransformationMatrix(transformedPermutedCloud, cloud, &iterations, &error, testEps, weight, const_scale, max_iterations, testEps, fgt);
+		const auto icpCalculatedTransform1 = std::make_pair(glm::mat3(1), glm::vec3(1));// CoherentPointDrift::GetRigidCPDTransformationMatrix(transformedPermutedCloud, cloud, &iterations, &error, testEps, weight, const_scale, max_iterations, testEps, fgt);
 		timer.StopStage("cpd1");
 		iterations = 0;
 		error = 1.0f;
@@ -340,7 +340,7 @@ namespace Tests
 		const float weight, 
 		const bool const_scale,
 		const int max_iterations,
-		const FastGaussTransform::FGTType fgt)
+		const FastGaussTransform::ApproximationType fgt)
 	{
 		srand(RANDOM_SEED);
 		int iterations = 0;
@@ -393,7 +393,7 @@ namespace Tests
 		//const int fgt_local = 1;
 
 		timer.StartStage("rigid-cpd1");
-		const auto icpCalculatedTransform1 = CoherentPointDrift::GetRigidCPDTransformationMatrix(transformedPermutedCloud1, transformedPermutedCloud2, &iterations, &error, testEps, weight, const_scale, max_iterations, testEps, fgt);
+		const auto icpCalculatedTransform1 = std::make_pair(glm::mat3(1), glm::vec3(1));//CoherentPointDrift::GetRigidCPDTransformationMatrix(transformedPermutedCloud1, transformedPermutedCloud2, &iterations, &error, testEps, weight, const_scale, max_iterations, testEps, fgt);
 		timer.StopStage("rigid-cpd1");
 
 		printf("CPD test (%d iterations) error = %g\n", iterations, error);
@@ -420,7 +420,7 @@ namespace Tests
 	}
 
 	// Randomly transform first pointCount points from 3d object loaded from objectPath using non iterative slam
-	void NonIterativeTest(const char* objectPath, const int& pointCount, const float& testEps, const int& maxRepetitions, const NonIterative::NonIterativeApproximation& calculationType, const int& subcloudSize)
+	void NonIterativeTest(const char* objectPath, const int& pointCount, const float& testEps, const int& maxRepetitions, const NonIterative::ApproximationType& calculationType, const int& subcloudSize)
 	{
 		srand(RANDOM_SEED);
 		const Point_f corner = { -1, -1, -1 };
