@@ -2,15 +2,13 @@
 #include "cuda.cuh"
 
 namespace Functors {
-	struct DistanceSquared
-	{
-	protected:
+	namespace {
 		__device__ __host__ float GetDistanceSquared(const glm::vec3& first, const glm::vec3& second)
 		{
 			const auto d = second - first;
 			return d.x * d.x + d.y * d.y + d.z * d.z;
 		}
-	};
+	}
 
 	struct MatrixTransform : thrust::unary_function<glm::vec3, glm::vec3>
 	{
@@ -62,7 +60,7 @@ namespace Functors {
 		}
 	};
 
-	struct FindNearestIndex : thrust::unary_function<glm::vec3, int>, DistanceSquared
+	struct FindNearestIndex : thrust::unary_function<glm::vec3, int>
 	{
 		FindNearestIndex(const thrust::device_vector<glm::vec3>& elementsAfter)
 		{
@@ -124,7 +122,7 @@ namespace Functors {
 		int length = 0;
 	};
 
-	struct CalculateSigmaSquaredInRow : thrust::unary_function<glm::vec3, float>, DistanceSquared
+	struct CalculateSigmaSquaredInRow : thrust::unary_function<glm::vec3, float>
 	{
 		CalculateSigmaSquaredInRow(const thrust::device_vector<glm::vec3>& cloud)
 		{
@@ -143,11 +141,17 @@ namespace Functors {
 		}
 
 	private:
+		__device__ __host__ float GetDistanceSquared(const glm::vec3& first, const glm::vec3& second)
+		{
+			const auto d = second - first;
+			return d.x * d.x + d.y * d.y + d.z * d.z;
+		}
+
 		const glm::vec3* cloud;
 		int cloudSize;
 	};
 
-	struct CalculateDenominator : thrust::unary_function<thrust::tuple<glm::vec3, int>, float>, DistanceSquared
+	struct CalculateDenominator : thrust::unary_function<thrust::tuple<glm::vec3, int>, float>
 	{
 		CalculateDenominator(
 			const glm::vec3& cloudBeforeItem,

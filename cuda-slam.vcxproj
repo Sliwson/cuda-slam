@@ -23,6 +23,7 @@
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="cpdcuda.cu" />
+    <CudaCompile Include="functors.cu" />
     <CudaCompile Include="source\cuda.cu" />
   </ItemGroup>
   <ItemGroup>

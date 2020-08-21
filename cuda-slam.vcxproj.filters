@@ -3,6 +3,7 @@
   <ItemGroup>
     <CudaCompile Include="source\cuda.cu" />
     <CudaCompile Include="cpdcuda.cu" />
+    <CudaCompile Include="functors.cu" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\main.cpp" />
