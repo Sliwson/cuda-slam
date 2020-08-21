@@ -191,6 +191,11 @@ namespace Common
 	void ConfigParser::ParseAdditionalParameters(const nlohmann::json& parsed)
 	{
 		config.MaxIterations = ParseOptional<int>(parsed, "max-iterations");
+
+		config.ShowVisualisation = [this, &parsed]() {
+			auto opt = ParseOptional<bool>(parsed, "show-visualisation");
+			return opt.has_value() ? opt.value() : false;
+		}();
 	}
 
 	void ConfigParser::ValidateConfiguration()

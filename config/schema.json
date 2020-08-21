@@ -41,6 +41,9 @@
     },
     "max-iterations": {
       "type": "integer"
+    },
+    "show-visualisation": {
+      "type":  "boolean"
     }
   }
 }

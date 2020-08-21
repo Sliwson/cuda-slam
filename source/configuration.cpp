@@ -1,4 +1,5 @@
 #include "configuration.h"
+#include <string>
 
 void Common::Configuration::Print()
 {
@@ -57,6 +58,8 @@ void Common::Configuration::Print()
 
 	if (MaxIterations.has_value())
 		printf("Max iterations: %d\n", MaxIterations.value());
+
+	printf("Show visualisation: %s\n", std::to_string(ShowVisualisation).c_str());
 
 	printf("===============================\n");
 }

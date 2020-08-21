@@ -29,6 +29,8 @@ namespace Common
 		std::optional<std::pair<float, float>> TransformationParameters = std::nullopt;
 		std::optional<int> MaxIterations = std::nullopt;
 
+		bool ShowVisualisation = false;
+
 		void Print();
 	};
 }
