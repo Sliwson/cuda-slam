@@ -30,6 +30,22 @@
 
 using namespace Common;
 
-void CudaTest();
+struct CudaSvdParams;
 
-void CPDTest();
+namespace CUDACommon
+{
+	typedef thrust::device_vector<glm::vec3> Cloud;
+	typedef thrust::device_vector<int> IndexIterator;
+	typedef thrust::permutation_iterator<Cloud, IndexIterator> Permutation;	
+
+	thrust::host_vector<glm::vec3> CommonToThrustVector(const std::vector<Common::Point_f>& vec);
+	std::vector<Point_f> ThrustToCommonVector(const Cloud& vec);
+	glm::vec3 CalculateCentroid(const Cloud& vec);
+	void TransformCloud(const Cloud& vec, Cloud& out, const glm::mat4& transform);
+	__device__ float GetDistanceSquared(const glm::vec3& first, const glm::vec3& second);
+	float GetMeanSquaredError(const IndexIterator& permutation, const Cloud& before, const Cloud& after);
+	void GetAlignedCloud(const Cloud& source, Cloud& target);
+	void CuBlasMultiply(float* A, float* B, float* C, int size, CudaSvdParams& params);
+	glm::mat3 CreateGlmMatrix(float* squareMatrix);
+	glm::mat4 LeastSquaresSVD(const IndexIterator& permutation, const Cloud& before, const Cloud& after, Cloud& alignBefore, Cloud& alignAfter, CudaSvdParams params);
+}

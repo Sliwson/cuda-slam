@@ -1,4 +1,4 @@
-#include "cuda.cuh"
+#include "cpdcuda.cuh"
 
 int main()
 {

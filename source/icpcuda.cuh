@@ -2,4 +2,4 @@
 
 #include "cuda.cuh"
 
-void CPDTest();
+void CudaTest();
