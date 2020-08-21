@@ -1,47 +1,63 @@
 #pragma once
 #include "_common.h"
+#include "configuration.h"
+#include <nlohmann/json.hpp>
 
-enum class ComputationMethod
+namespace Common 
 {
-	Icp,
-	NoniterativeIcp,
-	Cpd
-};
+	class ConfigParser
+	{
+	public:
+		ConfigParser(int argc, char** argv);
 
-enum class ExecutionPolicy
-{
-	Sequential,
-	Parallel
-};
+		bool IsCorrect() const { return correct; }
+		Configuration GetConfiguration() const { return config; }
 
-class ConfigParser
-{
-public:
-	ConfigParser(int argc, char** argv);
+	private:
 
-	ConfigParser(ConfigParser&) = delete;
-	ConfigParser(ConfigParser&&) = delete;
+		void LoadConfigFromFile(const std::string& path);
+		void ParseMethod(const nlohmann::json& parsed);
+		void ParseCloudPaths(const nlohmann::json& parsed);
+		void ParseExecutionPolicy(const nlohmann::json& parsed);
+		void ParseTransformation(const nlohmann::json& parsed);
+		void ParseTransformationParameters(const nlohmann::json& parsed);
+		void ParseAdditionalParameters(const nlohmann::json& parsed);
 
-	std::string GetBeforeCloudPath() const;
-	std::string GetAfterCloudPath() const;
+		void ValidateConfiguration();
 
-	ComputationMethod GetComputationMethod() const;
-	ExecutionPolicy GetExecutionPolicy() const;
+		template<typename T>
+		std::optional<T> ParseRequired(const nlohmann::json& parsed, std::string name);
+		template<typename T>
+		std::optional<T> ParseOptional(const nlohmann::json& parsed, std::string name);
 
-	std::vector<int> GetMethodAdditionalParamsInt() const;
-	std::vector<float> GetMethodAdditionalParamsFloat() const;
+		bool correct = true;
+		Configuration config;
+	};
 
-	/// Returns detailed transform given by user
-	std::optional<std::pair<glm::mat3, glm::vec3>> GetTransformation() const;
+	template<typename T>
+	inline std::optional<T> ConfigParser::ParseOptional(const nlohmann::json& parsed, std::string name)
+	{
+		if (parsed.find(name) != parsed.end())
+		{
+			auto prop = parsed[name];
+			return prop.get<T>();
+		}
+		else
+		{
+			return std::nullopt;
+		}
+	}
 
-	/// Returns translation, rotation parameter pair
-	std::optional<std::pair<float, float>> GetTransformationParameters() const;
+	template<typename T>
+	inline std::optional<T> ConfigParser::ParseRequired(const nlohmann::json& parsed, std::string name)
+	{
+		auto prop = ParseOptional<T>(parsed, name);
+		if (!prop.has_value())
+		{
+			printf("Parsing error: No required parameter '%s'\n", name.c_str());
+			correct = false;
+		}
 
-	std::optional<int> GetBeforeCloudResize() const;
-	std::optional<int> GetAfterCloudResize() const;
-
-private:
-
-	void LoadConfigFromFile(const std::string& path);
-
-};
+		return prop;
+	}
+}

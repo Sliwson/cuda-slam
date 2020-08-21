@@ -3,7 +3,9 @@
 #include <thread>
 #include <array>
 
+#include "testutils.h"
 #include "common.h"
+#include "configuration.h"
 #include "loader.h"
 
 namespace Common
@@ -52,15 +54,15 @@ namespace Common
 	std::vector<Point_f> NormalizeCloud(const std::vector<Point_f>& cloud, float size)
 	{
 		const auto get_minmax = [&](auto selector) {
-			 return std::minmax(cloud.begin(), cloud.end(), [selector](auto p1, auto p2) { return selector(p1) < selector(p2); });
+			 return std::minmax_element(cloud.rbegin(), cloud.rend(), [selector](const auto& p1, const auto& p2) { return selector(p1) < selector(p2); });
 		};
 
-		const auto [xMin, xMax] = get_minmax([](auto p) { return p->x; });
-		const auto [yMin, yMax] = get_minmax([](auto p) { return p->y; });
-		const auto [zMin, zMax] = get_minmax([](auto p) { return p->z; });
+		const auto [xMin, xMax] = get_minmax([](auto p) { return p.x; });
+		const auto [yMin, yMax] = get_minmax([](auto p) { return p.y; });
+		const auto [zMin, zMax] = get_minmax([](auto p) { return p.z; });
 
 		const std::array<float, 3> spans = { xMax->x - xMin->x, yMax->y - yMin->y, zMax->z - zMin->z };
-		const auto max = std::max(spans.begin(), spans.end());
+		const auto max = std::max_element(spans.begin(), spans.end());
 
 		if (*max == 0)
 			return cloud;
@@ -71,6 +73,52 @@ namespace Common
 		std::transform(cloud.begin(), cloud.end(), outputCloud.begin(), [scale](auto p) { return p * scale; });
 
 		return outputCloud;
+	}
+
+	std::pair<std::vector<Point_f>, std::vector<Point_f>> GetCloudsFromConfig(Configuration config)
+	{
+		auto before = LoadCloud(config.BeforePath);
+		auto after = LoadCloud(config.AfterPath);
+
+		// scale clouds if necessary
+		if (config.CloudResize.has_value())
+		{
+			const auto newSize = config.CloudResize.value();
+			before = GetSubcloud(before, newSize);
+			after = GetSubcloud(after, newSize);
+		}
+
+		// normalize clouds to standart value
+		before = NormalizeCloud(before, CLOUD_BOUNDARY);
+		after = NormalizeCloud(after, CLOUD_BOUNDARY);
+
+		// apply transformation and return
+		if (config.Transformation.has_value())
+		{
+			const auto& transform = config.Transformation.value();
+			return std::make_pair(
+				before,
+				GetTransformedCloud(after, transform.first, transform.second)
+			);
+		}
+		else if (config.TransformationParameters.has_value())
+		{
+			const auto params = config.TransformationParameters.value();
+			const auto rotationVal = params.first;
+			const auto translationVal = params.second;
+			const auto rotation = Tests::GetRandomRotationMatrix(rotationVal);
+			const auto translation = Tests::GetRandomTranslationVector(translationVal);
+
+			return std::make_pair(
+				before,
+				GetTransformedCloud(after, rotation, translation)
+			);
+		}
+		else
+		{
+			assert(false, "Wrong configuration!");
+			return std::make_pair(before, after);
+		}
 	}
 
 	std::vector<Point_f> GetTransformedCloud(const std::vector<Point_f>& cloud, const glm::mat4& matrix)

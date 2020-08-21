@@ -22,6 +22,7 @@
     <ClCompile Include="source\configparser.cpp" />
     <ClCompile Include="source\camera.cpp" />
     <ClCompile Include="source\common.cpp" />
+    <ClCompile Include="source\configuration.cpp" />
     <ClCompile Include="source\glad.c" />
     <ClCompile Include="source\Icosphere.cpp" />
     <ClCompile Include="source\loader.cpp" />
@@ -36,11 +37,11 @@
   <ItemGroup>
     <ClInclude Include="source\configparser.h" />
     <ClInclude Include="source\camera.h" />
-    <ClInclude Include="source\fgttype.h" />
+    <ClInclude Include="source\configuration.h" />
+    <ClInclude Include="source\enumerators.h" />
     <ClInclude Include="source\Icosphere.h" />
     <ClInclude Include="source\loader.h" />
     <ClInclude Include="source\moveablecamera.h" />
-    <ClInclude Include="source\noniterative_type.h" />
     <ClInclude Include="source\point.h" />
     <ClInclude Include="source\common.h" />
     <ClInclude Include="source\renderer.h" />

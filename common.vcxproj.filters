@@ -28,6 +28,7 @@
     <ClCompile Include="source\testutils.cpp" />
     <ClCompile Include="source\timer.cpp" />
     <ClCompile Include="source\configparser.cpp" />
+    <ClCompile Include="source\configuration.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\loader.h" />
@@ -58,9 +59,9 @@
     <ClInclude Include="source\tests.h" />
     <ClInclude Include="source\testutils.h" />
     <ClInclude Include="source\timer.h" />
-    <ClInclude Include="source\fgttype.h" />
-    <ClInclude Include="source\noniterative_type.h" />
     <ClInclude Include="source\configparser.h" />
+    <ClInclude Include="source\configuration.h" />
+    <ClInclude Include="source\enumerators.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="GUI">

@@ -41,6 +41,22 @@
     },
     "max-iterations": {
       "type": "integer"
+    },
+    "cloud-resize": {
+      "type": "integer"
+    },
+    "show-visualisation": {
+      "type": "boolean"
+    },
+    "max-distance-squared": {
+      "type": "number"
+    },
+    "nicp-type": {
+      "type": "string",
+      "enum": [ "none", "hybrid", "full" ]
+    }
+    "cpd-weight": {
+      "type": "number" 
     }
   }
 }
