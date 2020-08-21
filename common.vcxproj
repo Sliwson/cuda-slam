@@ -38,6 +38,7 @@
     <ClInclude Include="source\configparser.h" />
     <ClInclude Include="source\camera.h" />
     <ClInclude Include="source\configuration.h" />
+    <ClInclude Include="source\enumerators.h" />
     <ClInclude Include="source\Icosphere.h" />
     <ClInclude Include="source\loader.h" />
     <ClInclude Include="source\moveablecamera.h" />

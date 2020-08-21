@@ -3,6 +3,10 @@
 #include <tuple>
 #include "common.h"
 
+namespace Common {
+	class Configuration;
+}
+
 namespace CoherentPointDrift
 {
 	std::pair<glm::mat3, glm::vec3> CalculateCpdWithConfiguration(

@@ -2,6 +2,7 @@
 #include <utility>
 #include <tuple>
 #include "common.h"
+#include "configuration.h"
 
 using namespace Common;
 
@@ -56,7 +57,7 @@ namespace NonIterative
 	std::pair<glm::mat3, glm::vec3> CalculateNonIterativeWithConfiguration(
 		const std::vector<Point_f>& cloudBefore,
 		const std::vector<Point_f>& cloudAfter,
-		Configuration config);
+		Common::Configuration config);
 
 	NonIterativeSlamResult GetSingleNonIterativeSlamResult(
 		const std::vector<Point_f>& cloudBefore,

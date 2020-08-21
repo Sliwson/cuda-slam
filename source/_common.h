@@ -23,6 +23,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "point.h"
+#include "enumerators.h"
 
 namespace Common
 {

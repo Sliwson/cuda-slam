@@ -1,28 +1,9 @@
 #pragma once
 #include "_common.h"
+#include <optional>
 
 namespace Common
 {
-	enum class ComputationMethod
-	{
-		Icp,
-		NoniterativeIcp,
-		Cpd
-	};
-
-	enum class ExecutionPolicy
-	{
-		Sequential,
-		Parallel
-	};
-
-	enum class ApproximationType
-	{
-		None,
-		Full,
-		Hybrid
-	};
-
 	struct Configuration
 	{
 		//required parameters

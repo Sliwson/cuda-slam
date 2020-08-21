@@ -6,8 +6,8 @@
 
 #include "renderer.h"
 #include "shadertype.h"
-#include "configparser.h"
-#include "configuration.h"
+
+class Configuration;
 
 namespace Common
 {

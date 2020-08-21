@@ -3,6 +3,10 @@
 #include <tuple>
 #include "common.h"
 
+namespace Common {
+	class Configuration;
+}
+
 namespace BasicICP
 {
 	std::pair<glm::mat3, glm::vec3> CalculateICPWithConfiguration(const std::vector<Common::Point_f>& cloudBefore, const std::vector<Common::Point_f>& cloudAfter, Common::Configuration config);

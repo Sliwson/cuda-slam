@@ -5,6 +5,7 @@
 
 #include "testutils.h"
 #include "common.h"
+#include "configuration.h"
 #include "loader.h"
 
 namespace Common
