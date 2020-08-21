@@ -4,6 +4,7 @@
 #include "coherentpointdrift.h"
 #include "fgt.h"
 #include "fgt_model.h"
+#include "configuration.h"
 
 using namespace Common;
 using namespace FastGaussTransform;

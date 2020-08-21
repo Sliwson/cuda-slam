@@ -2,6 +2,7 @@
 
 #include "noniterative.h"
 #include "timer.h"
+#include "configuration.h"
 
 #include <thread>
 

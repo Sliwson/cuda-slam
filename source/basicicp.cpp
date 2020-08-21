@@ -3,6 +3,7 @@
 #include <limits>
 
 #include "basicicp.h"
+#include "configuration.h"
 
 using namespace Common;
 

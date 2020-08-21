@@ -4,6 +4,7 @@
 #include "noniterative.h"
 #include "basicicp.h"
 #include "common.h"
+#include "configparser.h"
 
 int main(int argc, char** argv)
 {
