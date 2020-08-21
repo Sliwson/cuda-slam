@@ -50,6 +50,10 @@
     },
     "max-distance-squared": {
       "type": "number"
+    },
+    "nicp-type": {
+      "type": "string",
+      "enum": [ "none", "hybrid", "full" ]
     }
   }
 }

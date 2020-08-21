@@ -16,6 +16,13 @@ namespace Common
 		Parallel
 	};
 
+	enum class NonIterativeApproximation
+	{
+		None,
+		Full,
+		Hybrid
+	};
+
 	struct Configuration
 	{
 		//required parameters
@@ -33,6 +40,7 @@ namespace Common
 		//optional parameters with default values
 		bool ShowVisualisation = false;
 		float MaxDistanceSquared = 1.f;
+		NonIterativeApproximation NicpType = NonIterativeApproximation::Hybrid;
 
 		void Print();
 	};

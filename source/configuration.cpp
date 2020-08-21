@@ -32,6 +32,20 @@ void Common::Configuration::Print()
 		}
 	}();
 
+	const auto nicpString = [t = this->NicpType]() {
+		switch (t)
+		{
+		case NonIterativeApproximation::Full:
+			return "Dull";
+		case NonIterativeApproximation::None:
+			return "None";
+		case NonIterativeApproximation::Hybrid:
+			return "Hybrid";
+		default:
+			return "";
+		}
+	}();
+
 	printf("===============================\n");
 	printf("Cuda-slam run configuration:\n");
 	printf("Computation method: %s\n", computationMethodString);
@@ -64,6 +78,7 @@ void Common::Configuration::Print()
 
 	printf("Show visualisation: %s\n", std::to_string(ShowVisualisation).c_str());
 	printf("Max distance squared: %f\n", MaxDistanceSquared);
+	printf("Non iterative approximation type: %s\n", nicpString);
 
 	printf("===============================\n");
 }
