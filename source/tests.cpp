@@ -267,6 +267,71 @@ namespace Tests
 	}
 
 	void RigidCPDTest(
+		const std::vector<Common::Point_f>& cloud,
+		const float& testEps,
+		const float weight,
+		const bool const_scale,
+		const int max_iterations,
+		const FastGaussTransform::FGTType fgt)
+	{
+		srand(RANDOM_SEED);
+		int iterations = 0;
+		float error = 1.0f;
+		Timer timer("Cpu timer");
+
+		printf("Cloud size: %d\n", cloud.size());
+
+		timer.StartStage("processing");
+		//std::transform(cloud.begin(), cloud.end(), cloud.begin(), [](const Point_f& point) { return Point_f{ point.x * 100.f, point.y * 100.f, point.z * 100.f }; });
+
+		int cloudSize = cloud.size();
+		printf("Processing %d points\n", cloudSize);
+
+		const auto translation_vector = glm::vec3(15.0f, 0.0f, 0.0f);
+		const auto rotation_matrix = GetRotationMatrix({ 1.0f, 0.4f, -0.3f }, glm::radians(50.0f));
+
+		const auto transform = ConvertToTransformationMatrix(rotation_matrix, translation_vector);
+		//const auto transform = GetRandomTransformMatrix({ 0.f, 0.f, 0.f }, { 10.0f, 10.0f, 10.0f }, glm::radians(35.f));
+		const auto permutation = GetRandomPermutationVector(cloudSize);
+		auto permutedCloud = ApplyPermutation(cloud, permutation);
+		std::transform(permutedCloud.begin(), permutedCloud.end(), permutedCloud.begin(), [](const Point_f& point) { return Point_f{ point.x * 2.f, point.y * 2.f, point.z * 2.f }; });
+		const auto transformedCloud = GetTransformedCloud(cloud, transform);
+		const auto transformedPermutedCloud = GetTransformedCloud(permutedCloud, transform);
+		timer.StopStage("processing");
+
+		timer.StartStage("cpd1");
+		const auto icpCalculatedTransform1 = CoherentPointDrift::GetRigidCPDTransformationMatrix(transformedPermutedCloud, cloud, &iterations, &error, testEps, weight, const_scale, max_iterations, testEps, fgt);
+		timer.StopStage("cpd1");
+		iterations = 0;
+		error = 1.0f;
+		timer.StartStage("icp2");
+		//const auto icpCalculatedTransform2 = CoherentPointDrift::GetRigidCPDTransformationMatrix(cloud, transformedPermutedCloud, &iterations, &error, testEps, weigth, const_scale, max_iterations, testEps, fgt);
+		timer.StopStage("icp2");
+
+		printf("ICP test (%d iterations) error = %g\n", iterations, error);
+
+		std::cout << "Transform Matrix" << std::endl;
+		PrintMatrix(transform);
+		std::cout << "Inverted Transform Matrix" << std::endl;
+		PrintMatrix(glm::inverse(transform));
+
+		std::cout << "CPD1 Matrix" << std::endl;
+		PrintMatrix(icpCalculatedTransform1.first, icpCalculatedTransform1.second);
+
+		timer.PrintResults();
+
+		Common::Renderer renderer(
+			Common::ShaderType::SimpleModel,
+			cloud, //red
+			transformedPermutedCloud, //green
+			GetTransformedCloud(cloud, icpCalculatedTransform1.first, icpCalculatedTransform1.second), //yellow
+			//GetTransformedCloud(cloud, icpCalculatedTransform2.first, icpCalculatedTransform2.second)); //blue
+			std::vector<Point_f>(1)); //green
+
+		renderer.Show();
+	}
+
+	void RigidCPDTest(
 		const char* objectPath1, 
 		const char* objectPath2, 
 		const int& pointCount1, 

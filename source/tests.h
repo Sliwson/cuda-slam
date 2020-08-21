@@ -32,6 +32,13 @@ namespace Tests
 		const int max_iterations,
 		const FastGaussTransform::FGTType fgt);
 	void RigidCPDTest(
+		const std::vector<Common::Point_f>& cloud,
+		const float& testEps,
+		const float weight,
+		const bool const_scale,
+		const int max_iterations,
+		const FastGaussTransform::FGTType fgt);
+	void RigidCPDTest(
 		const char* objectPath1,
 		const char* objectPath2,
 		const int& pointCount1,
