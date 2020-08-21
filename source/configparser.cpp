@@ -192,6 +192,8 @@ namespace Common
 	{
 		config.MaxIterations = ParseOptional<int>(parsed, "max-iterations");
 
+		config.CloudResize = ParseOptional<int>(parsed, "cloud-resize");
+
 		config.ShowVisualisation = [this, &parsed]() {
 			auto opt = ParseOptional<bool>(parsed, "show-visualisation");
 			return opt.has_value() ? opt.value() : false;

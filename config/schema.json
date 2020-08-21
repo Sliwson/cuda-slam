@@ -42,6 +42,9 @@
     "max-iterations": {
       "type": "integer"
     },
+    "cloud-resize": {
+      "type": "integer"
+    },
     "show-visualisation": {
       "type":  "boolean"
     }

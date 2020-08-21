@@ -58,6 +58,9 @@ void Common::Configuration::Print()
 
 	if (MaxIterations.has_value())
 		printf("Max iterations: %d\n", MaxIterations.value());
+	
+	if (CloudResize.has_value())
+		printf("Cloud resize: %d\n", CloudResize.value());
 
 	printf("Show visualisation: %s\n", std::to_string(ShowVisualisation).c_str());
 
