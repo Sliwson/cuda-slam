@@ -1,6 +1,7 @@
+#pragma once
 #include "cuda.cuh"
 
-namespace Functors 
+namespace Functors
 {
 	struct MatrixTransform : thrust::unary_function<glm::vec3, glm::vec3>
 	{

@@ -1,3 +1,4 @@
+#pragma once
 #pragma warning(disable : 4996)
 #include <Eigen/Dense>
 #include "_common.h"
