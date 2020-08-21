@@ -19,15 +19,17 @@ int main(int argc, char** argv)
 {
 	printf("Hello cpu-slam!\n");
 
-	//const float outliers = 0.5f;
-	//const bool const_scale = false;
-	//const int max_iter = 50;
-	//const auto fgt = FastGaussTransform::FGTType::Full; //None-not use fgt, Full-use fgt, Hybrid-hybrid
-	//Tests::RigidCPDTest(objectPathBunnyFaceless, objectPathBunnyTailless, -1, -1, TEST_EPS, outliers, const_scale, max_iter, fgt);
+	const float outliers = 0.0f;
+	const bool const_scale = false;
+	const int max_iter = 50;
+	const auto fgt = FastGaussTransform::FGTType::None; //None-not use fgt, Full-use fgt, Hybrid-hybrid
+
+	//Tests::RigidCPDTest(cloud, TEST_EPS, outliers, const_scale, max_iter, fgt);
+	Tests::RigidCPDTest(objectPathBunny, 10, TEST_EPS, outliers, const_scale, max_iter, fgt);
 	//Tests::BasicICPTest(object_path4, object_path5, -1, -1, TEST_EPS);
 
-	const auto type = NonIterative::NonIterativeApproximation::None;
-//	Tests::NonIterativeTest(objectPathBunny, -1, TEST_EPS, 20, type, CLOUD_SIZE);
-	Tests::BasicICPTest(objectPathBunny, CLOUD_SIZE, TEST_EPS);
+//	const auto type = NonIterative::NonIterativeApproximation::None;
+////	Tests::NonIterativeTest(objectPathBunny, -1, TEST_EPS, 20, type, CLOUD_SIZE);
+//	Tests::BasicICPTest(objectPathBunny, CLOUD_SIZE, TEST_EPS);
 	return 0;
 }

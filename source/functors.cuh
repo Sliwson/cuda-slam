@@ -139,7 +139,6 @@ namespace Functors {
 			{
 				sum += GetDistanceSquared(vector, cloud[i]);
 			}
-
 			return sum;
 		}
 

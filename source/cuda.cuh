@@ -31,3 +31,5 @@
 using namespace Common;
 
 void CudaTest();
+
+void CPDTest();

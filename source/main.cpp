@@ -2,6 +2,6 @@
 
 int main()
 {
-	CudaTest();
+	CPDTest();
 	return 0;
 }
