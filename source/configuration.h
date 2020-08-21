@@ -16,7 +16,7 @@ namespace Common
 		Parallel
 	};
 
-	enum class NonIterativeApproximation
+	enum class ApproximationType
 	{
 		None,
 		Full,
@@ -40,7 +40,8 @@ namespace Common
 		//optional parameters with default values
 		bool ShowVisualisation = false;
 		float MaxDistanceSquared = 1.f;
-		NonIterativeApproximation NicpType = NonIterativeApproximation::Hybrid;
+		ApproximationType ApproximationType = ApproximationType::Hybrid;
+		float CpdWeight = .3f;
 
 		void Print();
 	};

@@ -203,23 +203,28 @@ namespace Common
 			auto opt = ParseOptional<bool>(parsed, "show-visualisation");
 			return opt.has_value() ? opt.value() : false;
 		}();
+		
+		config.CpdWeight = [this, &parsed]() {
+			auto opt = ParseOptional<float>(parsed, "cpd-weight");
+			return opt.has_value() ? opt.value() : .3f;
+		}();
 
-		config.NicpType = [this, &parsed]() {
+		config.ApproximationType = [this, &parsed]() {
 			auto nicpType = ParseOptional<std::string>(parsed, "nicp-type");
 			if (!nicpType.has_value())
-				return NonIterativeApproximation::Hybrid;
+				return ApproximationType::Hybrid;
 
-			const std::map<std::string, NonIterativeApproximation> mapping = {
-				{ "full", NonIterativeApproximation::Full },
-				{ "hybrid", NonIterativeApproximation::Hybrid },
-				{ "none", NonIterativeApproximation::None }
+			const std::map<std::string, ApproximationType> mapping = {
+				{ "full", ApproximationType::Full },
+				{ "hybrid", ApproximationType::Hybrid },
+				{ "none", ApproximationType::None }
 			};
 
 			const auto nicpStr = nicpType.value();
 			if (auto result = mapping.find(nicpStr); result != mapping.end())
 				return result->second;
 			else
-				return NonIterativeApproximation::Hybrid;
+				return ApproximationType::Hybrid;
 		}();
 	}
 

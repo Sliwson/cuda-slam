@@ -32,14 +32,14 @@ void Common::Configuration::Print()
 		}
 	}();
 
-	const auto nicpString = [t = this->NicpType]() {
+	const auto nicpString = [t = this->ApproximationType]() {
 		switch (t)
 		{
-		case NonIterativeApproximation::Full:
+		case ApproximationType::Full:
 			return "Dull";
-		case NonIterativeApproximation::None:
+		case ApproximationType::None:
 			return "None";
-		case NonIterativeApproximation::Hybrid:
+		case ApproximationType::Hybrid:
 			return "Hybrid";
 		default:
 			return "";
@@ -79,6 +79,7 @@ void Common::Configuration::Print()
 	printf("Show visualisation: %s\n", std::to_string(ShowVisualisation).c_str());
 	printf("Max distance squared: %f\n", MaxDistanceSquared);
 	printf("Non iterative approximation type: %s\n", nicpString);
+	printf("Cpd weight: %s\n", std::to_string(CpdWeight).c_str());
 
 	printf("===============================\n");
 }

@@ -55,5 +55,8 @@
       "type": "string",
       "enum": [ "none", "hybrid", "full" ]
     }
+    "cpd-weight": {
+      "type": "number" 
+    }
   }
 }

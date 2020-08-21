@@ -68,7 +68,7 @@ namespace NonIterative
 		float* error, 
 		float eps, 
 		int maxRepetitions, 
-		const NonIterativeApproximation& calculationType, 
+		const ApproximationType& calculationType, 
 		bool parallel = false,
 		int subcloudSize = -1);
 

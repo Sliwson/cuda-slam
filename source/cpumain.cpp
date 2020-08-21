@@ -27,7 +27,9 @@ int main(int argc, char** argv)
 			case Common::ComputationMethod::Cpd:
 				return NonIterative::CalculateNonIterativeWithConfiguration(beforeCloud, afterCloud, configuration);
 			case Common::ComputationMethod::NoniterativeIcp:
-				return BasicICP::CalculateICPWithConfiguration(beforeCloud, afterCloud, configuration);
+				return CoherentPointDrift::CalculateCpdWithConfiguration(beforeCloud, afterCloud, configuration);
+			default:
+				assert(false, "Unknown method");
 		}
 	}();
 
