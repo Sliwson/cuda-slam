@@ -37,46 +37,47 @@ namespace
 		return -1.0f;
 	}
 
-	Probabilities ComputePMatrix(
-		const Cloud& cloudBefore,
-		const Cloud& cloudTransformed,
-		const float& constant,
-		const float& sigmaSquared,
-		const bool& doTruncate,
-		float truncate)
-	{
-		const float multiplier = -0.5f / sigmaSquared;
-		thrust::device_vector<float> p = thrust::device_vector<float>(cloudTransformed.size());
-		thrust::device_vector<float> p1 = thrust::device_vector<float>(cloudTransformed.size());
-		thrust::device_vector<float> pt1 = thrust::device_vector<float>(cloudBefore.size());
-		thrust::device_vector<glm::vec3> px = thrust::device_vector<glm::vec3>(cloudTransformed.size());
+	//Probabilities ComputePMatrix(
+	//	const Cloud& cloudBefore,
+	//	const Cloud& cloudTransformed,
+	//	const float& constant,
+	//	const float& sigmaSquared,
+	//	const bool& doTruncate,
+	//	float truncate)
+	//{
+	//	const float multiplier = -0.5f / sigmaSquared;
+	//	thrust::device_vector<float> p = thrust::device_vector<float>(cloudTransformed.size());
+	//	thrust::device_vector<float> p1 = thrust::device_vector<float>(cloudTransformed.size());
+	//	thrust::device_vector<float> pt1 = thrust::device_vector<float>(cloudBefore.size());
+	//	thrust::device_vector<glm::vec3> px = thrust::device_vector<glm::vec3>(cloudTransformed.size());
 
-		auto idxfirst = thrust::make_counting_iterator<int>(0);
-		auto idxlast = thrust::make_counting_iterator<int>(cloudTransformed.size());
+	//	thrust::counting_iterator<int> idxfirst(0);
+	//	thrust::counting_iterator<int> idxlast = idxfirst + cloudTransformed.size();
 
-		auto cloudTransformed_first = thrust::make_zip_iterator(thrust::make_tuple(cloudTransformed.begin(), idxfirst));
-		auto cloudTransformed_last = thrust::make_zip_iterator(thrust::make_tuple(cloudTransformed.end(), idxlast));
+	//	//maybe use auto instead of this
+	//	thrust::zip_iterator<thrust::tuple<thrust::device_vector<glm::vec3>::iterator, thrust::counting_iterator<int>>> cloudTransformed_first = thrust::make_zip_iterator(thrust::make_tuple(cloudTransformed.begin(), idxfirst));
+	//	thrust::zip_iterator<thrust::tuple<thrust::device_vector<glm::vec3>::iterator, thrust::counting_iterator<int>>> cloudTransformed_last = thrust::make_zip_iterator(thrust::make_tuple(cloudTransformed.end(), idxlast));
 
-		float error = 0.0;
-		if (doTruncate)
-			truncate = std::log(truncate);
+	//	float error = 0.0;
+	//	if (doTruncate)
+	//		truncate = std::log(truncate);
 
-		for (size_t x = 0; x < cloudBefore.size(); x++)
-		{
-			const auto functorDenominator = Functors::CalculateDenominator(cloudBefore[x], p, multiplier, doTruncate, truncate);
-			//const float denominator = thrust::transform_reduce(thrust::device, cloudTransformed_first, cloudTransformed_last, functorDenominator, constant, thrust::plus<float>());
-			const float denominator = 1.0f;
+	//	for (size_t x = 0; x < cloudBefore.size(); x++)
+	//	{
+	//		const auto functorDenominator = Functors::CalculateDenominator(cloudBefore[x], p, multiplier, doTruncate, truncate);
+	//		//const float denominator = thrust::transform_reduce(thrust::device, cloudTransformed_first, cloudTransformed_last, functorDenominator, constant, thrust::plus<float>());
+	//		const float denominator = 1.0f;
 
-			pt1[x] = 1.0f - constant / denominator;
+	//		pt1[x] = 1.0f - constant / denominator;
 
-			const auto functor = Functors::CalculateP1AndPX(cloudBefore[x], p, p1, px, denominator);
-			thrust::for_each(thrust::device, idxfirst, idxlast, functor);
-			error -= std::log(denominator);
-		}
-		error += DIMENSION * cloudBefore.size() * std::log(sigmaSquared) / 2.0f;
+	//		const auto functor = Functors::CalculateP1AndPX(cloudBefore[x], p, p1, px, denominator);
+	//		thrust::for_each(thrust::device, idxfirst, idxlast, functor);
+	//		error -= std::log(denominator);
+	//	}
+	//	error += DIMENSION * cloudBefore.size() * std::log(sigmaSquared) / 2.0f;
 
-		return { std::move(p1), std::move(pt1), std::move(px), error };
-	}
+	//	return { p1, pt1, px, error };
+	//}
 
 	glm::mat4 CudaCPD(
 		const Cloud& cloudBefore,
