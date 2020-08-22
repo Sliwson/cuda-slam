@@ -22,14 +22,19 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <CudaCompile Include="source\cpdcuda.cu" />
     <CudaCompile Include="source\cuda.cu" />
+    <CudaCompile Include="source\functors.cu" />
+    <CudaCompile Include="source\icpcuda.cu" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="source\cpdcuda.cuh" />
     <ClInclude Include="source\cuda.cuh" />
     <ClInclude Include="source\functors.cuh" />
+    <ClInclude Include="source\icpcuda.cuh" />
     <ClInclude Include="source\svdparams.cuh" />
   </ItemGroup>
   <ItemGroup>
@@ -113,6 +118,7 @@
       <CodeGeneration>compute_30,sm_30;compute_35,sm_35;compute_37,sm_37;compute_50,sm_50;compute_52,sm_52;compute_60,sm_60;compute_61,sm_61;compute_70,sm_70;compute_75,sm_75</CodeGeneration>
       <Runtime>MDd</Runtime>
       <TargetMachinePlatform>64</TargetMachinePlatform>
+      <GenerateRelocatableDeviceCode Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</GenerateRelocatableDeviceCode>
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='FastDebug75'">
@@ -130,6 +136,7 @@
       <CodeGeneration>compute_75,sm_75</CodeGeneration>
       <Runtime>MDd</Runtime>
       <TargetMachinePlatform>64</TargetMachinePlatform>
+      <GenerateRelocatableDeviceCode Condition="'$(Configuration)|$(Platform)'=='FastDebug75|x64'">true</GenerateRelocatableDeviceCode>
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='FastDebug50'">
@@ -147,6 +154,7 @@
       <CodeGeneration>compute_50,sm_50</CodeGeneration>
       <Runtime>MDd</Runtime>
       <TargetMachinePlatform>64</TargetMachinePlatform>
+      <GenerateRelocatableDeviceCode Condition="'$(Configuration)|$(Platform)'=='FastDebug50|x64'">true</GenerateRelocatableDeviceCode>
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
@@ -163,6 +171,7 @@
       <CodeGeneration>compute_30,sm_30;compute_35,sm_35;compute_37,sm_37;compute_50,sm_50;compute_52,sm_52;compute_60,sm_60;compute_61,sm_61;compute_70,sm_70;compute_75,sm_75</CodeGeneration>
       <Runtime>MD</Runtime>
       <TargetMachinePlatform>64</TargetMachinePlatform>
+      <GenerateRelocatableDeviceCode Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</GenerateRelocatableDeviceCode>
     </CudaCompile>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

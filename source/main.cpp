@@ -1,7 +1,7 @@
-#include "cuda.cuh"
+#include "cpdcuda.cuh"
 
 int main()
 {
-	CudaTest();
+	CPDTest();
 	return 0;
 }

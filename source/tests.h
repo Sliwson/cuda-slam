@@ -3,12 +3,7 @@
 
 using namespace Common;
 
-namespace FastGaussTransform
-{
-	enum class ApproximationType;
-}
-
-namespace NonIterative
+namespace Common
 {
 	enum class ApproximationType;
 }
@@ -30,7 +25,14 @@ namespace Tests
 		const float weight,
 		const bool const_scale,
 		const int max_iterations,
-		const FastGaussTransform::ApproximationType fgt);
+		const Common::ApproximationType fgt);
+	void RigidCPDTest(
+		const std::vector<Common::Point_f>& cloud,
+		const float& testEps,
+		const float weight,
+		const bool const_scale,
+		const int max_iterations,
+		const Common::ApproximationType fgt);
 	void RigidCPDTest(
 		const char* objectPath1,
 		const char* objectPath2,
@@ -40,8 +42,8 @@ namespace Tests
 		const float weight,
 		const bool const_scale,
 		const int max_iterations,
-		const FastGaussTransform::ApproximationType fgt);
+		const Common::ApproximationType fgt);
 
 
-	void NonIterativeTest(const char* objectPath, const int& pointCount, const float& testEps, const int& maxRepetitions, const NonIterative::ApproximationType& calculationType, const int& subcloudSize);
+	void NonIterativeTest(const char* objectPath, const int& pointCount, const float& testEps, const int& maxRepetitions, const Common::ApproximationType& calculationType, const int& subcloudSize);
 }
