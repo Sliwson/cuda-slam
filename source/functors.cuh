@@ -84,11 +84,16 @@ namespace Functors
 		__device__ __host__ float operator()(const thrust::tuple<glm::vec3, int>& vector);
 
 	private:
-		glm::vec3 cloudBeforeItem = glm::vec3(0.f);
+		glm::vec3 cloudBeforeItem;
 		float* p;
 		float multiplier = 0.f;
 		bool doTruncate = false;
 		float truncate = 0.f;
+	};
+
+	struct CalculateDenominator2 : thrust::unary_function<thrust::tuple<glm::vec3, int>, float>
+	{
+		__device__ __host__ float operator()(const thrust::tuple<glm::vec3, int>& vector) { return 1.0f; }
 	};
 
 	struct CalculateP1AndPX : thrust::unary_function<int, void>
@@ -103,7 +108,7 @@ namespace Functors
 		__device__ __host__ void operator()(const int& index);
 
 	private:
-		glm::vec3 cloudBeforeItem = glm::vec3(0.f);
+		glm::vec3 cloudBeforeItem;
 		const float* p;
 		float* p1;
 		glm::vec3* px;

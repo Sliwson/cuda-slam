@@ -4,6 +4,34 @@
 
 namespace CUDACommon
 {
+	void PrintVector(thrust::host_vector<float> vector)
+	{
+		for (int i = 0; i < vector.size(); i++)
+		{
+			printf("%f\n", vector[i]);
+		}
+	}
+
+	void PrintVector(thrust::host_vector<glm::vec3> vector)
+	{
+		for (int i = 0; i < vector.size(); i++)
+		{
+			printf("%f %f %f\n", vector[i].x, vector[i].y, vector[i].z);
+		}
+	}
+
+	void PrintVector(thrust::device_vector<float> vector)
+	{
+		thrust::host_vector<float> vec = vector;
+		PrintVector(vec);
+	}
+
+	void PrintVector(thrust::device_vector<glm::vec3> vector)
+	{
+		thrust::host_vector<glm::vec3> vec = vector;
+		PrintVector(vec);
+	}
+
 	thrust::host_vector<glm::vec3> CommonToThrustVector(const std::vector<Common::Point_f>& vec)
 	{
 		thrust::host_vector<glm::vec3> hostCloud(vec.size());

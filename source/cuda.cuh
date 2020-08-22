@@ -19,6 +19,8 @@
 #include <thrust/host_vector.h>
 #include <thrust/sequence.h>
 #include <thrust/iterator/permutation_iterator.h>
+#include <thrust/iterator/counting_iterator.h>
+#include <thrust/iterator/zip_iterator.h>
 #include <thrust/transform_reduce.h>
 #include <thrust/functional.h>
 
@@ -35,8 +37,12 @@ namespace CUDACommon
 {
 	typedef thrust::device_vector<glm::vec3> Cloud;
 	typedef thrust::device_vector<int> IndexIterator;
-	typedef thrust::permutation_iterator<Cloud, IndexIterator> Permutation;	
+	typedef thrust::permutation_iterator<Cloud, IndexIterator> Permutation;
 
+	void PrintVector(thrust::host_vector<float> vector);
+	void PrintVector(thrust::host_vector<glm::vec3> vector);
+	void PrintVector(thrust::device_vector<float> vector);
+	void PrintVector(thrust::device_vector<glm::vec3> vector);
 	thrust::host_vector<glm::vec3> CommonToThrustVector(const std::vector<Common::Point_f>& vec);
 	std::vector<Point_f> ThrustToCommonVector(const Cloud& vec);
 	glm::vec3 CalculateCentroid(const Cloud& vec);

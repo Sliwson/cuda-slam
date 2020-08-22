@@ -228,14 +228,14 @@ namespace Tests
 		const auto transform = ConvertToTransformationMatrix(rotation_matrix, translation_vector);
 		//const auto transform = GetRandomTransformMatrix({ 0.f, 0.f, 0.f }, { 10.0f, 10.0f, 10.0f }, glm::radians(35.f));
 		const auto permutation = GetRandomPermutationVector(cloudSize);
-		auto permutedCloud = ApplyPermutation(cloud, permutation);
+		auto permutedCloud = cloud;//ApplyPermutation(cloud, permutation);
 		std::transform(permutedCloud.begin(), permutedCloud.end(), permutedCloud.begin(), [](const Point_f& point) { return Point_f{ point.x * 2.f, point.y * 2.f, point.z * 2.f }; });
 		const auto transformedCloud = GetTransformedCloud(cloud, transform);
 		const auto transformedPermutedCloud = GetTransformedCloud(permutedCloud, transform);
 		timer.StopStage("processing");
 
 		timer.StartStage("cpd1");
-		const auto icpCalculatedTransform1 = std::make_pair(glm::mat3(1), glm::vec3(1));// CoherentPointDrift::GetRigidCPDTransformationMatrix(transformedPermutedCloud, cloud, &iterations, &error, testEps, weight, const_scale, max_iterations, testEps, fgt);
+		const auto icpCalculatedTransform1 = CoherentPointDrift::GetRigidCPDTransformationMatrix(transformedPermutedCloud, cloud, &iterations, &error, testEps, weight, const_scale, max_iterations, testEps, fgt);
 		timer.StopStage("cpd1");
 		iterations = 0;
 		error = 1.0f;
@@ -254,6 +254,18 @@ namespace Tests
 		PrintMatrix(icpCalculatedTransform1.first, icpCalculatedTransform1.second);
 
 		timer.PrintResults();
+
+
+		std::cout << "Before" << std::endl;
+		for (size_t i = 0; i < transformedPermutedCloud.size(); i++)
+		{
+			printf("%f %f %f\n", transformedPermutedCloud[i].x, transformedPermutedCloud[i].y, transformedPermutedCloud[i].z);
+		}
+		std::cout << "After" << std::endl;
+		for (size_t i = 0; i < cloud.size(); i++)
+		{
+			printf("%f %f %f\n", cloud[i].x, cloud[i].y, cloud[i].z);
+		}
 
 		Common::Renderer renderer(
 			Common::ShaderType::SimpleModel,

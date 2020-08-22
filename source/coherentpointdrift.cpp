@@ -107,6 +107,8 @@ namespace CoherentPointDrift
 		const float constant = (std::pow(2 * M_PI * sigmaSquared, (float)DIMENSION * 0.5f) * weight * cloudAfter.size()) / ((1 - weight) * cloudBefore.size());
 		float ntol = tolerance + 10.0f;
 		float l = 0.0f;
+		//TODO:
+		//initialize memory for probabilities once
 		Probabilities probabilities;
 		std::vector<Point_f> transformedCloud = cloudAfter;
 		//EM optimization
@@ -121,12 +123,20 @@ namespace CoherentPointDrift
 			ntol = std::abs((probabilities.error - l) / probabilities.error);
 			l = probabilities.error;
 
+			std::cout << "P1" << std::endl;
+			std::cout << probabilities.p1;
+			std::cout << std::endl << "Pt1" << std::endl;
+			std::cout << probabilities.pt1;
+			std::cout << std::endl << "PX" << std::endl;
+			std::cout << probabilities.px;
+
 			//M-step
 			MStep(probabilities, cloudBefore, cloudAfter, const_scale, &rotationMatrix, &translationVector, &scale, &sigmaSquared);
 
 			transformedCloud = GetTransformedCloud(cloudAfter, rotationMatrix, translationVector, scale);
 			(*error) = sigmaSquared;
 			(*iterations)++;
+			break;
 		}
 		return std::make_pair(scale * rotationMatrix, translationVector);
 	}
@@ -284,6 +294,7 @@ namespace CoherentPointDrift
 				}
 			}
 			denominator += constant;
+
 			pt1(x) = 1.0f - constant / denominator;
 			for (size_t k = 0; k < cloudTransformed.size(); k++)
 			{
