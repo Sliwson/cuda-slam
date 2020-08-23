@@ -1,6 +1,7 @@
 #include "cuda.cuh"
 #include "functors.cuh"
 #include "svdparams.cuh"
+#include "svdbatchparams.cuh"
 
 namespace {
 	typedef thrust::device_vector<glm::vec3> Cloud;
@@ -108,11 +109,6 @@ namespace {
 	{
 		const float alpha = 1.f, beta = 0.f;
 		cublasSgemm(params.multiplyHandle, CUBLAS_OP_N, CUBLAS_OP_N, 3, 3, size, &alpha, A, 3, B, size, &beta, C, 3);
-	}
-
-	glm::mat3 CreateGlmMatrix(float* squareMatrix)
-	{
-		return glm::transpose(glm::make_mat3(squareMatrix));
 	}
 
 	glm::mat4 LeastSquaresSVD(const IndexIterator& permutation, const Cloud& before, const Cloud& after, Cloud& alignBefore, Cloud& alignAfter, CudaSvdParams params)
@@ -235,6 +231,107 @@ namespace {
 		return CreateGlmMatrix(result);
 	}
 
+	Cloud ApplyPermutation(const Cloud& inputCloud, IndexIterator permutation)
+	{
+		Cloud outputCloud(inputCloud.size());
+
+		int permutationSize = permutation.size();
+		if (permutationSize < inputCloud.size())
+		{
+			permutation.resize(inputCloud.size());
+			auto helperCountingIterator = thrust::make_counting_iterator(0);
+			thrust::copy(helperCountingIterator + permutationSize, helperCountingIterator + inputCloud.size(), permutation.begin() + permutationSize);
+		}
+
+		const auto applyPermutationFunctor = Functors::Permutation(inputCloud);
+		thrust::transform(thrust::device, permutation.begin(), permutation.end(), outputCloud.begin(), applyPermutationFunctor);
+
+		return outputCloud;
+	}
+
+	void PrepareMatricesForParallelSVD(const Cloud& cloudBefore, const Cloud& cloudAfter, int batchSize, thrust::host_vector<float*> &outputBefore, thrust::host_vector<float*> &outputAfter)
+	{
+		int cloudSize = std::min(cloudBefore.size(), cloudAfter.size());
+
+		outputBefore.resize(batchSize);
+		outputAfter.resize(batchSize);
+		for (int i = 0; i < batchSize; i++)
+		{
+			cudaMalloc(&(outputBefore[i]), 3 * cloudBefore.size() * sizeof(float));
+			cudaMalloc(&(outputAfter[i]), 3 * cloudAfter.size() * sizeof(float));
+		}
+
+		Cloud alignBefore(cloudBefore.size());
+		Cloud alignAfter(cloudAfter.size());
+
+		// Align array
+		GetAlignedCloud(cloudBefore, alignBefore);
+		GetAlignedCloud(cloudAfter, alignAfter);
+
+
+		//thrust::host_vector<glm::vec3> debug(cloudBefore.size());
+		//thrust::copy(cloudBefore.begin(), cloudBefore.end(), debug.begin());
+		//for (int i = 0; i < debug.size(); i++)
+		//	printf("[%d] %f, %f, %f\n", i, debug[i].x, debug[i].y, debug[i].z);
+
+		for (int i = 0; i < batchSize; i++)
+		{
+			// Generate permutation
+			std::vector<int> h_permutation = GetRandomPermutationVector(cloudSize);
+			IndexIterator d_permutation(h_permutation.size());
+
+			thrust::copy(h_permutation.begin(), h_permutation.end(), d_permutation.begin());
+			auto permutedBefore = ApplyPermutation(alignBefore, d_permutation);
+			auto permutedAfter = ApplyPermutation(alignAfter, d_permutation);
+
+			// Create counting iterators
+			auto beforeCountingBegin = thrust::make_counting_iterator<int>(0);
+			auto beforeCountingEnd = thrust::make_counting_iterator<int>(permutedBefore.size());
+			auto afterCountingBegin = thrust::make_counting_iterator<int>(0);
+			auto afterCountingEnd = thrust::make_counting_iterator<int>(permutedAfter.size());
+
+			// Create array for SVD
+			const auto beforeZipBegin = thrust::make_zip_iterator(thrust::make_tuple(beforeCountingBegin, permutedBefore.begin()));
+			const auto beforeZipEnd = thrust::make_zip_iterator(thrust::make_tuple(beforeCountingEnd, permutedBefore.end()));
+			auto convertBefore = Functors::GlmToCuBlas(true, permutedBefore.size(), outputBefore[i]);
+			thrust::for_each(thrust::device, beforeZipBegin, beforeZipEnd, convertBefore);
+			const auto afterZipBegin = thrust::make_zip_iterator(thrust::make_tuple(afterCountingBegin, permutedAfter.begin()));
+			const auto afterZipEnd = thrust::make_zip_iterator(thrust::make_tuple(afterCountingEnd, permutedAfter.end()));
+			auto convertAfter = Functors::GlmToCuBlas(true, permutedAfter.size(), outputAfter[i]);
+			thrust::for_each(thrust::device, afterZipBegin, afterZipEnd, convertAfter);
+		}
+	}
+
+	void GetSVDMatricesUParallel(const Cloud& cloudBefore, const Cloud &cloudAfter, int batchSize, thrust::host_vector<glm::mat3> &outputBefore, thrust::host_vector<glm::mat3> &outputAfter)
+	{
+		thrust::host_vector<float*> preparedBefore;
+		thrust::host_vector<float*> preparedAfter;
+		//thrust::device_vector<glm::mat3> resultMatrices(batchSize);
+
+		PrepareMatricesForParallelSVD(cloudBefore, cloudAfter, batchSize, preparedBefore, preparedAfter);
+
+		// Run SVD for cloud before
+		CudaParallelSvdHelper svdBefore(batchSize, cloudBefore.size(), 3);
+		svdBefore.RunSVD(preparedBefore);
+		outputBefore = svdBefore.GetHostMatricesVT();
+		svdBefore.FreeMemory();
+
+		// Run SVD for cloud after
+		CudaParallelSvdHelper svdAfter(batchSize, cloudAfter.size(), 3);
+		svdAfter.RunSVD(preparedAfter);
+		outputAfter = svdAfter.GetHostMatricesVT();
+		svdAfter.FreeMemory();
+
+		for (int i = 0; i < batchSize; i++)
+		{
+			if(preparedBefore[i])
+				cudaFree(preparedBefore[i]);
+
+			if (preparedAfter[i])
+				cudaFree(preparedAfter[i]);
+		}
+	}
+
 	glm::mat4 CudaICP(const Cloud& before, const Cloud& after)
 	{
 		const int maxIterations = 60;
@@ -334,8 +431,61 @@ namespace {
 		return subcloud;
 	}
 
-	glm::mat4 CudaNonIterative(const Cloud& before, const Cloud& after, int* repetitions, float* error, float eps, int maxRepetitions, int cpuThreadsCount, const int subcloudSize)
+	glm::mat4 CudaNonIterativeParallel(const Cloud& before, const Cloud& after, int* repetitions, float* error, float eps, int maxRepetitions, int cpuThreadsCount, const int subcloudSize)
 	{
+		maxRepetitions = 1;
+
+		thrust::host_vector<glm::mat3> matricesBefore(maxRepetitions);
+		thrust::host_vector<glm::mat3> matricesAfter(maxRepetitions);
+
+		GetSVDMatricesUParallel(before, after, maxRepetitions, matricesBefore, matricesAfter);
+
+		// Hardcoded centers of bunny.obj clouds for test purposes
+		auto centroidBefore = glm::vec3(-28.1278152, 94.5905228, 9.00993729);
+		auto centroidAfter = glm::vec3(-32.1814156, 92.5075684, 15.2964954);
+		//auto centroidBefore = CalculateCentroid(before);
+		//auto centroidAfter = CalculateCentroid(after);
+
+		for (int i = 0; i < maxRepetitions; i++)
+		{
+			auto transformationMatrix = glm::mat4(1.0f);
+
+			auto rotationMatrix = matricesAfter[i] * glm::transpose(matricesBefore[i]);
+			auto translationVector = glm::vec3(centroidAfter) - (rotationMatrix * centroidBefore);
+
+			for (int i = 0; i < 3; i++)
+				for (int j = 0; j < 3; j++)
+					transformationMatrix[i][j] = rotationMatrix[i][j];
+
+			transformationMatrix[3][0] = translationVector.x;
+			transformationMatrix[3][1] = translationVector.y;
+			transformationMatrix[3][2] = translationVector.z;
+			transformationMatrix[3][3] = 1.0f;
+
+			for (int i = 0; i < 4; i++)
+			{
+				for (int j = 0; j < 4; j++)
+				{
+					printf("%f\t", transformationMatrix[i][j]);
+				}
+				printf("\n");
+			}
+			printf("\n");
+
+			//Cloud workingSubcloud(subcloud.size());
+			//TransformCloud(subcloud, workingSubcloud, transformationMatrix);
+			//GetCorrespondingPoints(indices, workingSubcloud, after);
+			//error = GetMeanSquaredError(indices, workingSubcloud, after);
+
+			if (i == maxRepetitions - 1)
+				return transformationMatrix;
+		}
+	}
+
+	glm::mat4 CudaNonIterativeV2(const Cloud& before, const Cloud& after, int* repetitions, float* error, float eps, int maxRepetitions, int cpuThreadsCount, const int subcloudSize)
+	{
+		//cpuThreadsCount = 2;
+
 		glm::mat4 transformResult(1.0f);
 		*error = std::numeric_limits<float>::max();
 
@@ -470,21 +620,21 @@ void NonIterativeCudaTest()
 	/****************************/
 	//TESTS
 	/****************************/
-	MultiplicationTest();
+	//MultiplicationTest();
 
 	/****************************/
 	//ALGORITHM
 	/****************************/
-	const auto testCloud = LoadCloud("data/bunny.obj");
-	const auto testCorrupted = LoadCloud("data/bunny.obj");
+	auto testCloud = LoadCloud("data/bunny.obj");
+	auto testCorrupted = LoadCloud("data/bunny.obj");
 	int repetitions;
 	float error;
 	const int maxRepetitions = 20;
 	const int subcloudSize = 1000;
 	const float eps = 1e-5;
 	const int cpuThreadsCount = (int)std::thread::hardware_concurrency();
-	//testCloud.resize(19000);
-	//testCorrupted.resize(19000);
+	testCloud.resize(10000);
+	testCorrupted.resize(10000);
 
 	const auto hostBefore = CommonToThrustVector(testCloud);
 	const auto hostAfter = CommonToThrustVector(testCorrupted);
@@ -513,7 +663,7 @@ void NonIterativeCudaTest()
 	TransformCloud(deviceCloudAfter, deviceCloudAfter, sampleTransform);
 
 	auto start = std::chrono::high_resolution_clock::now();
-	const auto result = CudaNonIterative(deviceCloudBefore, deviceCloudAfter, &repetitions, &error, eps, maxRepetitions, cpuThreadsCount, subcloudSize);
+	const auto result = CudaNonIterativeParallel(deviceCloudBefore, deviceCloudAfter, &repetitions, &error, eps, maxRepetitions, cpuThreadsCount, subcloudSize);
 	auto stop = std::chrono::high_resolution_clock::now();
 	printf("Size: %d points, duration: %dms\n", testCloud.size(), std::chrono::duration_cast<std::chrono::milliseconds>(stop - start));
 
@@ -527,6 +677,11 @@ void NonIterativeCudaTest()
 		std::vector<Point_f>(1));
 
 	renderer.Show();
+}
+
+glm::mat3 CreateGlmMatrix(float* squareMatrix)
+{
+	return glm::transpose(glm::make_mat3(squareMatrix));
 }
 
 void CudaTest()

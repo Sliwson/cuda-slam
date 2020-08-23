@@ -20,7 +20,8 @@ struct CudaSvdParams
 			cudaMalloc(&U, m * m * sizeof(float));
 		cusolverDnCreate(&solverHandle);
 
-		cusolverDnDgesvd_bufferSize(solverHandle, m, n, &workSize);
+		cusolverDnSgesvd_bufferSize(solverHandle, m, n, &workSize);
+
 		cudaMalloc(&work, workSize * sizeof(float));
 	}
 

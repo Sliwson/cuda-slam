@@ -24,5 +24,7 @@
 
 using namespace Common;
 
+glm::mat3 CreateGlmMatrix(float* squareMatrix);
+
 void CudaTest();
 void NonIterativeCudaTest();
