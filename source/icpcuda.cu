@@ -57,16 +57,20 @@ namespace
 		glm::mat4 transformationMatrix(1.0f);
 		glm::mat4 previousTransformationMatrix = transformationMatrix;
 
+
 		//do not change before vector - copy it for calculations
-		const int size = std::max(before.size(), after.size());
-		Cloud workingBefore(size);
-		Cloud alignBefore(size);
-		Cloud alignAfter(size);
-		thrust::device_vector<int> indices(before.size());
+		const int beforeSize = before.size();
+		const int afterSize = after.size();
+
+		Cloud workingBefore(beforeSize);
+		Cloud alignBefore(beforeSize);
+		Cloud alignAfter(beforeSize);
+
+		thrust::device_vector<int> indices(beforeSize);
 		thrust::copy(thrust::device, before.begin(), before.end(), workingBefore.begin());
 
 		//allocate memory for cuBLAS
-		CudaSvdParams params(size, size);
+		CudaSvdParams params(beforeSize, beforeSize);
 
 		while (iterations < maxIterations)
 		{
