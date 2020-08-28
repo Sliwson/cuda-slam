@@ -19,6 +19,9 @@ namespace Common
     std::vector<Configuration> Common::GetBasicTestSet()
     {
         return {
+            GetDefaultConfiguration(),
+            GetDefaultConfiguration(),
+            GetDefaultConfiguration(),
             GetDefaultConfiguration()
         };
     }

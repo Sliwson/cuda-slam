@@ -41,7 +41,7 @@ namespace Tests
 
 	glm::mat3 GetRandomRotationMatrix(float rotationRangeRadians)
 	{
-		const auto angle = GetRandomFloat(0, rotationRangeRadians);
+		const auto angle = rotationRangeRadians;
 		const auto axis = glm::vec3(GetRandomPoint(Point_f::Zero(), Point_f::One()));
 		const auto rotation = glm::rotate(glm::mat4(1.0f), angle, glm::normalize(axis));
 		return glm::mat3(rotation);
