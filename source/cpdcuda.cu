@@ -8,7 +8,7 @@ using namespace CUDACommon;
 
 namespace
 {
-	typedef thrust::device_vector<glm::vec3> Cloud;
+	typedef thrust::device_vector<glm::vec3> GpuCloud;
 
 	struct Probabilities
 	{
@@ -22,7 +22,7 @@ namespace
 		float error;
 	};
 
-	float CalculateSigmaSquared(const Cloud& cloudBefore, const Cloud& cloudAfter)
+	float CalculateSigmaSquared(const GpuCloud& cloudBefore, const GpuCloud& cloudAfter)
 	{
 		if (cloudBefore.size() > cloudAfter.size())
 		{
@@ -38,8 +38,8 @@ namespace
 	}
 
 	//Probabilities ComputePMatrix(
-	//	const Cloud& cloudBefore,
-	//	const Cloud& cloudTransformed,
+	//	const GpuCloud& cloudBefore,
+	//	const GpuCloud& cloudTransformed,
 	//	const float& constant,
 	//	const float& sigmaSquared,
 	//	const bool& doTruncate,
@@ -80,8 +80,8 @@ namespace
 	//}
 
 	glm::mat4 CudaCPD(
-		const Cloud& cloudBefore,
-		const Cloud& cloudAfter,
+		const GpuCloud& cloudBefore,
+		const GpuCloud& cloudAfter,
 		int* iterations,
 		float* error,
 		float eps,
@@ -110,7 +110,7 @@ namespace
 			//float ntol = tolerance + 10.0f;
 			//float l = 0.0f;
 			//Probabilities probabilities;
-			//Cloud transformedCloud = cloudAfter;
+			//GpuCloud transformedCloud = cloudAfter;
 			////EM optimization
 			//while (*iterations < maxIterations && ntol > tolerance && sigmaSquared > eps)
 			//{
@@ -186,8 +186,8 @@ void CPDTest()
 	const auto hostBefore = CommonToThrustVector(transformedPermutedCloud);
 	const auto hostAfter = CommonToThrustVector(cloud);
 
-	Cloud deviceCloudBefore = hostBefore;
-	Cloud deviceCloudAfter = hostAfter;
+	GpuCloud deviceCloudBefore = hostBefore;
+	GpuCloud deviceCloudAfter = hostAfter;
 
 	timer.StartStage("cpd1");
 	const auto icpCalculatedTransform1 = CudaCPD(deviceCloudBefore, deviceCloudAfter, &iterations, &error, testEps, weight, const_scale, max_iterations, testEps, fgt);

@@ -13,7 +13,7 @@ namespace CUDACommon
 		return hostCloud;
 	}
 
-	std::vector<Point_f> ThrustToCommonVector(const Cloud& vec)
+	std::vector<Point_f> ThrustToCommonVector(const GpuCloud& vec)
 	{
 		thrust::host_vector<glm::vec3> hostCloud = vec;
 		std::vector<Point_f> outVector(vec.size());
@@ -23,13 +23,13 @@ namespace CUDACommon
 		return outVector;
 	}
 
-	glm::vec3 CalculateCentroid(const Cloud& vec)
+	glm::vec3 CalculateCentroid(const GpuCloud& vec)
 	{
 		const auto sum = thrust::reduce(thrust::device, vec.begin(), vec.end());
 		return sum / static_cast<float>(vec.size());
 	}
 
-	void TransformCloud(const Cloud& vec, Cloud& out, const glm::mat4& transform)
+	void TransformCloud(const GpuCloud& vec, GpuCloud& out, const glm::mat4& transform)
 	{
 		const auto functor = Functors::MatrixTransform(transform);
 		thrust::transform(thrust::device, vec.begin(), vec.end(), out.begin(), functor);
@@ -41,7 +41,7 @@ namespace CUDACommon
 		return d.x * d.x + d.y * d.y + d.z * d.z;
 	}
 
-	float GetMeanSquaredError(const IndexIterator& permutation, const Cloud& before, const Cloud& after)
+	float GetMeanSquaredError(const IndexIterator& permutation, const GpuCloud& before, const GpuCloud& after)
 	{
 		auto permutationIteratorBegin = thrust::make_permutation_iterator(after.begin(), permutation.begin());
 		auto permutationIteratorEnd = thrust::make_permutation_iterator(after.end(), permutation.end());
@@ -53,7 +53,7 @@ namespace CUDACommon
 		return result / after.size();
 	}
 
-	void GetAlignedCloud(const Cloud& source, Cloud& target)
+	void GetAlignedCloud(const GpuCloud& source, GpuCloud& target)
 	{
 		const auto centroid = CalculateCentroid(source);
 		const auto transform = Functors::TranslateTransform(-centroid);
@@ -71,7 +71,7 @@ namespace CUDACommon
 		return glm::transpose(glm::make_mat3(squareMatrix));
 	}
 
-	glm::mat4 LeastSquaresSVD(const IndexIterator& permutation, const Cloud& before, const Cloud& after, Cloud& alignBefore, Cloud& alignAfter, CudaSvdParams params)
+	glm::mat4 LeastSquaresSVD(const IndexIterator& permutation, const GpuCloud& before, const GpuCloud& after, GpuCloud& alignBefore, GpuCloud& alignAfter, CudaSvdParams params)
 	{
 		const int size = before.size();
 
