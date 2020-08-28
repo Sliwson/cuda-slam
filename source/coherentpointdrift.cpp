@@ -136,6 +136,7 @@ namespace CoherentPointDrift
 			transformedCloud = GetTransformedCloud(cloudAfter, rotationMatrix, translationVector, scale);
 			(*error) = sigmaSquared;
 			(*iterations)++;
+			//TODO: delete
 			break;
 		}
 		return std::make_pair(scale * rotationMatrix, translationVector);
@@ -329,6 +330,10 @@ namespace CoherentPointDrift
 		Eigen::Vector3f EigenCenterBefore = InvertedNp * EigenBeforeT * probabilities.pt1;
 		Eigen::Vector3f EigenCenterAfter = InvertedNp * EigenAfterT * probabilities.p1;
 
+		//TODO: delete next 2 lines
+		const Eigen::Matrix3f mat1 = (EigenAfterT * probabilities.px).transpose();
+		const Eigen::Matrix3f mat2 = Np * (EigenCenterBefore * EigenCenterAfter.transpose());
+
 		const Eigen::MatrixXf AMatrix = (EigenAfterT * probabilities.px).transpose() - Np * (EigenCenterBefore * EigenCenterAfter.transpose());
 
 		const Eigen::JacobiSVD<Eigen::MatrixXf> svd = Eigen::JacobiSVD<Eigen::MatrixXf>(AMatrix, Eigen::ComputeThinU | Eigen::ComputeThinV);
@@ -366,5 +371,46 @@ namespace CoherentPointDrift
 		*translationVector = ConvertTranslationVector(EigenTranslationVector);
 
 		*rotationMatrix = ConvertRotationMatrix(EigenRotationMatrix);
+
+		//TODO: delete
+		std::cout << std::endl;
+
+		std::cout << "np " << Np << std::endl;
+
+		std::cout << "beforeT" << std::endl;
+		std::cout << EigenBeforeT << std::endl;
+
+		std::cout << "afterT" << std::endl;
+		std::cout << EigenAfterT << std::endl;
+
+		std::cout << "p1" << std::endl;
+		std::cout << probabilities.p1 << std::endl;
+
+		std::cout << "pt1" << std::endl;
+		std::cout << probabilities.pt1 << std::endl;
+
+		std::cout << "center before" << std::endl;
+		std::cout << EigenCenterBefore << std::endl;
+
+		std::cout << "center after" << std::endl;
+		std::cout << EigenCenterAfter << std::endl;
+
+		std::cout << "a matrix" << std::endl;
+		std::cout << AMatrix << std::endl;
+
+		std::cout << "afterTxPX" << std::endl;
+		std::cout << mat1 << std::endl;
+
+		std::cout << "matrixU" << std::endl;
+		std::cout << matrixU << std::endl;
+
+		std::cout << "matrixVT" << std::endl;
+		std::cout << matrixVT << std::endl;
+
+		std::cout << "SIngular values" << std::endl;
+		std::cout << svd.singularValues() << std::endl;
+
+		std::cout << "scale numerator" << std::endl;
+		std::cout << scaleNumerator << std::endl;
 	}
 }

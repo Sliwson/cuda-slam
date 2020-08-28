@@ -27,8 +27,6 @@ namespace CUDAProbabilities
 		//p
 		thrust::device_vector<float> p;
 		//tmp
-		thrust::device_vector<float> tmp;
-
-		
+		thrust::device_vector<float> tmp;		
 	};
 }

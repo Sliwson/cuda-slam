@@ -4,9 +4,12 @@
 #include "timer.h"
 #include "testutils.h"
 #include "cudaprobabilities.h"
+#include "mstepparams.cuh"
+#include "common.h"
 
 using namespace CUDACommon;
 using namespace CUDAProbabilities;
+using namespace MStepParams;
 
 namespace
 {
@@ -22,10 +25,11 @@ namespace
 		const bool& doTruncate,
 		float truncate);
 	void MStep(
-		const Probabilities& probabilities,
 		const Cloud& cloudBefore,
 		const Cloud& cloudAfter,
-		bool const_scale,
+		const Probabilities& probabilities,
+		CUDAMStepParams& params,
+		const bool& const_scale,
 		glm::mat3* rotationMatrix,
 		glm::vec3* translationVector,
 		float* scale,
@@ -98,27 +102,217 @@ namespace
 		probabilities.error += DIMENSION * cloudBefore.size() * std::log(sigmaSquared) / 2.0f;
 	}
 
-	void MStep(
-		const Probabilities& probabilities,
+	void MStep(		
 		const Cloud& cloudBefore,
 		const Cloud& cloudAfter,
-		bool const_scale,
+		const Probabilities& probabilities,
+		CUDAMStepParams& params,
+		const bool& const_scale,
 		glm::mat3* rotationMatrix,
 		glm::vec3* translationVector,
 		float* scale,
 		float* sigmaSquared)
 	{
+		const float alpha = 1.f, beta = 0.f;
+		const int beforeSize = cloudBefore.size();
+		const int afterSize = cloudAfter.size();
 		const float Np = thrust::reduce(thrust::device, probabilities.p1.begin(), probabilities.p1.end(), 0.0f, thrust::plus<float>());
 		const float InvertedNp = 1.0f / Np;
 
-		auto EigenBeforeT = GetMatrix3XFromPointsVector(cloudBefore);
-		auto EigenAfterT = GetMatrix3XFromPointsVector(cloudAfter);
-		Eigen::Vector3f EigenCenterBefore = InvertedNp * EigenBeforeT * probabilities.pt1;
-		Eigen::Vector3f EigenCenterAfter = InvertedNp * EigenAfterT * probabilities.p1;
+		//create array beforeT
+		auto countingBeforeBegin = thrust::make_counting_iterator<int>(0);
+		auto countingBeforeEnd = thrust::make_counting_iterator<int>(beforeSize);
+		auto zipBeforeBegin = thrust::make_zip_iterator(thrust::make_tuple(countingBeforeBegin, cloudBefore.begin()));
+		auto zipBeforeEnd = thrust::make_zip_iterator(thrust::make_tuple(countingBeforeEnd, cloudBefore.end()));
 
-		const Eigen::MatrixXf AMatrix = (EigenAfterT * probabilities.px).transpose() - Np * (EigenCenterBefore * EigenCenterAfter.transpose());
+		auto convertBefore = Functors::GlmToCuBlas(false, beforeSize, params.beforeT);
+		thrust::for_each(thrust::device, zipBeforeBegin, zipBeforeEnd, convertBefore);
 
-		const Eigen::JacobiSVD<Eigen::MatrixXf> svd = Eigen::JacobiSVD<Eigen::MatrixXf>(AMatrix, Eigen::ComputeThinU | Eigen::ComputeThinV);
+		//create array afterT
+		auto countingAfterBegin = thrust::make_counting_iterator<int>(0);
+		auto countingAfterEnd = thrust::make_counting_iterator<int>(afterSize);
+		auto zipAfterBegin = thrust::make_zip_iterator(thrust::make_tuple(countingAfterBegin, cloudAfter.begin()));
+		auto zipAfterEnd = thrust::make_zip_iterator(thrust::make_tuple(countingAfterEnd, cloudAfter.end()));
+
+		auto convertAfter = Functors::GlmToCuBlas(false, afterSize, params.afterT);
+		thrust::for_each(thrust::device, zipAfterBegin, zipAfterEnd, convertAfter);
+		
+		//create array px
+		auto countingPXBegin = thrust::make_counting_iterator<int>(0);
+		auto countingPXEnd = thrust::make_counting_iterator<int>(probabilities.px.size());
+		auto zipPXBegin = thrust::make_zip_iterator(thrust::make_tuple(countingPXBegin, probabilities.px.begin()));
+		auto zipPXEnd = thrust::make_zip_iterator(thrust::make_tuple(countingPXEnd, probabilities.px.end()));
+
+		auto convertPX = Functors::GlmToCuBlas(true, probabilities.px.size(), params.px);
+		thrust::for_each(thrust::device, zipPXBegin, zipPXEnd, convertPX);
+
+		cublasSgemv(params.multiplyHandle, CUBLAS_OP_N, 3, beforeSize, &InvertedNp, params.beforeT, 3, params.pt1, 1, &beta, params.centerBefore, 1);
+
+		cublasSgemv(params.multiplyHandle, CUBLAS_OP_N, 3, afterSize, &InvertedNp, params.afterT, 3, params.p1, 1, &beta, params.centerAfter, 1);
+
+		cublasSgemm(params.multiplyHandle, CUBLAS_OP_N, CUBLAS_OP_N, 3, 3, afterSize, &alpha, params.afterT, 3, params.px, afterSize, &beta, params.afterTxPX, 3);
+
+		cublasSgemm(params.multiplyHandle, CUBLAS_OP_N, CUBLAS_OP_T, 3, 3, 1, &Np, params.centerBefore, 3, params.centerAfter, 3, &beta, params.centerBeforexCenterAfter, 3);
+
+		float minus = -1.0f;
+		cublasSgeam(params.multiplyHandle, CUBLAS_OP_T, CUBLAS_OP_N, 3, 3, &alpha, params.afterTxPX, 3, &minus, params.centerBeforexCenterAfter, 3, params.AMatrix, 3);
+
+		//TODO: try jacobi svd
+		//SVD
+		cusolverDnSgesvd(params.solverHandle, 'A', 'A', 3, 3, params.AMatrix, 3, params.S, params.U, 3, params.VT, 3, params.work, params.workSize, nullptr, params.devInfo);
+		int svdResultInfo = 0;
+		cudaMemcpy(&svdResultInfo, params.devInfo, sizeof(int), cudaMemcpyDeviceToHost);
+		if (svdResultInfo != 0)
+			printf("Svd execution failed!\n");
+
+		float hostS[3], hostVT[9], hostU[9];
+		const int copySize = 9 * sizeof(float);
+		cudaMemcpy(hostS, params.S, 3 * sizeof(float), cudaMemcpyDeviceToHost);
+		cudaMemcpy(hostVT, params.VT, copySize, cudaMemcpyDeviceToHost);
+		cudaMemcpy(hostU, params.U, copySize, cudaMemcpyDeviceToHost);
+
+		auto gVT = glm::transpose(CreateGlmMatrix(hostVT));
+		auto gU = glm::transpose(CreateGlmMatrix(hostU));
+
+		//revert signs to match svd cpu solution
+		for (int i = 0; i < 3; i++)
+		{
+			gU[0][i] = -gU[0][i];
+			gU[1][i] = -gU[1][i];
+			gVT[i][0] = -gVT[i][0];
+			gVT[i][1] = -gVT[i][1];
+		}
+
+		const float determinant = glm::determinant(gU * gVT);
+		const auto diagonal = glm::diagonal3x3(glm::vec3{ 1.f, 1.f, determinant });
+		*rotationMatrix = gU * diagonal * gVT;
+		const auto scaleNumeratorMatrix = glm::diagonal3x3(glm::make_vec3(hostS)) * diagonal;
+		const float scaleNumerator = scaleNumeratorMatrix[0][0] + scaleNumeratorMatrix[1][1] + scaleNumeratorMatrix[2][2];
+
+
+
+		float BeforeCPU[30];
+		cudaMemcpy(BeforeCPU, params.beforeT, 30 * sizeof(float), cudaMemcpyDeviceToHost);
+
+		float AfterCPU[30];
+		cudaMemcpy(AfterCPU, params.afterT, 30 * sizeof(float), cudaMemcpyDeviceToHost);
+
+		float p1CPU[10];
+		cudaMemcpy(p1CPU, params.p1, 10 * sizeof(float), cudaMemcpyDeviceToHost);
+
+		float pt1CPU[10];
+		cudaMemcpy(pt1CPU, params.pt1, 10 * sizeof(float), cudaMemcpyDeviceToHost);
+
+		float centerBeforeCPU[3];
+		cudaMemcpy(centerBeforeCPU, params.centerBefore, 3 * sizeof(float), cudaMemcpyDeviceToHost);
+
+		float centerAfterCPU[3];
+		cudaMemcpy(centerAfterCPU, params.centerAfter, 3 * sizeof(float), cudaMemcpyDeviceToHost);
+
+		float result[9];
+		cudaMemcpy(result, params.AMatrix, 9 * sizeof(float), cudaMemcpyDeviceToHost);
+		
+		float afterTxPX[9];
+		cudaMemcpy(afterTxPX, params.afterTxPX, 9 * sizeof(float), cudaMemcpyDeviceToHost);
+
+		float centerBeforexCenterAfter[9];
+		cudaMemcpy(centerBeforexCenterAfter, params.centerBeforexCenterAfter, 9 * sizeof(float), cudaMemcpyDeviceToHost);
+
+		printf("np %f\n", Np);
+
+		printf("BeforeCPU\n");
+		for (size_t i = 0; i < 3; i++)
+		{
+			for (size_t j = 0; j < 10; j++)
+			{
+				printf("%f ", BeforeCPU[10 * i + j]);
+			}
+			printf("\n");
+		}
+
+		printf("AfterCPU\n");
+		for (size_t i = 0; i < 3; i++)
+		{
+			for (size_t j = 0; j < 10; j++)
+			{
+				printf("%f ", AfterCPU[10 * i + j]);
+			}
+			printf("\n");
+		}
+
+		printf("p1CPU\n");
+		for (size_t j = 0; j < 10; j++)
+		{
+			printf("%f ", p1CPU[j]);
+		}
+		printf("\n");
+
+		printf("pt1CPU\n");
+		for (size_t j = 0; j < 10; j++)
+		{
+			printf("%f ", pt1CPU[j]);
+		}
+		printf("\n");
+
+		printf("centerBeforeCPU\n");
+		for (size_t j = 0; j < 3; j++)
+		{
+			printf("%f ", centerBeforeCPU[j]);
+		}
+		printf("\n");
+
+		printf("centerAfterCPU\n");
+		for (size_t j = 0; j < 3; j++)
+		{
+			printf("%f ", centerAfterCPU[j]);
+		}
+		printf("\n");
+
+		printf("afterTxPX\n");
+		for (size_t i = 0; i < 3; i++)
+		{
+			for (size_t j = 0; j < 3; j++)
+			{
+				printf("%f ", afterTxPX[3 * j + i]);
+			}
+			printf("\n");
+		}
+
+		printf("centerBeforexCenterAfter\n");
+		for (size_t i = 0; i < 3; i++)
+		{
+			for (size_t j = 0; j < 3; j++)
+			{
+				printf("%f ", centerBeforexCenterAfter[3 * j + i]);
+			}
+			printf("\n");
+		}
+
+		printf("AMatrix\n");
+		for (size_t i = 0; i < 3; i++)
+		{
+			for (size_t j = 0; j < 3; j++)
+			{
+				printf("%f ", result[3 * j + i]);
+			}
+			printf("\n");
+		}
+
+		printf("matrix U\n");
+		Common::PrintMatrix(gU);
+		printf("matrix VT\n");
+		Common::PrintMatrix(gVT);
+
+		printf("S Matrix\n");
+		for (size_t i = 0; i < 3; i++)
+		{
+			printf("%f ", hostS[i]);
+			printf("\n");
+		}
+
+		printf("scale numerator %f\n", scaleNumerator);
+
+		/*const Eigen::JacobiSVD<Eigen::MatrixXf> svd = Eigen::JacobiSVD<Eigen::MatrixXf>(AMatrix, Eigen::ComputeThinU | Eigen::ComputeThinV);
 
 		const Eigen::Matrix3f matrixU = svd.matrixU();
 		const Eigen::Matrix3f matrixV = svd.matrixV();
@@ -152,7 +346,7 @@ namespace
 
 		*translationVector = ConvertTranslationVector(EigenTranslationVector);
 
-		*rotationMatrix = ConvertRotationMatrix(EigenRotationMatrix);
+		*rotationMatrix = ConvertRotationMatrix(EigenRotationMatrix);*/
 	}
 
 	glm::mat4 CudaCPD(
@@ -175,7 +369,8 @@ namespace
 		float sigmaSquared = CalculateSigmaSquared(cloudBefore, cloudAfter);
 		float sigmaSquared_init = sigmaSquared;
 
-		Probabilities probabilities(cloudBefore.size(), cloudAfter.size());	
+		Probabilities probabilities(cloudBefore.size(), cloudAfter.size());
+		CUDAMStepParams mStepParams(cloudBefore.size(), cloudAfter.size(), probabilities);
 
 		if (weight <= 0.0f)
 			weight = 1e-6f;
@@ -210,7 +405,7 @@ namespace
 			PrintVector(probabilities.px);
 
 			//M-step
-			//MStep(probabilities, cloudBefore, cloudAfter, const_scale, &rotationMatrix, &translationVector, &scale, &sigmaSquared);
+			MStep(cloudBefore, cloudAfter, probabilities, mStepParams, const_scale, &rotationMatrix, &translationVector, &scale, &sigmaSquared);
 
 			//transformedCloud = GetTransformedCloud(cloudAfter, rotationMatrix, translationVector, scale);
 			(*error) = sigmaSquared;

@@ -273,7 +273,7 @@ namespace Tests
 			transformedPermutedCloud, //green
 			GetTransformedCloud(cloud, icpCalculatedTransform1.first, icpCalculatedTransform1.second), //yellow
 			//GetTransformedCloud(cloud, icpCalculatedTransform2.first, icpCalculatedTransform2.second)); //blue
-			std::vector<Point_f>(1)); //green
+			std::vector<Point_f>(1)); //blue
 
 		renderer.Show();
 	}
@@ -338,7 +338,7 @@ namespace Tests
 			transformedPermutedCloud, //green
 			GetTransformedCloud(cloud, icpCalculatedTransform1.first, icpCalculatedTransform1.second), //yellow
 			//GetTransformedCloud(cloud, icpCalculatedTransform2.first, icpCalculatedTransform2.second)); //blue
-			std::vector<Point_f>(1)); //green
+			std::vector<Point_f>(1)); //blue
 
 		renderer.Show();
 	}
