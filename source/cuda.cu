@@ -1,7 +1,7 @@
 #include "cuda.cuh"
 #include "functors.cuh"
 #include "svdparams.cuh"
-#include "svdbatchparams.cuh"
+#include "parallelsvdhelper.cuh"
 
 namespace {
 	typedef thrust::device_vector<glm::vec3> Cloud;
@@ -269,16 +269,27 @@ namespace {
 		GetAlignedCloud(cloudAfter, alignAfter);
 
 
-		//thrust::host_vector<glm::vec3> debug(cloudBefore.size());
-		//thrust::copy(cloudBefore.begin(), cloudBefore.end(), debug.begin());
-		//for (int i = 0; i < debug.size(); i++)
-		//	printf("[%d] %f, %f, %f\n", i, debug[i].x, debug[i].y, debug[i].z);
+		thrust::host_vector<glm::vec3> debug(alignAfter.size());
+		thrust::copy(alignAfter.begin(), alignAfter.end(), debug.begin());
+		FILE* file;
+		file = fopen("glm-debug.txt", "w+");
+
+		for (int j = 0; j < debug.size(); j++)
+			fprintf(file, "[j=%d] %f, %f, %f\n", j, debug[j].x, debug[j].y, debug[j].z);
+		fclose(file);
 
 		for (int i = 0; i < batchSize; i++)
 		{
 			// Generate permutation
 			std::vector<int> h_permutation = GetRandomPermutationVector(cloudSize);
 			IndexIterator d_permutation(h_permutation.size());
+
+
+			// FAKE PERMUTATION
+			thrust::counting_iterator<int> helper(0);
+			thrust::copy(helper, helper + h_permutation.size(), h_permutation.begin());
+			// END OF FAKE PERMUTATION
+
 
 			thrust::copy(h_permutation.begin(), h_permutation.end(), d_permutation.begin());
 			auto permutedBefore = ApplyPermutation(alignBefore, d_permutation);
@@ -293,12 +304,26 @@ namespace {
 			// Create array for SVD
 			const auto beforeZipBegin = thrust::make_zip_iterator(thrust::make_tuple(beforeCountingBegin, permutedBefore.begin()));
 			const auto beforeZipEnd = thrust::make_zip_iterator(thrust::make_tuple(beforeCountingEnd, permutedBefore.end()));
-			auto convertBefore = Functors::GlmToCuBlas(true, permutedBefore.size(), outputBefore[i]);
+			auto convertBefore = Functors::GlmToCuBlas(false, permutedBefore.size(), outputBefore[i]);
 			thrust::for_each(thrust::device, beforeZipBegin, beforeZipEnd, convertBefore);
 			const auto afterZipBegin = thrust::make_zip_iterator(thrust::make_tuple(afterCountingBegin, permutedAfter.begin()));
 			const auto afterZipEnd = thrust::make_zip_iterator(thrust::make_tuple(afterCountingEnd, permutedAfter.end()));
-			auto convertAfter = Functors::GlmToCuBlas(true, permutedAfter.size(), outputAfter[i]);
+			auto convertAfter = Functors::GlmToCuBlas(false, permutedAfter.size(), outputAfter[i]);
 			thrust::for_each(thrust::device, afterZipBegin, afterZipEnd, convertAfter);
+
+
+			if (i == 0)
+			{
+				float* debug2 = (float*)malloc(3 * cloudAfter.size() * sizeof(float));
+				cudaMemcpy(debug2, outputAfter[i], 3 * cloudAfter.size() * sizeof(float), cudaMemcpyDeviceToHost);
+				FILE* file2;
+				file2 = fopen("cublas-debug.txt", "w+");
+
+				for (int j = 0; j < 3 * cloudAfter.size(); j += 3)
+					fprintf(file2, "[j=%d] %f, %f, %f\n", j / 3, debug2[j], debug2[j + 1], debug2[j + 2]);
+				free(debug2);
+				fclose(file2);
+			}
 		}
 	}
 
@@ -306,18 +331,26 @@ namespace {
 	{
 		thrust::host_vector<float*> preparedBefore;
 		thrust::host_vector<float*> preparedAfter;
-		//thrust::device_vector<glm::mat3> resultMatrices(batchSize);
 
 		PrepareMatricesForParallelSVD(cloudBefore, cloudAfter, batchSize, preparedBefore, preparedAfter);
 
 		// Run SVD for cloud before
-		CudaParallelSvdHelper svdBefore(batchSize, cloudBefore.size(), 3);
+		CudaParallelSvdHelper svdBefore(batchSize, cloudBefore.size(), 3, false);
 		svdBefore.RunSVD(preparedBefore);
 		outputBefore = svdBefore.GetHostMatricesVT();
 		svdBefore.FreeMemory();
 
 		// Run SVD for cloud after
-		CudaParallelSvdHelper svdAfter(batchSize, cloudAfter.size(), 3);
+		float* debug = (float*)malloc(3 * cloudAfter.size() * sizeof(float));
+		cudaMemcpy(debug, preparedAfter[0], 3 * cloudAfter.size() * sizeof(float), cudaMemcpyDeviceToHost);
+		cudaDeviceSynchronize();
+
+		for (int i = 0; i < 3 * cloudAfter.size(); i+=3)
+			printf("[i=%d] %f, %f, %f\n", i / 3, debug[i], debug[i + 1], debug[i + 2]);
+
+
+
+		CudaParallelSvdHelper svdAfter(batchSize, cloudAfter.size(), 3, false);
 		svdAfter.RunSVD(preparedAfter);
 		outputAfter = svdAfter.GetHostMatricesVT();
 		svdAfter.FreeMemory();
@@ -451,7 +484,7 @@ namespace {
 			auto transformationMatrix = glm::mat4(1.0f);
 
 			auto rotationMatrix = matricesAfter[i] * glm::transpose(matricesBefore[i]);
-			auto translationVector = glm::vec3(centroidAfter) - (rotationMatrix * centroidBefore);
+			auto translationVector = centroidAfter - (rotationMatrix * centroidBefore);
 
 			for (int i = 0; i < 3; i++)
 				for (int j = 0; j < 3; j++)
@@ -625,16 +658,16 @@ void NonIterativeCudaTest()
 	/****************************/
 	//ALGORITHM
 	/****************************/
-	auto testCloud = LoadCloud("data/bunny.obj");
-	auto testCorrupted = LoadCloud("data/bunny.obj");
+	const auto testCloud = LoadCloud("data/bunny.obj");
+	const auto testCorrupted = LoadCloud("data/bunny.obj");
 	int repetitions;
 	float error;
 	const int maxRepetitions = 20;
 	const int subcloudSize = 1000;
 	const float eps = 1e-5;
 	const int cpuThreadsCount = (int)std::thread::hardware_concurrency();
-	testCloud.resize(10000);
-	testCorrupted.resize(10000);
+	//testCloud.resize(10000);
+	//testCorrupted.resize(10000);
 
 	const auto hostBefore = CommonToThrustVector(testCloud);
 	const auto hostAfter = CommonToThrustVector(testCorrupted);

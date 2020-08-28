@@ -21,18 +21,19 @@ struct CudaParallelSvdHelper
 			assert(error == cudaSuccess);
 		}
 
+		VT.resize(batchSize);
 		if (useMatrixV)
 		{
-			VT.resize(batchSize);
 			for (int i = 0; i < batchSize; i++)
 			{
 				error = cudaMalloc(&(VT[i]), n * n * sizeof(float));
 				assert(error == cudaSuccess);
 			}
 		}
+
+		U.resize(batchSize);
 		if (useMatrixU)
 		{
-			U.resize(batchSize);
 			for (int i = 0; i < batchSize; i++)
 			{
 				error = cudaMalloc(&(U[i]), m * m * sizeof(float));
@@ -71,13 +72,6 @@ struct CudaParallelSvdHelper
 
 	void RunSVD(const thrust::host_vector<float*>& sourceMatrices)
 	{
-		float* debug = (float*)malloc(n * m * sizeof(float));
-		cudaMemcpy(debug, sourceMatrices[0], n*m*sizeof(float), cudaMemcpyDeviceToHost);
-		
-		//printf("m: %d\t n: %d\n", m, n);
-		//for (int i = 0; i < m*n; i++)
-		//	printf("[i = %d]: %f\n", i, debug[i]);
-
 		for (int i = 0; i < batchSize; i++)
 		{
 			cusolverStatus = cusolverDnSgesvd(solverHandles[i], 'N', 'A', m, n, sourceMatrices[i], m, S[i], U[i], m, VT[i], n, work[i], workSize[i], nullptr, info[i]);
@@ -102,18 +96,27 @@ struct CudaParallelSvdHelper
 	{
 		thrust::host_vector<glm::mat3> result(batchSize);
 		
+		float* data = (float*)malloc(n * n * sizeof(float));
 		for (int i = 0; i < batchSize; i++)
 		{
-			// Convert SVD result to glm
-			float* data = (float*)malloc(n * n * sizeof(float));
 			// Use V^T matrix instead of U as we pass transposed matrix to cusolver
 			// A = U * S * V => A^T = V^T * S^T * U^T => U(A^T)  = V^T (more or less :) )
 			error = cudaMemcpy(data, VT[i], 9 * sizeof(float), cudaMemcpyDeviceToHost);
 			assert(error == cudaSuccess);
 
+			printf("-----%d-----\n", i);
+			for (int j = 0; j < 9; j++)
+				printf("%f\t", data[j]);
+			printf("\n");
+
 			result[i] = CreateGlmMatrix(data);
-			free(data);
+
+			for (int j = 0; j < 9; j++)
+				printf("%f\t", result[i][j%3][j/3]);
+			printf("\n");
+			printf("------------\n", i);
 		}
+		free(data);
 
 		return result;
 	}

@@ -30,7 +30,7 @@
   <ItemGroup>
     <ClInclude Include="source\cuda.cuh" />
     <ClInclude Include="source\functors.cuh" />
-    <ClInclude Include="source\svdbatchparams.cuh" />
+    <ClInclude Include="source\parallelsvdhelper.cuh" />
     <ClInclude Include="source\svdparams.cuh" />
   </ItemGroup>
   <ItemGroup>
