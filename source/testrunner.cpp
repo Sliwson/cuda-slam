@@ -27,7 +27,7 @@ namespace Common
 
 	void TestRunner::RunSingle(Configuration configuration)
 	{
-		const auto [before, after] = Common::GetCloudsFromConfig(configuration);
+		const auto [before, after] = GetCloudsFromConfig(configuration);
 
 		auto timer = Common::Timer();
 
@@ -36,6 +36,11 @@ namespace Common
 		timer.StopStage("test");
 		timer.PrintResults();
 
-		const auto resultCloud = Common::GetTransformedCloud(before, result.first, result.second);
+		const auto resultCloud = GetTransformedCloud(before, result.first, result.second);
+		const auto correspondingPoints = GetCorrespondingPoints(resultCloud, after, configuration.MaxDistanceSquared, true);
+		const auto error = GetMeanSquaredError(resultCloud, after, std::get<2>(correspondingPoints), std::get<3>(correspondingPoints));
+
+		printf("Error: %f\n", error);
+
 	}
 }

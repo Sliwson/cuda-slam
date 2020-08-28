@@ -11,18 +11,22 @@ namespace Common
             config.AfterPath = "data/bunny.obj";
             config.ComputationMethod = ComputationMethod::Icp;
             config.MaxIterations = 50;
-            config.TransformationParameters = std::make_pair(1.f, 1.f);
+            config.MaxDistanceSquared = 10000.f;
+            config.TransformationParameters = std::make_pair(0.3f, 10.f);
             return config;
         }
     }
 
     std::vector<Configuration> Common::GetBasicTestSet()
     {
-        return {
-            GetDefaultConfiguration(),
-            GetDefaultConfiguration(),
-            GetDefaultConfiguration(),
-            GetDefaultConfiguration()
-        };
+        std::vector<Configuration> set;
+        for (int i = 0; i < 20; i++)
+        {
+            auto config = GetDefaultConfiguration();
+            config.TransformationParameters = std::make_pair(0.05f * i, 10.f);
+            set.push_back(config);
+        }
+
+        return set;
     }
 }
