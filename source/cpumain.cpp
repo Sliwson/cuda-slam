@@ -12,7 +12,7 @@
 //#define TEST
 
 namespace {
-	std::pair<glm::mat3, glm::vec3> GetCpuSlamResult(const Common::cpu_cloud& before, const Common::cpu_cloud& after, Configuration configuration)
+	std::pair<glm::mat3, glm::vec3> GetCpuSlamResult(const Common::CpuCloud& before, const Common::CpuCloud& after, Configuration configuration)
 	{
 		switch (configuration.ComputationMethod) {
 			case Common::ComputationMethod::Icp:
