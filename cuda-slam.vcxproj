@@ -33,8 +33,10 @@
   <ItemGroup>
     <ClInclude Include="source\cpdcuda.cuh" />
     <ClInclude Include="source\cuda.cuh" />
+    <ClInclude Include="source\cudaprobabilities.h" />
     <ClInclude Include="source\functors.cuh" />
     <ClInclude Include="source\icpcuda.cuh" />
+    <ClInclude Include="source\mstepparams.cuh" />
     <ClInclude Include="source\svdparams.cuh" />
   </ItemGroup>
   <ItemGroup>

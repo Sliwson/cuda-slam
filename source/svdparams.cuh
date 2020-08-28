@@ -4,7 +4,7 @@
 
 struct CudaSvdParams
 {
-	CudaSvdParams(int beforeLength, int afterLength)
+	CudaSvdParams(int beforeLength, int afterLength,)
 	{
 		cudaMalloc(&workBefore, beforeLength * 3 * sizeof(float));
 		cudaMalloc(&workAfter, afterLength * 3 * sizeof(float));

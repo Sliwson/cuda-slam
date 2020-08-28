@@ -15,5 +15,7 @@
     <ClInclude Include="source\svdparams.cuh" />
     <ClInclude Include="source\cpdcuda.cuh" />
     <ClInclude Include="source\icpcuda.cuh" />
+    <ClInclude Include="source\mstepparams.cuh" />
+    <ClInclude Include="source\cudaprobabilities.h" />
   </ItemGroup>
 </Project>

@@ -3,28 +3,33 @@
 #include "svdparams.cuh"
 #include "timer.h"
 #include "testutils.h"
+#include "cudaprobabilities.h"
 
 using namespace CUDACommon;
+using namespace CUDAProbabilities;
 
 namespace
 {
 	typedef thrust::device_vector<glm::vec3> Cloud;
 
-	struct Probabilities
-	{
-		// The probability matrix, multiplied by the identity vector.
-		thrust::device_vector<float> p1;
-		// The probability matrix, transposed, multiplied by the identity vector.
-		thrust::device_vector<float> pt1;
-		// The probability matrix multiplied by the fixed(cloud before) points.
-		thrust::device_vector<glm::vec3> px;
-		// The total error.
-		float error;
-		//p
-		thrust::device_vector<float> p;
-		//tmp
-		thrust::device_vector<float> tmp;
-	};
+	float CalculateSigmaSquared(const Cloud& cloudBefore, const Cloud& cloudAfter);
+	void ComputePMatrix(
+		const Cloud& cloudBefore,
+		const Cloud& cloudTransformed,
+		Probabilities& probabilities,
+		const float& constant,
+		const float& sigmaSquared,
+		const bool& doTruncate,
+		float truncate);
+	void MStep(
+		const Probabilities& probabilities,
+		const Cloud& cloudBefore,
+		const Cloud& cloudAfter,
+		bool const_scale,
+		glm::mat3* rotationMatrix,
+		glm::vec3* translationVector,
+		float* scale,
+		float* sigmaSquared);
 
 	float CalculateSigmaSquared(const Cloud& cloudBefore, const Cloud& cloudAfter)
 	{
@@ -69,7 +74,7 @@ namespace
 		//auto cloudTransformed_first = thrust::make_zip_iterator(thrust::make_tuple(p.begin(), idxfirst));
 		//auto cloudTransformed_last = thrust::make_zip_iterator(thrust::make_tuple(p.end(), idxlast));
 
-		float error = 0.0;
+		probabilities.error = 0.0f;
 		if (doTruncate)
 			truncate = std::log(truncate);
 
@@ -88,9 +93,66 @@ namespace
 
 			const auto functor = Functors::CalculateP1AndPX(cloudBefore[x], probabilities.p, probabilities.p1, probabilities.px, denominator);
 			thrust::for_each(thrust::device, idxfirst, idxlast, functor);
-			error -= std::log(denominator);
+			probabilities.error -= std::log(denominator);
 		}
-		error += DIMENSION * cloudBefore.size() * std::log(sigmaSquared) / 2.0f;
+		probabilities.error += DIMENSION * cloudBefore.size() * std::log(sigmaSquared) / 2.0f;
+	}
+
+	void MStep(
+		const Probabilities& probabilities,
+		const Cloud& cloudBefore,
+		const Cloud& cloudAfter,
+		bool const_scale,
+		glm::mat3* rotationMatrix,
+		glm::vec3* translationVector,
+		float* scale,
+		float* sigmaSquared)
+	{
+		const float Np = thrust::reduce(thrust::device, probabilities.p1.begin(), probabilities.p1.end(), 0.0f, thrust::plus<float>());
+		const float InvertedNp = 1.0f / Np;
+
+		auto EigenBeforeT = GetMatrix3XFromPointsVector(cloudBefore);
+		auto EigenAfterT = GetMatrix3XFromPointsVector(cloudAfter);
+		Eigen::Vector3f EigenCenterBefore = InvertedNp * EigenBeforeT * probabilities.pt1;
+		Eigen::Vector3f EigenCenterAfter = InvertedNp * EigenAfterT * probabilities.p1;
+
+		const Eigen::MatrixXf AMatrix = (EigenAfterT * probabilities.px).transpose() - Np * (EigenCenterBefore * EigenCenterAfter.transpose());
+
+		const Eigen::JacobiSVD<Eigen::MatrixXf> svd = Eigen::JacobiSVD<Eigen::MatrixXf>(AMatrix, Eigen::ComputeThinU | Eigen::ComputeThinV);
+
+		const Eigen::Matrix3f matrixU = svd.matrixU();
+		const Eigen::Matrix3f matrixV = svd.matrixV();
+		const Eigen::Matrix3f matrixVT = matrixV.transpose();
+
+		const Eigen::Matrix3f determinantMatrix = matrixU * matrixVT;
+
+		const Eigen::Matrix3f diag = Eigen::DiagonalMatrix<float, 3>(1.0f, 1.0f, determinantMatrix.determinant());
+
+		const Eigen::Matrix3f EigenRotationMatrix = matrixU * diag * matrixVT;
+
+		const Eigen::Matrix3f EigenScaleNumerator = svd.singularValues().asDiagonal() * diag;
+
+		const float scaleNumerator = EigenScaleNumerator.trace();
+		const float sigmaSubtrahend = (EigenBeforeT.transpose().array().pow(2) * probabilities.pt1.replicate(1, DIMENSION).array()).sum()
+			- Np * EigenCenterBefore.transpose() * EigenCenterBefore;
+		const float scaleDenominator = (EigenAfterT.transpose().array().pow(2) * probabilities.p1.replicate(1, DIMENSION).array()).sum()
+			- Np * EigenCenterAfter.transpose() * EigenCenterAfter;
+
+		if (const_scale == false)
+		{
+			*scale = scaleNumerator / scaleDenominator;
+			*sigmaSquared = (InvertedNp * std::abs(sigmaSubtrahend - (*scale) * scaleNumerator)) / (float)DIMENSION;
+		}
+		else
+		{
+			*sigmaSquared = (InvertedNp * std::abs(sigmaSubtrahend + scaleDenominator - 2 * scaleNumerator)) / (float)DIMENSION;
+		}
+
+		const Eigen::Vector3f EigenTranslationVector = EigenCenterBefore - (*scale) * EigenRotationMatrix * EigenCenterAfter;
+
+		*translationVector = ConvertTranslationVector(EigenTranslationVector);
+
+		*rotationMatrix = ConvertRotationMatrix(EigenRotationMatrix);
 	}
 
 	glm::mat4 CudaCPD(
@@ -113,12 +175,7 @@ namespace
 		float sigmaSquared = CalculateSigmaSquared(cloudBefore, cloudAfter);
 		float sigmaSquared_init = sigmaSquared;
 
-		Probabilities probabilities;
-		probabilities.p1 = thrust::device_vector<float>(cloudAfter.size());
-		probabilities.pt1 = thrust::device_vector<float>(cloudAfter.size());
-		probabilities.px = thrust::device_vector<glm::vec3>(cloudAfter.size());
-		probabilities.p = thrust::device_vector<float>(cloudAfter.size());
-		probabilities.tmp = thrust::device_vector<float>(cloudAfter.size());
+		Probabilities probabilities(cloudBefore.size(), cloudAfter.size());	
 
 		if (weight <= 0.0f)
 			weight = 1e-6f;
