@@ -81,6 +81,8 @@ namespace CUDACommon
 
 		auto permutationIteratorBegin = thrust::make_permutation_iterator(after.begin(), permutation.begin());
 		auto permutationIteratorEnd = thrust::make_permutation_iterator(after.end(), permutation.end());
+		assert(permutationIteratorBegin + permutation.size() == permutationIteratorEnd);
+
 		thrust::copy(thrust::device, permutationIteratorBegin, permutationIteratorEnd, alignAfter.begin());
 		const auto centroidAfter = CalculateCentroid(alignAfter);
 		GetAlignedCloud(alignAfter, alignAfter);
@@ -101,6 +103,7 @@ namespace CUDACommon
 		thrust::for_each(thrust::device, beforeZipBegin, beforeZipEnd, convertBefore);
 
 		//multiply
+		assert(beforeZipEnd - beforeZipBegin == zipEnd - zipBegin);
 		CuBlasMultiply(params.workBefore, params.workAfter, params.multiplyResult, size, params);
 		float result[9];
 		cudaMemcpy(result, params.multiplyResult, 9 * sizeof(float), cudaMemcpyDeviceToHost);
