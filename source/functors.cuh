@@ -114,4 +114,14 @@ namespace Functors
 		glm::vec3* px;
 		float denominator = 0.f;
 	};
+
+	struct CalculateSigmaSubtrahend : thrust::unary_function<thrust::tuple<int, float>, float>
+	{
+		CalculateSigmaSubtrahend(const float* pt1);
+
+		__device__ __host__ float operator()(const thrust::tuple<int, float>& pair);
+
+	private:
+		const float* pt1;
+	};
 }

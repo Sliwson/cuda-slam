@@ -158,4 +158,13 @@ namespace Functors
 			px[index] += cloudBeforeItem * value;
 		}
 	}
+
+	CalculateSigmaSubtrahend::CalculateSigmaSubtrahend(const float* pt1) : pt1(pt1) { }
+
+	__device__ __host__ float CalculateSigmaSubtrahend::operator()(const thrust::tuple<int, float>& pair)
+	{
+		const int idx = pair.get<0>();
+		const float val = pair.get<1>();
+		return val * val * pt1[idx / 3];
+	}
 }

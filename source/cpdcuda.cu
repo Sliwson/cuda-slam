@@ -189,6 +189,50 @@ namespace
 		const auto scaleNumeratorMatrix = glm::diagonal3x3(glm::make_vec3(hostS)) * diagonal;
 		const float scaleNumerator = scaleNumeratorMatrix[0][0] + scaleNumeratorMatrix[1][1] + scaleNumeratorMatrix[2][2];
 
+		auto countingSigmaSubtrahendBegin = thrust::make_counting_iterator<int>(0);
+		auto countingSigmaSubtrahendEnd = thrust::make_counting_iterator<int>(3 * beforeSize);
+		auto zipSigmaSubtrahendBegin = thrust::make_zip_iterator(thrust::make_tuple(countingSigmaSubtrahendBegin, params.beforeT));
+		auto zipSigmaSubtrahendEnd = thrust::make_zip_iterator(thrust::make_tuple(countingSigmaSubtrahendEnd, params.beforeT + 3 * beforeSize));
+
+		auto calculateSigmaSubtrahend = Functors::CalculateSigmaSubtrahend(params.pt1);
+
+		thrust::transform(thrust::device, zipSigmaSubtrahendBegin, zipSigmaSubtrahendEnd, params.beforeT, calculateSigmaSubtrahend);
+		float sigmaSubtrahend = thrust::reduce(thrust::device, params.beforeT, params.beforeT + 3 * beforeSize, 0.0f, thrust::plus<float>());
+
+		auto countingScaleDenominatorBegin = thrust::make_counting_iterator<int>(0);
+		auto countingScaleDenominatorEnd = thrust::make_counting_iterator<int>(3 * afterSize);
+		auto zipScaleDenominatorBegin = thrust::make_zip_iterator(thrust::make_tuple(countingScaleDenominatorBegin, params.afterT));
+		auto zipScaleDenominatorEnd = thrust::make_zip_iterator(thrust::make_tuple(countingScaleDenominatorEnd, params.afterT + 3 * afterSize));
+
+		auto calculateScaleDenominator = Functors::CalculateSigmaSubtrahend(params.p1);
+
+		thrust::transform(thrust::device, zipScaleDenominatorBegin, zipScaleDenominatorEnd, params.afterT, calculateScaleDenominator);
+		float scaleDenominator = thrust::reduce(thrust::device, params.afterT, params.afterT + 3 * afterSize, 0.0f, thrust::plus<float>());
+
+
+
+		/*
+		const float sigmaSubtrahend = (EigenBeforeT.transpose().array().pow(2) * probabilities.pt1.replicate(1, DIMENSION).array()).sum()
+			- Np * EigenCenterBefore.transpose() * EigenCenterBefore;
+		const float scaleDenominator = (EigenAfterT.transpose().array().pow(2) * probabilities.p1.replicate(1, DIMENSION).array()).sum()
+			- Np * EigenCenterAfter.transpose() * EigenCenterAfter;
+
+		if (const_scale == false)
+		{
+			*scale = scaleNumerator / scaleDenominator;
+			*sigmaSquared = (InvertedNp * std::abs(sigmaSubtrahend - (*scale) * scaleNumerator)) / (float)DIMENSION;
+		}
+		else
+		{
+			*sigmaSquared = (InvertedNp * std::abs(sigmaSubtrahend + scaleDenominator - 2 * scaleNumerator)) / (float)DIMENSION;
+		}
+
+		const Eigen::Vector3f EigenTranslationVector = EigenCenterBefore - (*scale) * EigenRotationMatrix * EigenCenterAfter;
+
+		*translationVector = ConvertTranslationVector(EigenTranslationVector);
+
+		*rotationMatrix = ConvertRotationMatrix(EigenRotationMatrix);
+		*/
 
 
 		float BeforeCPU[30];
@@ -311,42 +355,8 @@ namespace
 		}
 
 		printf("scale numerator %f\n", scaleNumerator);
-
-		/*const Eigen::JacobiSVD<Eigen::MatrixXf> svd = Eigen::JacobiSVD<Eigen::MatrixXf>(AMatrix, Eigen::ComputeThinU | Eigen::ComputeThinV);
-
-		const Eigen::Matrix3f matrixU = svd.matrixU();
-		const Eigen::Matrix3f matrixV = svd.matrixV();
-		const Eigen::Matrix3f matrixVT = matrixV.transpose();
-
-		const Eigen::Matrix3f determinantMatrix = matrixU * matrixVT;
-
-		const Eigen::Matrix3f diag = Eigen::DiagonalMatrix<float, 3>(1.0f, 1.0f, determinantMatrix.determinant());
-
-		const Eigen::Matrix3f EigenRotationMatrix = matrixU * diag * matrixVT;
-
-		const Eigen::Matrix3f EigenScaleNumerator = svd.singularValues().asDiagonal() * diag;
-
-		const float scaleNumerator = EigenScaleNumerator.trace();
-		const float sigmaSubtrahend = (EigenBeforeT.transpose().array().pow(2) * probabilities.pt1.replicate(1, DIMENSION).array()).sum()
-			- Np * EigenCenterBefore.transpose() * EigenCenterBefore;
-		const float scaleDenominator = (EigenAfterT.transpose().array().pow(2) * probabilities.p1.replicate(1, DIMENSION).array()).sum()
-			- Np * EigenCenterAfter.transpose() * EigenCenterAfter;
-
-		if (const_scale == false)
-		{
-			*scale = scaleNumerator / scaleDenominator;
-			*sigmaSquared = (InvertedNp * std::abs(sigmaSubtrahend - (*scale) * scaleNumerator)) / (float)DIMENSION;
-		}
-		else
-		{
-			*sigmaSquared = (InvertedNp * std::abs(sigmaSubtrahend + scaleDenominator - 2 * scaleNumerator)) / (float)DIMENSION;
-		}
-
-		const Eigen::Vector3f EigenTranslationVector = EigenCenterBefore - (*scale) * EigenRotationMatrix * EigenCenterAfter;
-
-		*translationVector = ConvertTranslationVector(EigenTranslationVector);
-
-		*rotationMatrix = ConvertRotationMatrix(EigenRotationMatrix);*/
+		printf("sigma subtrahend %f\n", sigmaSubtrahend);
+		printf("scaleDenominator %f\n", scaleDenominator);
 	}
 
 	glm::mat4 CudaCPD(
@@ -413,7 +423,7 @@ namespace
 			break;
 		}
 		//return std::make_pair(scale * rotationMatrix, translationVector);
-
+		mStepParams.Free();
 		return glm::mat4(0.0f);
 	}
 }

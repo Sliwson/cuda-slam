@@ -352,9 +352,9 @@ namespace CoherentPointDrift
 
 		const float scaleNumerator = EigenScaleNumerator.trace();
 		const float sigmaSubtrahend = (EigenBeforeT.transpose().array().pow(2) * probabilities.pt1.replicate(1, DIMENSION).array()).sum()
-			- Np * EigenCenterBefore.transpose() * EigenCenterBefore;
+			;//- Np * EigenCenterBefore.transpose() * EigenCenterBefore;
 		const float scaleDenominator = (EigenAfterT.transpose().array().pow(2) * probabilities.p1.replicate(1, DIMENSION).array()).sum()
-			- Np * EigenCenterAfter.transpose() * EigenCenterAfter;
+			;//- Np * EigenCenterAfter.transpose() * EigenCenterAfter;
 
 		if (const_scale == false)
 		{
@@ -410,7 +410,10 @@ namespace CoherentPointDrift
 		std::cout << "SIngular values" << std::endl;
 		std::cout << svd.singularValues() << std::endl;
 
-		std::cout << "scale numerator" << std::endl;
-		std::cout << scaleNumerator << std::endl;
+		std::cout << "sigmaSubtrahend before sub" << std::endl;
+		std::cout << sigmaSubtrahend << std::endl;
+
+		std::cout << "scaleDenominator before sub" << std::endl;
+		std::cout << scaleDenominator << std::endl;
 	}
 }
