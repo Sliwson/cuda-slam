@@ -1,15 +1,22 @@
 #include "testrunner.h"
+#include "common.h"
 
-void Common::TestRunner::RunAll()
+namespace Common
 {
-	while (!tests.empty())
+	void TestRunner::RunAll()
 	{
-		auto test = tests.front();
-		tests.pop();
-		RunSingle(test);
+		while (!tests.empty())
+		{
+			auto test = tests.front();
+			tests.pop();
+			RunSingle(test);
+		}
 	}
-}
 
-void Common::TestRunner::RunSingle(Configuration config)
-{
+	void TestRunner::RunSingle(Configuration configuration)
+	{
+		auto [before, after] = Common::GetCloudsFromConfig(configuration);
+		auto result = computeFunction(before, after, configuration);
+		auto resultCloud = Common::GetTransformedCloud(before, result.first, result.second);
+	}
 }

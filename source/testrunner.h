@@ -5,7 +5,7 @@
 namespace Common 
 {
 	using cpu_cloud = std::vector<Point_f>;
-	using slam_func = std::function <std::tuple<glm::mat3, glm::vec3>(const cpu_cloud&, const cpu_cloud&, Configuration)>;
+	using slam_func = std::function <std::pair<glm::mat3, glm::vec3>(const cpu_cloud&, const cpu_cloud&, Configuration)>;
 
 	class TestRunner
 	{
