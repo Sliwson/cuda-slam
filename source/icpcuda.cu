@@ -28,7 +28,7 @@ namespace
 		}
 	}
 
-	void GetCorrespondingPoints(thrust::device_vector<int>& indices, const Cloud& before, const Cloud& after)
+	void GetCorrespondingPoints(thrust::device_vector<int>& indices, const GpuCloud& before, const GpuCloud& after)
 	{
 #ifdef USE_CORRESPONDENCES_KERNEL
 		int* dIndices = thrust::raw_pointer_cast(indices.data());
@@ -47,7 +47,7 @@ namespace
 #endif
 	}
 
-	glm::mat4 CudaICP(const Cloud& before, const Cloud& after)
+	glm::mat4 CudaICP(const GpuCloud& before, const GpuCloud& after)
 	{
 		const int maxIterations = 60;
 		const float TEST_EPS = 1e-5;
@@ -62,9 +62,9 @@ namespace
 		const int beforeSize = before.size();
 		const int afterSize = after.size();
 
-		Cloud workingBefore(beforeSize);
-		Cloud alignBefore(beforeSize);
-		Cloud alignAfter(beforeSize);
+		GpuCloud workingBefore(beforeSize);
+		GpuCloud alignBefore(beforeSize);
+		GpuCloud alignAfter(beforeSize);
 
 		thrust::device_vector<int> indices(beforeSize);
 		thrust::copy(thrust::device, before.begin(), before.end(), workingBefore.begin());
@@ -172,10 +172,10 @@ void CudaTest()
 	const auto hostBefore = CommonToThrustVector(testCloud);
 	const auto hostAfter = CommonToThrustVector(testCorrupted);
 
-	Cloud deviceCloudBefore = hostBefore;
-	Cloud deviceCloudAfter = hostAfter;
+	GpuCloud deviceCloudBefore = hostBefore;
+	GpuCloud deviceCloudAfter = hostAfter;
 
-	Cloud calculatedCloud(hostAfter.size());
+	GpuCloud calculatedCloud(hostAfter.size());
 
 	const auto scaleInput = Functors::ScaleTransform(1000.f);
 	thrust::transform(thrust::device, deviceCloudBefore.begin(), deviceCloudBefore.end(), deviceCloudBefore.begin(), scaleInput);

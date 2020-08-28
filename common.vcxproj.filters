@@ -29,6 +29,8 @@
     <ClCompile Include="source\timer.cpp" />
     <ClCompile Include="source\configparser.cpp" />
     <ClCompile Include="source\configuration.cpp" />
+    <ClCompile Include="source\testrunner.cpp" />
+    <ClCompile Include="source\testset.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\loader.h" />
@@ -62,6 +64,8 @@
     <ClInclude Include="source\configparser.h" />
     <ClInclude Include="source\configuration.h" />
     <ClInclude Include="source\enumerators.h" />
+    <ClInclude Include="source\testrunner.h" />
+    <ClInclude Include="source\testset.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="GUI">

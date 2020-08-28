@@ -13,8 +13,8 @@ namespace Common
 
 		//optional parameters
 		std::optional<ExecutionPolicy> ExecutionPolicy = std::nullopt;
-		std::optional<std::pair<glm::mat3, glm::vec3>> Transformation = std::nullopt;
-		std::optional<std::pair<float, float>> TransformationParameters = std::nullopt;
+		std::optional<std::pair<glm::mat3, glm::vec3>> Transformation = std::nullopt; // rotation matrix, translation vector
+		std::optional<std::pair<float, float>> TransformationParameters = std::nullopt; // rotation range, translation range
 		std::optional<int> MaxIterations = std::nullopt;
 		std::optional<int> CloudResize = std::nullopt;
 
