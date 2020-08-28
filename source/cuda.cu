@@ -99,7 +99,7 @@ namespace CUDACommon
 		//create array BEFORE
 		const auto beforeZipBegin = thrust::make_zip_iterator(thrust::make_tuple(countingBegin, alignBefore.begin()));
 		const auto beforeZipEnd = thrust::make_zip_iterator(thrust::make_tuple(countingEnd, alignBefore.end()));
-		auto convertBefore = Functors::GlmToCuBlas(false, before.size(), params.workBefore);
+		auto convertBefore = Functors::GlmToCuBlas(false, size, params.workBefore);
 		thrust::for_each(thrust::device, beforeZipBegin, beforeZipEnd, convertBefore);
 
 		//multiply
