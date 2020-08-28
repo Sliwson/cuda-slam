@@ -1,4 +1,5 @@
 #include "testset.h"
+#include "configuration.h"
 
 namespace Common
 {
