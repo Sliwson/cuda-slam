@@ -41,6 +41,5 @@ namespace Common
 		const auto error = GetMeanSquaredError(resultCloud, after, std::get<2>(correspondingPoints), std::get<3>(correspondingPoints));
 
 		printf("Error: %f\n", error);
-
 	}
 }
