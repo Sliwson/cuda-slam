@@ -4,14 +4,14 @@
 
 namespace Common 
 {
-	using cpu_cloud = std::vector<Point_f>;
-	using slam_func = std::function <std::pair<glm::mat3, glm::vec3>(const cpu_cloud&, const cpu_cloud&, Configuration)>;
+	using CpuCloud = std::vector<Point_f>;
+	using SlamFunc = std::function <std::pair<glm::mat3, glm::vec3>(const CpuCloud&, const CpuCloud&, Configuration)>;
 
 	class TestRunner
 	{
 	public:
 
-		TestRunner(slam_func func) : computeFunction(func) {}
+		TestRunner(SlamFunc func) : computeFunction(func) {}
 		TestRunner(const TestRunner&) = delete;
 		TestRunner& operator=(const TestRunner&) = delete;
 
@@ -22,6 +22,6 @@ namespace Common
 	private:
 
 		std::queue<Configuration> tests;
-		slam_func computeFunction;
+		SlamFunc computeFunction;
 	};
 }
