@@ -54,7 +54,6 @@ struct CudaParallelSvdHelper
 			
 			cusolverStatus = cusolverDnSetStream(solverHandles[i], streams[i]);
 			assert(cusolverStatus == CUSOLVER_STATUS_SUCCESS);
-
 		}
 
 		// Allocate memory for SVD work
@@ -72,24 +71,23 @@ struct CudaParallelSvdHelper
 
 	void RunSVD(const thrust::host_vector<float*>& sourceMatrices)
 	{
-		for (int i = 0; i < batchSize; i++)
-		{
-			cusolverStatus = cusolverDnSgesvd(solverHandles[i], 'N', 'A', m, n, sourceMatrices[i], m, S[i], U[i], m, VT[i], n, work[i], workSize[i], nullptr, info[i]);
-			assert(cusolverStatus == CUSOLVER_STATUS_SUCCESS);
-		}
+		const auto thread_work = [&](int index) {
+			auto status = cusolverDnSgesvd(solverHandles[index], 'N', 'A', m, n, sourceMatrices[index], m, S[index], U[index], m, VT[index], n, work[index], workSize[index], nullptr, info[index]);
+			assert(status == CUSOLVER_STATUS_SUCCESS);
+		};
+		
+		std::vector<std::thread> workerThreads(batchSize);
+
+		// SVD needs to be launched from separated threads to take full advantage of CUDA streams
+		for (int j = 0; j < batchSize; j++)
+			workerThreads[j] = std::thread(thread_work, j);
+
+		// Wait for threads to finish
+		for (int j = 0; j < batchSize; j++)
+			workerThreads[j].join();
+
 		error = cudaDeviceSynchronize();
 		assert(error == cudaSuccess);
-
-		//cusolverStatus_t status = cusolverDnSgesvdjBatched_bufferSize(solverHandles, CUSOLVER_EIG_MODE_VECTOR, m, n, sourceMatrices, m, S, U, m, V, n, &workSize, gesvdj_info, batchSize);
-		//assert(CUSOLVER_STATUS_SUCCESS == status);
-
-		//cudaError_t cudaStat = cudaMalloc(&work, workSize * sizeof(float));
-		//assert(cudaSuccess == cudaStat);
-
-		//cusolverDnSgesvd(solverHandles[0], 'N', 'A', m, n, params.workBefore, params.m, params.S, params.U, params.m, params.VT, params.n, params.work, params.workSize, nullptr, params.devInfo);
-
-		//cusolverDnDgesvd_bufferSize(solverHandles[0], m, n, &workSize);
-		//cusolverDnSgesvd()
 	}
 
 	thrust::host_vector<glm::mat3> GetHostMatricesVT()
@@ -104,17 +102,7 @@ struct CudaParallelSvdHelper
 			error = cudaMemcpy(data, VT[i], 9 * sizeof(float), cudaMemcpyDeviceToHost);
 			assert(error == cudaSuccess);
 
-			printf("-----%d-----\n", i);
-			for (int j = 0; j < 9; j++)
-				printf("%f\t", data[j]);
-			printf("\n");
-
 			result[i] = CreateGlmMatrix(data);
-
-			for (int j = 0; j < 9; j++)
-				printf("%f\t", result[i][j%3][j/3]);
-			printf("\n");
-			printf("------------\n", i);
 		}
 		free(data);
 
@@ -146,8 +134,6 @@ struct CudaParallelSvdHelper
 			if (info[i])
 				cudaFree(info[i]);
 		}
-
-		cudaDeviceReset();
 	}
 
 	int batchSize = 0;

@@ -390,11 +390,11 @@ namespace Tests
 		//error = 1.0f;
 
 		timer.StartStage("non-iterative-ordered");
-		const auto orderedCalculatedTransform = NonIterative::GetNonIterativeTransformationMatrix(cloud, transformedCloud, &repetitionsOrdered, &errorOrdered, testEps, maxRepetitions, calculationType, subcloudSize);
+		const auto orderedCalculatedTransform = NonIterative::GetNonIterativeTransformationMatrix(cloud, transformedCloud, &repetitionsOrdered, &errorOrdered, testEps, maxRepetitions, calculationType, false, subcloudSize);
 		timer.StopStage("non-iterative-ordered");
 
 		timer.StartStage("non-iterative-permuted");
-		const auto permutedCalculatedTransform = NonIterative::GetNonIterativeTransformationMatrix(cloud, transformedPermutedCloud, &repetitionsPermuted, &errorPermuted, testEps, maxRepetitions, calculationType, subcloudSize);
+		const auto permutedCalculatedTransform = NonIterative::GetNonIterativeTransformationMatrix(cloud, transformedPermutedCloud, &repetitionsPermuted, &errorPermuted, testEps, maxRepetitions, calculationType, false, subcloudSize);
 		timer.StopStage("non-iterative-permuted");
 
 		printf("\nTransform Matrix\n");
