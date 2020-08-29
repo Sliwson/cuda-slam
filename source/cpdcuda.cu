@@ -92,9 +92,8 @@ namespace
 			//const float denominator = thrust::transform_reduce(thrust::device, cloudTransformed_first, cloudTransformed_last, functorDenominator, constant, thrust::plus<float>());
 			thrust::transform(thrust::device, cloudTransformed_first, cloudTransformed_last, probabilities.tmp.begin(), functorDenominator);
 			const float denominator = thrust::reduce(thrust::device, probabilities.tmp.begin(), probabilities.tmp.end(), constant, thrust::plus<float>());
-			//const float denominator = 1;
 
-			std::cout << "denominator: " << denominator << std::endl;
+			//std::cout << "denominator: " << denominator << std::endl;
 
 			probabilities.pt1[x] = 1.0f - constant / denominator;
 
@@ -234,7 +233,7 @@ namespace
 
 		*translationVector = glmCenterBefore - (*scale) * (*rotationMatrix) * glmCenterAfter;
 
-		float BeforeCPU[30];
+		/*float BeforeCPU[30];
 		cudaMemcpy(BeforeCPU, params.beforeT, 30 * sizeof(float), cudaMemcpyDeviceToHost);
 
 		float AfterCPU[30];
@@ -352,7 +351,7 @@ namespace
 		printf("scaleDenominator %f\n", scaleDenominator);
 
 		printf("rotation matrix\n");
-		Common::PrintMatrix((*scale) * (*rotationMatrix), *translationVector);		
+		Common::PrintMatrix((*scale) * (*rotationMatrix), *translationVector);*/
 	}
 
 	glm::mat4 CudaCPD(
@@ -403,12 +402,12 @@ namespace
 			thrust::host_vector<float> pt1 = probabilities.pt1;
 			thrust::host_vector<glm::vec3> px = probabilities.px;
 
-			std::cout << "P1" << std::endl;
+			/*std::cout << "P1" << std::endl;
 			PrintVector(probabilities.p1);
 			std::cout << std::endl << "Pt1" << std::endl;
 			PrintVector(probabilities.pt1);
 			std::cout << std::endl << "PX" << std::endl;
-			PrintVector(probabilities.px);
+			PrintVector(probabilities.px);*/
 
 			//M-step
 			MStep(cloudBefore, cloudAfter, probabilities, mStepParams, const_scale, &rotationMatrix, &translationVector, &scale, &sigmaSquared);
@@ -425,7 +424,7 @@ namespace
 void CPDTest()
 {
 	const char* objectPath = "data/bunny.obj";
-	const int pointCount = 10;
+	const int pointCount = -1;
 	const float testEps = 1e-6f;
 	const float weight = 0.0f;
 	const bool const_scale = false;
@@ -488,20 +487,20 @@ void CPDTest()
 	std::cout << "CPD1 Matrix" << std::endl;
 	PrintMatrix(icpCalculatedTransform1);
 
-	//timer.PrintResults();
+	timer.PrintResults();
 
-	std::cout << "Before" << std::endl;
-	PrintVector(deviceCloudBefore);
-	std::cout << "After" << std::endl;
-	PrintVector(deviceCloudAfter);
+	//std::cout << "Before" << std::endl;
+	//PrintVector(deviceCloudBefore);
+	//std::cout << "After" << std::endl;
+	//PrintVector(deviceCloudAfter);
 
-	//Common::Renderer renderer(
-	//	Common::ShaderType::SimpleModel,
-	//	cloud, //red
-	//	transformedPermutedCloud, //green
-	//	GetTransformedCloud(cloud, icpCalculatedTransform1.first, icpCalculatedTransform1.second), //yellow
-	//	//GetTransformedCloud(cloud, icpCalculatedTransform2.first, icpCalculatedTransform2.second)); //blue
-	//	std::vector<Point_f>(1)); //green
+	Common::Renderer renderer(
+		Common::ShaderType::SimpleModel,
+		cloud, //red
+		transformedPermutedCloud, //green
+		GetTransformedCloud(cloud, icpCalculatedTransform1), //yellow
+		//GetTransformedCloud(cloud, icpCalculatedTransform2.first, icpCalculatedTransform2.second)); //blue
+		std::vector<Point_f>(1)); //green
 
-	//renderer.Show();
+	renderer.Show();
 }

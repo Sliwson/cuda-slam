@@ -52,15 +52,15 @@ int main(int argc, char** argv)
 	//}
 
 	//michal things
-	constexpr float TEST_EPS = 1e-6f;
+	constexpr float TEST_EPS = 1e-4f;
 	const char* objectPathBunny = "data/bunny.obj";
-	const float outliers = 0.0f;
+	const float outliers = 0.1f;
 	const bool const_scale = false;
 	const int max_iter = 50;
-	const auto fgt = ApproximationType::None; //None-not use fgt, Full-use fgt, Hybrid-hybrid
+	const auto fgt = ApproximationType::Full; //None-not use fgt, Full-use fgt, Hybrid-hybrid
 
 	//Tests::RigidCPDTest(cloud, TEST_EPS, outliers, const_scale, max_iter, fgt);
-	Tests::RigidCPDTest(objectPathBunny, 10, TEST_EPS, outliers, const_scale, max_iter, fgt);
+	Tests::RigidCPDTest(objectPathBunny, -1, TEST_EPS, outliers, const_scale, max_iter, fgt);
 
 	return 0;
 }

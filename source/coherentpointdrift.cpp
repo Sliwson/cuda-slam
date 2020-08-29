@@ -123,12 +123,12 @@ namespace CoherentPointDrift
 			ntol = std::abs((probabilities.error - l) / probabilities.error);
 			l = probabilities.error;
 
-			std::cout << "P1" << std::endl;
+			/*std::cout << "P1" << std::endl;
 			std::cout << probabilities.p1;
 			std::cout << std::endl << "Pt1" << std::endl;
 			std::cout << probabilities.pt1;
 			std::cout << std::endl << "PX" << std::endl;
-			std::cout << probabilities.px;
+			std::cout << probabilities.px;*/
 
 			//M-step
 			MStep(probabilities, cloudBefore, cloudAfter, const_scale, &rotationMatrix, &translationVector, &scale, &sigmaSquared);
@@ -329,8 +329,8 @@ namespace CoherentPointDrift
 		Eigen::Vector3f EigenCenterAfter = InvertedNp * EigenAfterT * probabilities.p1;
 
 		//TODO: delete next 2 lines
-		const Eigen::Matrix3f mat1 = (EigenAfterT * probabilities.px).transpose();
-		const Eigen::Matrix3f mat2 = Np * (EigenCenterBefore * EigenCenterAfter.transpose());
+		//const Eigen::Matrix3f mat1 = (EigenAfterT * probabilities.px).transpose();
+		//const Eigen::Matrix3f mat2 = Np * (EigenCenterBefore * EigenCenterAfter.transpose());
 
 		const Eigen::MatrixXf AMatrix = (EigenAfterT * probabilities.px).transpose() - Np * (EigenCenterBefore * EigenCenterAfter.transpose());
 
@@ -374,54 +374,54 @@ namespace CoherentPointDrift
 
 		*rotationMatrix = ConvertRotationMatrix(EigenRotationMatrix);
 
-		//TODO: delete
-		std::cout << std::endl;
+		////TODO: delete
+		//std::cout << std::endl;
 
-		std::cout << "np " << Np << std::endl;
+		//std::cout << "np " << Np << std::endl;
 
-		std::cout << "beforeT" << std::endl;
-		std::cout << EigenBeforeT << std::endl;
+		//std::cout << "beforeT" << std::endl;
+		//std::cout << EigenBeforeT << std::endl;
 
-		std::cout << "afterT" << std::endl;
-		std::cout << EigenAfterT << std::endl;
+		//std::cout << "afterT" << std::endl;
+		//std::cout << EigenAfterT << std::endl;
 
-		std::cout << "p1" << std::endl;
-		std::cout << probabilities.p1 << std::endl;
+		//std::cout << "p1" << std::endl;
+		//std::cout << probabilities.p1 << std::endl;
 
-		std::cout << "pt1" << std::endl;
-		std::cout << probabilities.pt1 << std::endl;
+		//std::cout << "pt1" << std::endl;
+		//std::cout << probabilities.pt1 << std::endl;
 
-		std::cout << "center before" << std::endl;
-		std::cout << EigenCenterBefore << std::endl;
+		//std::cout << "center before" << std::endl;
+		//std::cout << EigenCenterBefore << std::endl;
 
-		std::cout << "center after" << std::endl;
-		std::cout << EigenCenterAfter << std::endl;
+		//std::cout << "center after" << std::endl;
+		//std::cout << EigenCenterAfter << std::endl;
 
-		std::cout << "a matrix" << std::endl;
-		std::cout << AMatrix << std::endl;
+		//std::cout << "a matrix" << std::endl;
+		//std::cout << AMatrix << std::endl;
 
-		std::cout << "afterTxPX" << std::endl;
-		std::cout << mat1 << std::endl;
+		//std::cout << "afterTxPX" << std::endl;
+		//std::cout << mat1 << std::endl;
 
-		std::cout << "matrixU" << std::endl;
-		std::cout << matrixU << std::endl;
+		//std::cout << "matrixU" << std::endl;
+		//std::cout << matrixU << std::endl;
 
-		std::cout << "matrixVT" << std::endl;
-		std::cout << matrixVT << std::endl;
+		//std::cout << "matrixVT" << std::endl;
+		//std::cout << matrixVT << std::endl;
 
-		std::cout << "SIngular values" << std::endl;
-		std::cout << svd.singularValues() << std::endl;
+		//std::cout << "SIngular values" << std::endl;
+		//std::cout << svd.singularValues() << std::endl;
 
-		std::cout << "sigmaSubtrahend after sub" << std::endl;
-		std::cout << sigmaSubtrahend << std::endl;
+		//std::cout << "sigmaSubtrahend after sub" << std::endl;
+		//std::cout << sigmaSubtrahend << std::endl;
 
-		std::cout << "scaleDenominator after sub" << std::endl;
-		std::cout << scaleDenominator << std::endl;
+		//std::cout << "scaleDenominator after sub" << std::endl;
+		//std::cout << scaleDenominator << std::endl;
 
-		std::cout << "tmp1" << std::endl;
-		std::cout << tmp1 << std::endl;
+		//std::cout << "tmp1" << std::endl;
+		//std::cout << tmp1 << std::endl;
 
-		std::cout << "tmp2" << std::endl;
-		std::cout << tmp2 << std::endl;
+		//std::cout << "tmp2" << std::endl;
+		//std::cout << tmp2 << std::endl;
 	}
 }

@@ -256,7 +256,7 @@ namespace Tests
 		timer.PrintResults();
 
 
-		std::cout << "Before" << std::endl;
+		/*std::cout << "Before" << std::endl;
 		for (size_t i = 0; i < transformedPermutedCloud.size(); i++)
 		{
 			printf("%f %f %f\n", transformedPermutedCloud[i].x, transformedPermutedCloud[i].y, transformedPermutedCloud[i].z);
@@ -265,7 +265,7 @@ namespace Tests
 		for (size_t i = 0; i < cloud.size(); i++)
 		{
 			printf("%f %f %f\n", cloud[i].x, cloud[i].y, cloud[i].z);
-		}
+		}*/
 
 		Common::Renderer renderer(
 			Common::ShaderType::SimpleModel,
