@@ -20,12 +20,13 @@ namespace Common {
 		void StartStage(const std::string& name);
 		void StopStage(const std::string& name);
 		void StageTimedCall(const std::string& name, std::function<void()> func);
+		long long GetStageTime(const std::string& name) const;
 
 		void PrintResults();
 
 	private:
 
-		std::shared_ptr<StageProperties> GetStage(const std::string& name);
+		std::shared_ptr<StageProperties> GetStage(const std::string& name) const;
 		std::map<std::string, std::shared_ptr<StageProperties>> stages;
 		std::string timerName = "";
 
