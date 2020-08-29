@@ -29,4 +29,9 @@ namespace Common
 
         return set;
     }
+
+    std::vector<Configuration> GetSizesTestSet()
+    {
+        return std::vector<Configuration>();
+    }
 }

@@ -4,4 +4,5 @@
 namespace Common
 {
 	std::vector<Configuration> GetBasicTestSet();
+	std::vector<Configuration> GetSizesTestSet();
 }
