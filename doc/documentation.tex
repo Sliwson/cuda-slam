@@ -108,7 +108,7 @@ The project is constructed using several modules:
 \item \textit{CloudLoader} - implemented in \textit{common} project. Module responsible for loading .obj point clouds.
 \item \textit{Configuration} - implemented in \textit{common} project. Module representing configuration, tightly coupled with \textit{ConfigParser} which allows loading configuration from .json files.
 \item \textit{TestRunner} - implemented in \textit{common} project. Module used to define and run benchmarks.
-\item \textit{Algorithms} - implemented in \textit{cuda-slam} as well as \textit{cpu-slam}. Each algorithm is implemented in separate file as a global function in appropriate namespace.
+\item \textit{Algorithms} - implemented in \textit{cuda-slam} as well as \textit{cpu-slam}. Each algorithm is implemented in separate file as a global function in appropriate namespace. Some operations that are common for cpu as well as gpu are implemented in \textit{common} project.
 \end{itemize}
 
 \subsection{Dependencies}
