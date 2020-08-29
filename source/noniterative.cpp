@@ -3,6 +3,7 @@
 #include "noniterative.h"
 #include "timer.h"
 #include "configuration.h"
+#include "nicputils.h"
 
 #include <thread>
 
@@ -56,7 +57,7 @@ namespace NonIterative
 		translationVector = glm::vec3(centerAfter) - (rotationMatrix * centerBefore);
 
 		float error = GetMeanSquaredError(alignedBefore, alignedAfter, rotationMatrix);
-		return NonIterativeSlamResult(rotationMatrix, translationVector, cloudAfter, error);
+		return NonIterativeSlamResult(rotationMatrix, translationVector, error);
 	}
 
 	std::pair<glm::mat3, glm::vec3> GetNonIterativeTransformationMatrixParallel(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, int *repetitions, float* error, float eps, int maxRepetitions, const ApproximationType& calculationType, int subcloudSize)
@@ -210,7 +211,7 @@ namespace NonIterative
 			for (int i = 0; i < bestResults.size(); i++)
 			{
 				std::vector<Point_f> transformedSubcloud = GetTransformedCloud(subcloudVertices, bestResults[i].getRotationMatrix(), bestResults[i].getTranslationVector());
-				CorrespondingPointsTuple correspondingPoints = GetCorrespondingPoints(transformedSubcloud, bestResults[i].getCloudAfter(), maxDistanceForComparison, false);
+				CorrespondingPointsTuple correspondingPoints = GetCorrespondingPoints(transformedSubcloud, cloudAfter, maxDistanceForComparison, false);
 				*error = GetMeanSquaredError(std::get<0>(correspondingPoints), std::get<1>(correspondingPoints));
 
 				if (*error < minError)
@@ -236,28 +237,5 @@ namespace NonIterative
 			return GetNonIterativeTransformationMatrixParallel(cloudBefore, cloudAfter, repetitions, error, eps, maxRepetitions, calculationType, subcloudSize);
 		else
 			return GetNonIterativeTransformationMatrixSequential(cloudBefore, cloudAfter, repetitions, error, eps, maxRepetitions, calculationType, subcloudSize);
-	}
-
-	void StoreResultIfOptimal(std::vector<NonIterativeSlamResult>& results, const NonIterativeSlamResult& newResult, const int desiredLength)
-	{
-		int length = results.size();
-		if (length == 0 && desiredLength > 0)
-		{
-			results.push_back(newResult);
-			return;
-		}
-
-		for (int i = 0; i < length; i++)
-		{
-			if (newResult.getApproximatedError() < results[i].getApproximatedError())
-			{
-				results.insert(results.begin() + i, newResult);
-				if (results.size() > desiredLength)
-				{
-					results.resize(desiredLength);
-					return;
-				} 
-			}
-		}
 	}
 }

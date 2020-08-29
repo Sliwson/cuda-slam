@@ -19,6 +19,7 @@
     <ClCompile Include="source\Icosphere.cpp" />
     <ClCompile Include="source\loader.cpp" />
     <ClCompile Include="source\moveablecamera.cpp" />
+    <ClCompile Include="source\nicputils.cpp" />
     <ClCompile Include="source\renderer.cpp" />
     <ClCompile Include="source\shader.cpp" />
     <ClCompile Include="source\shaderfactory.cpp" />
@@ -36,6 +37,7 @@
     <ClInclude Include="source\Icosphere.h" />
     <ClInclude Include="source\loader.h" />
     <ClInclude Include="source\moveablecamera.h" />
+    <ClInclude Include="source\nicputils.h" />
     <ClInclude Include="source\point.h" />
     <ClInclude Include="source\common.h" />
     <ClInclude Include="source\renderer.h" />
