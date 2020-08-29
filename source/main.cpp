@@ -1,4 +1,5 @@
 #include "cpdcuda.cuh"
+#include "nicpcuda.cuh"
 
 int main()
 {

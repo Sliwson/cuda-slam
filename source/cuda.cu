@@ -5,6 +5,34 @@
 
 namespace CUDACommon
 {
+	__device__ float GetDistanceSquared(const glm::vec3& first, const glm::vec3& second)
+	{
+		const auto d = second - first;
+		return d.x * d.x + d.y * d.y + d.z * d.z;
+	}
+
+	__global__ void FindCorrespondences(int* result, const glm::vec3* before, const glm::vec3* after, int beforeSize, int afterSize)
+	{
+		int targetIdx = blockDim.x * blockIdx.x + threadIdx.x;
+		if (targetIdx < beforeSize)
+		{
+			const glm::vec3 vector = before[targetIdx];
+			int nearestIdx = 0;
+			float smallestError = GetDistanceSquared(vector, after[0]);
+			for (int i = 1; i < afterSize; i++)
+			{
+				const auto dist = GetDistanceSquared(vector, after[i]);
+				if (dist < smallestError)
+				{
+					smallestError = dist;
+					nearestIdx = i;
+				}
+			}
+
+			result[targetIdx] = nearestIdx;
+		}
+	}
+
 	thrust::host_vector<glm::vec3> CommonToThrustVector(const std::vector<Common::Point_f>& vec)
 	{
 		thrust::host_vector<glm::vec3> hostCloud(vec.size());
@@ -34,12 +62,6 @@ namespace CUDACommon
 	{
 		const auto functor = Functors::MatrixTransform(transform);
 		thrust::transform(thrust::device, vec.begin(), vec.end(), out.begin(), functor);
-	}
-
-	__device__ float GetDistanceSquared(const glm::vec3& first, const glm::vec3& second)
-	{
-		const auto d = second - first;
-		return d.x * d.x + d.y * d.y + d.z * d.z;
 	}
 
 	float GetMeanSquaredError(const IndexIterator& permutation, const GpuCloud& before, const GpuCloud& after)
@@ -175,5 +197,24 @@ namespace CUDACommon
 		thrust::transform(thrust::device, permutation.begin(), permutation.end(), outputCloud.begin(), applyPermutationFunctor);
 
 		return outputCloud;
+	}
+
+	void GetCorrespondingPoints(thrust::device_vector<int>& indices, const GpuCloud& before, const GpuCloud& after)
+	{
+#ifdef USE_CORRESPONDENCES_KERNEL
+		int* dIndices = thrust::raw_pointer_cast(indices.data());
+		const glm::vec3* dBefore = thrust::raw_pointer_cast(before.data());
+		const glm::vec3* dAfter = thrust::raw_pointer_cast(after.data());
+		int beforeSize = before.size();
+		int afterSize = after.size();
+
+		constexpr int threadsPerBlock = 256;
+		const int blocksPerGrid = (beforeSize + threadsPerBlock - 1) / threadsPerBlock;
+		FindCorrespondences << <blocksPerGrid, threadsPerBlock >> > (dIndices, dBefore, dAfter, beforeSize, afterSize);
+		cudaDeviceSynchronize();
+#else
+		const auto nearestFunctor = Functors::FindNearestIndex(after);
+		thrust::transform(thrust::device, before.begin(), before.end(), indices.begin(), nearestFunctor);
+#endif
 	}
 }

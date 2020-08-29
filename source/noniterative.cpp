@@ -20,10 +20,10 @@ namespace NonIterative
 			config.ExecutionPolicy.value() == Common::ExecutionPolicy::Parallel :
 			true;
 
-		int iterations = 0;
+		int repetitions = 0;
 		float error = 0;
 
-		auto result = GetNonIterativeTransformationMatrix(cloudBefore, cloudAfter, &error, NICP_EPS, maxIterations, config.ApproximationType, parallel);
+		auto result = GetNonIterativeTransformationMatrix(cloudBefore, cloudAfter, &repetitions, &error, NICP_EPS, maxIterations, config.ApproximationType, parallel);
 		return result;
 	}
 
@@ -59,7 +59,7 @@ namespace NonIterative
 		return NonIterativeSlamResult(rotationMatrix, translationVector, cloudAfter, error);
 	}
 
-	std::pair<glm::mat3, glm::vec3> GetNonIterativeTransformationMatrixParallel(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, float* error, float eps, int maxRepetitions, const ApproximationType& calculationType, int subcloudSize)
+	std::pair<glm::mat3, glm::vec3> GetNonIterativeTransformationMatrixParallel(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, int *repetitions, float* error, float eps, int maxRepetitions, const ApproximationType& calculationType, int subcloudSize)
 	{
 		std::pair<glm::mat3, glm::vec3> bestTransformation;
 		
@@ -150,7 +150,7 @@ namespace NonIterative
 		return bestTransformation;
 	}
 
-	std::pair<glm::mat3, glm::vec3> GetNonIterativeTransformationMatrixSequential(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, float* error, float eps, int maxRepetitions, const ApproximationType& calculationType, int subcloudSize)
+	std::pair<glm::mat3, glm::vec3> GetNonIterativeTransformationMatrixSequential(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, int* repetitions, float* error, float eps, int maxRepetitions, const ApproximationType& calculationType, int subcloudSize)
 	{
 		int cloudSize = std::min(cloudBefore.size(), cloudAfter.size());
 
@@ -230,7 +230,7 @@ namespace NonIterative
 		return bestTransformation;
 	}
 
-	std::pair<glm::mat3, glm::vec3> GetNonIterativeTransformationMatrix(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, float* error, float eps, int maxRepetitions, const ApproximationType& calculationType, bool parallel, int subcloudSize)
+	std::pair<glm::mat3, glm::vec3> GetNonIterativeTransformationMatrix(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, int *repetitions, float* error, float eps, int maxRepetitions, const ApproximationType& calculationType, bool parallel, int subcloudSize)
 	{
 		if (parallel)
 			return GetNonIterativeTransformationMatrixParallel(cloudBefore, cloudAfter, repetitions, error, eps, maxRepetitions, calculationType, subcloudSize);

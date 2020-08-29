@@ -38,6 +38,7 @@ namespace CUDACommon
 	typedef thrust::permutation_iterator<GpuCloud, IndexIterator> Permutation;	
 
 	__device__ float GetDistanceSquared(const glm::vec3& first, const glm::vec3& second);
+	__global__ void FindCorrespondences(int* result, const glm::vec3* before, const glm::vec3* after, int beforeSize, int afterSize);
 
 	thrust::host_vector<glm::vec3> CommonToThrustVector(const std::vector<Common::Point_f>& vec);
 	std::vector<Point_f> ThrustToCommonVector(const GpuCloud& vec);
@@ -49,4 +50,5 @@ namespace CUDACommon
 	glm::mat3 CreateGlmMatrix(float* squareMatrix);
 	glm::mat4 LeastSquaresSVD(const IndexIterator& permutation, const GpuCloud& before, const GpuCloud& after, GpuCloud& alignBefore, GpuCloud& alignAfter, CudaSvdParams params);
 	GpuCloud ApplyPermutation(const GpuCloud& inputCloud, IndexIterator permutation);
+	void GetCorrespondingPoints(thrust::device_vector<int>& indices, const GpuCloud& before, const GpuCloud& after);
 }

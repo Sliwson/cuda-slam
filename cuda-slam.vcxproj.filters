@@ -5,6 +5,7 @@
     <CudaCompile Include="source\functors.cu" />
     <CudaCompile Include="source\cpdcuda.cu" />
     <CudaCompile Include="source\icpcuda.cu" />
+    <CudaCompile Include="source\nicpcuda.cu" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\main.cpp" />
@@ -15,5 +16,7 @@
     <ClInclude Include="source\svdparams.cuh" />
     <ClInclude Include="source\cpdcuda.cuh" />
     <ClInclude Include="source\icpcuda.cuh" />
+    <ClInclude Include="source\parallelsvdhelper.cuh" />
+    <ClInclude Include="source\nicpcuda.cuh" />
   </ItemGroup>
 </Project>
