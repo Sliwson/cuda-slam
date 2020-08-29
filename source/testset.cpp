@@ -40,9 +40,9 @@ namespace Common
 
     std::vector<Configuration> GetSizesTestSet(ComputationMethod method)
     {
-        constexpr int sizeSpan = 2500;
-        constexpr int minSize = 2500;
-        constexpr int maxSize = 7500;
+        constexpr int sizeSpan = 500;
+        constexpr int minSize = 500;
+        constexpr int maxSize = 10000;
 
         std::vector<Configuration> configurations;
 
@@ -60,6 +60,7 @@ namespace Common
             config.CloudResize = i;
             config.ExecutionPolicy = ExecutionPolicy::Sequential;
             config.ApproximationType = ApproximationType::None;
+            config.CpdWeight = 0.1f;
 
             configurations.push_back(config);
         }
