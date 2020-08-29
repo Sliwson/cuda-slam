@@ -12,7 +12,8 @@ namespace CoherentPointDrift
 	std::pair<glm::mat3, glm::vec3> CalculateCpdWithConfiguration(
 		const std::vector<Common::Point_f>& cloudBefore,
 		const std::vector<Common::Point_f>& cloudAfter,
-		Common::Configuration configuration);
+		Common::Configuration configuration,
+		int* iterations);
 
 	std::pair<glm::mat3, glm::vec3> GetRigidCPDTransformationMatrix(
 		const std::vector<Common::Point_f>& cloudBefore,

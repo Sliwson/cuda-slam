@@ -65,14 +65,13 @@ namespace CoherentPointDrift
 	std::pair<glm::mat3, glm::vec3> CalculateCpdWithConfiguration(
 		const std::vector<Common::Point_f>& cloudBefore,
 		const std::vector<Common::Point_f>& cloudAfter,
-		Common::Configuration config)
+		Common::Configuration config,
+		int* iterations)
 	{
 		auto maxIterations = config.MaxIterations.has_value() ? config.MaxIterations.value() : -1;
 
-		int iterations = 0;
 		float error = 0;
-
-		auto result = GetRigidCPDTransformationMatrix(cloudBefore, cloudAfter, &iterations, &error, CPD_EPS, config.CpdWeight, false, maxIterations, CPD_EPS, config.ApproximationType);
+		auto result = GetRigidCPDTransformationMatrix(cloudBefore, cloudAfter, iterations, &error, CPD_EPS, config.CpdWeight, false, maxIterations, CPD_EPS, config.ApproximationType);
 		return result;
 	}
 

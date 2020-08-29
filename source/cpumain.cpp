@@ -9,27 +9,27 @@
 #include "testrunner.h"
 #include "testset.h"
 
-//#define TEST
+#define TEST
 
 namespace {
-	std::pair<glm::mat3, glm::vec3> GetCpuSlamResult(const Common::CpuCloud& before, const Common::CpuCloud& after, Configuration configuration)
+	std::pair<glm::mat3, glm::vec3> GetCpuSlamResult(const Common::CpuCloud& before, const Common::CpuCloud& after, Configuration configuration, int* iterations)
 	{
 		switch (configuration.ComputationMethod) {
 			case Common::ComputationMethod::Icp:
-				return BasicICP::CalculateICPWithConfiguration(before, after, configuration);
+				return BasicICP::CalculateICPWithConfiguration(before, after, configuration, iterations);
 			case Common::ComputationMethod::Cpd:
-				return NonIterative::CalculateNonIterativeWithConfiguration(before, after, configuration);
+				return NonIterative::CalculateNonIterativeWithConfiguration(before, after, configuration, iterations);
 			case Common::ComputationMethod::NoniterativeIcp:
-				return CoherentPointDrift::CalculateCpdWithConfiguration(before, after, configuration);
+				return CoherentPointDrift::CalculateCpdWithConfiguration(before, after, configuration, iterations);
 			default:
-				assert(false, "Unknown method");
+				assert(false); //unknown method
 		}
 	}
 
 	int RunCpuTests()
 	{ 
 		auto testSet = Common::GetBasicTestSet();
-		auto runner = TestRunner(GetCpuSlamResult);
+		auto runner = TestRunner(GetCpuSlamResult, "basic.csv");
 
 		for (const auto& test : testSet)
 			runner.AddTest(test);
@@ -54,7 +54,8 @@ namespace {
 		auto [before, after] = Common::GetCloudsFromConfig(configuration);
 
 		//calculate
-		auto result = GetCpuSlamResult(before, after, configuration);
+		int iterations = 0;
+		auto result = GetCpuSlamResult(before, after, configuration, &iterations);
 
 		auto resultCloud = Common::GetTransformedCloud(before, result.first, result.second);
 

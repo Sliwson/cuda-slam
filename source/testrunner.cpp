@@ -47,9 +47,10 @@ namespace Common
 		const auto [before, after] = GetCloudsFromConfig(configuration);
 
 		auto timer = Common::Timer();
+		int iterations = 0;
 
 		timer.StartStage("test");
-		const auto result = computeFunction(before, after, configuration);
+		const auto result = computeFunction(before, after, configuration, &iterations);
 		timer.StopStage("test");
 		timer.PrintResults();
 
@@ -69,7 +70,7 @@ namespace Common
 				configuration.TransformationParameters.has_value() ? configuration.TransformationParameters.value().first : -1.f,
 				configuration.TransformationParameters.has_value() ? configuration.TransformationParameters.value().second : -1.f,
 				timer.GetStageTime("test"),
-				0,
+				iterations,
 				error
 			);
 		}
