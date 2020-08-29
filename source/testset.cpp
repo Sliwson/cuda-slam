@@ -36,17 +36,27 @@ namespace Common
 
             return "data/" + std::string(mainName) + ".obj";
         }
+
+        struct MethodTestParams
+        {
+			int MinSize = 500;
+			int SizeSpan = 500;
+			int MaxSize = 100000;
+        };
     }
 
     std::vector<Configuration> GetSizesTestSet(ComputationMethod method)
     {
-        constexpr int sizeSpan = 500;
-        constexpr int minSize = 500;
-        constexpr int maxSize = 10000;
+        const std::map<ComputationMethod, MethodTestParams> map{ {
+            { ComputationMethod::Icp, { 1000, 4000, 100000 }},
+            { ComputationMethod::Cpd, { 100, 100, 1000 }},
+            { ComputationMethod::NoniterativeIcp, { 1000, 4000, 200000 }}
+        } };
 
         std::vector<Configuration> configurations;
 
-        for (int i = minSize; i <= maxSize; i += sizeSpan)
+        const auto params = map.find(method)->second;
+        for (int i = params.MinSize; i <= params.MaxSize; i += params.SizeSpan)
         {
             auto path = GetObjectWithMinSize(i);
 
@@ -58,7 +68,7 @@ namespace Common
             config.MaxDistanceSquared = 10000.f;
             config.TransformationParameters = std::make_pair(.2f, 10.f);
             config.CloudResize = i;
-            config.ExecutionPolicy = ExecutionPolicy::Sequential;
+            config.ExecutionPolicy = method == ComputationMethod::Icp ? ExecutionPolicy::Parallel : ExecutionPolicy::Sequential;
             config.ApproximationType = ApproximationType::None;
             config.CpdWeight = 0.1f;
 
