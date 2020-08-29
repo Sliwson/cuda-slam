@@ -111,6 +111,16 @@ The project is constructed using several modules:
 \item \textit{Algorithms} - implemented in \textit{cuda-slam} as well as \textit{cpu-slam}. Each algorithm is implemented in separate file as a global function in appropriate namespace.
 \end{itemize}
 
+\subsection{Dependencies}
+\begin{itemize}
+\item \textit{Assimp} - for cloud loading.
+\item \textit{Eigen} - for cpu matrix operations.
+\item \textit{Glad} - wrapper for OpenGL.
+\item \textit{GLFW} - for window system.
+\item \textit{Nlohmann/json} - for configuration parsing.
+\item \textit{CuBLAS} - for gpu matrix operations.
+\end{itemize}
+
 \section{Input data description}
 %File formats, api used to read, dependencies, data sources, etc.
 %Is there any institution providing the input data?
