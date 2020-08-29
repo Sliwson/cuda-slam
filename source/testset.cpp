@@ -56,7 +56,7 @@ namespace Common
             config.ComputationMethod = method;
             config.MaxIterations = 50;
             config.MaxDistanceSquared = 10000.f;
-            config.TransformationParameters = std::make_pair(.5f, 10.f);
+            config.TransformationParameters = std::make_pair(.2f, 10.f);
             config.CloudResize = i;
             config.ExecutionPolicy = ExecutionPolicy::Sequential;
 
