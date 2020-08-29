@@ -15,23 +15,54 @@ namespace Common
             config.TransformationParameters = std::make_pair(0.3f, 10.f);
             return config;
         }
+
+        std::string GetObjectWithMinSize(int size)
+        {
+            const auto mainName = [size]() {
+                if (size <= 14904)
+                    return "bunny";
+                else if (size <= 35008)
+                    return "bird";
+                else if (size <= 333536)
+                    return "rose";
+                else if (size <= 376401)
+                    return "mustang";
+                else if (size <= 1375028)
+                    return "airbus";
+                else
+                    assert(false);
+                    return "";
+            }();
+
+            return "data/" + std::string(mainName) + ".obj";
+        }
     }
 
-    std::vector<Configuration> Common::GetBasicTestSet()
+    std::vector<Configuration> GetSizesTestSet(ComputationMethod method)
     {
-        std::vector<Configuration> set;
-        for (int i = 0; i < 20; i++)
+        constexpr int sizeSpan = 2500;
+        constexpr int minSize = 2500;
+        constexpr int maxSize = 7500;
+
+        std::vector<Configuration> configurations;
+
+        for (int i = minSize; i <= maxSize; i += sizeSpan)
         {
-            auto config = GetDefaultConfiguration();
-            config.TransformationParameters = std::make_pair(0.05f * i, 10.f);
-            set.push_back(config);
+            auto path = GetObjectWithMinSize(i);
+
+			Configuration config;
+            config.BeforePath = path;
+            config.AfterPath = path;
+            config.ComputationMethod = method;
+            config.MaxIterations = 50;
+            config.MaxDistanceSquared = 10000.f;
+            config.TransformationParameters = std::make_pair(.5f, 10.f);
+            config.CloudResize = i;
+            config.ExecutionPolicy = ExecutionPolicy::Sequential;
+
+            configurations.push_back(config);
         }
 
-        return set;
-    }
-
-    std::vector<Configuration> GetSizesTestSet()
-    {
-        return std::vector<Configuration>();
-    }
+        return configurations;
+	}
 }

@@ -28,18 +28,27 @@ namespace {
 
 	int RunCpuTests()
 	{ 
-		const auto run_test_set = [](std::function<std::vector<Configuration>()> acquireFunc, std::string name) {
-			auto testSet = acquireFunc();
-			auto runner = TestRunner(GetCpuSlamResult, name);
-		
-			for (const auto& test : testSet)
-			runner.AddTest(test);
+		static_assert(static_cast<int>(ComputationMethod::Icp) == 0);
+		static_assert(static_cast<int>(ComputationMethod::NoniterativeIcp) == 1);
+		static_assert(static_cast<int>(ComputationMethod::Cpd) == 2);
 
-			runner.RunAll();
+		const auto run_test_set = [](std::function<std::vector<Configuration>(ComputationMethod)> acquireFunc, std::string name) {
+			const std::vector<std::string> methods = { "icp", "nicp", "cpd" };
+
+			for (int i = 0; i < methods.size(); i++)
+			{
+				auto testSet = acquireFunc(ComputationMethod(i));
+				const auto fileName = name + "-" + methods[i] + ".csv";
+				auto runner = TestRunner(GetCpuSlamResult, fileName);
+
+				for (const auto& test : testSet)
+					runner.AddTest(test);
+
+				runner.RunAll();
+			}
 		};
 
-		run_test_set(Common::GetBasicTestSet, "basic.csv");
-		run_test_set(Common::GetSizesTestSet, "sizes.csv");
+		run_test_set(Common::GetSizesTestSet, "sizes");
 
 		return 0;
 	}
