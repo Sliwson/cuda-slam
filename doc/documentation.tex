@@ -101,6 +101,15 @@ The solution consists of three projects:
 \item \textit{gpu-slam} - executable project, contains implementaion of slam methods for gpu and gpu main.
 \end{itemize}
 
+\subsection{Modules}
+The project is constructed using several modules:
+\begin{itemize}
+\item \textit{Renderer} - implemented in \textit{common} project. Capable of rendering point clouds in different colors. Can be used multiple times in one executable launch. Widely using for results visualisation.
+\item \textit{CloudLoader} - implemented in \textit{common} project. Module responsible for loading .obj point clouds.
+\item \textit{Configuration} - implemented in \textit{common} project. Module representing configuration, tightly coupled with \textit{ConfigParser} which allows loading configuration from .json files.
+\item \textit{TestRunner} - implemented in \textit{common} project. Module used to define and run benchmarks.
+\item \textit{Algorithms} - implemented in \textit{cuda-slam} as well as \textit{cpu-slam}. Each algorithm is implemented in separate file as a global function in appropriate namespace.
+\end{itemize}
 
 \section{Input data description}
 %File formats, api used to read, dependencies, data sources, etc.
