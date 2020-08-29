@@ -28,13 +28,18 @@ namespace {
 
 	int RunCpuTests()
 	{ 
-		auto testSet = Common::GetBasicTestSet();
-		auto runner = TestRunner(GetCpuSlamResult, "basic.csv");
-
-		for (const auto& test : testSet)
+		const auto run_test_set = [](std::function<std::vector<Configuration>()> acquireFunc, std::string name) {
+			auto testSet = acquireFunc();
+			auto runner = TestRunner(GetCpuSlamResult, name);
+		
+			for (const auto& test : testSet)
 			runner.AddTest(test);
 
-		runner.RunAll();
+			runner.RunAll();
+		};
+
+		run_test_set(Common::GetBasicTestSet, "basic.csv");
+		run_test_set(Common::GetSizesTestSet, "sizes.csv");
 
 		return 0;
 	}
