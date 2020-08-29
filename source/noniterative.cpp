@@ -153,6 +153,8 @@ namespace NonIterative
 	std::pair<glm::mat3, glm::vec3> GetNonIterativeTransformationMatrixSequential(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, int* repetitions, float* error, float eps, int maxRepetitions, const ApproximationType& calculationType, int subcloudSize)
 	{
 		int cloudSize = std::min(cloudBefore.size(), cloudAfter.size());
+		if (maxRepetitions == -1)
+			maxRepetitions = 20;
 
 		std::pair<glm::mat3, glm::vec3> bestTransformation;
 		float minError = std::numeric_limits<float>::max();
@@ -210,7 +212,7 @@ namespace NonIterative
 			for (int i = 0; i < bestResults.size(); i++)
 			{
 				std::vector<Point_f> transformedSubcloud = GetTransformedCloud(subcloudVertices, bestResults[i].getRotationMatrix(), bestResults[i].getTranslationVector());
-				CorrespondingPointsTuple correspondingPoints = GetCorrespondingPoints(transformedSubcloud, cloudAfter, maxDistanceForComparison, false);
+				CorrespondingPointsTuple correspondingPoints = GetCorrespondingPoints(transformedSubcloud, cloudAfter, maxDistanceForComparison, true);
 				*error = GetMeanSquaredError(std::get<0>(correspondingPoints), std::get<1>(correspondingPoints));
 
 				if (*error < minError)
