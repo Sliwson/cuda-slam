@@ -59,6 +59,7 @@ namespace Common
             config.TransformationParameters = std::make_pair(.2f, 10.f);
             config.CloudResize = i;
             config.ExecutionPolicy = ExecutionPolicy::Sequential;
+            config.ApproximationType = ApproximationType::None;
 
             configurations.push_back(config);
         }
