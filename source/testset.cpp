@@ -15,18 +15,66 @@ namespace Common
             config.TransformationParameters = std::make_pair(0.3f, 10.f);
             return config;
         }
-    }
 
-    std::vector<Configuration> Common::GetBasicTestSet()
-    {
-        std::vector<Configuration> set;
-        for (int i = 0; i < 20; i++)
+        std::string GetObjectWithMinSize(int size)
         {
-            auto config = GetDefaultConfiguration();
-            config.TransformationParameters = std::make_pair(0.05f * i, 10.f);
-            set.push_back(config);
+            const auto mainName = [size]() {
+                if (size <= 14904)
+                    return "bunny";
+                else if (size <= 35008)
+                    return "bird";
+                else if (size <= 333536)
+                    return "rose";
+                else if (size <= 376401)
+                    return "mustang";
+                else if (size <= 1375028)
+                    return "airbus";
+                else
+                    assert(false);
+                    return "";
+            }();
+
+            return "data/" + std::string(mainName) + ".obj";
         }
 
-        return set;
+        struct MethodTestParams
+        {
+			int MinSize = 500;
+			int SizeSpan = 500;
+			int MaxSize = 100000;
+        };
     }
+
+    std::vector<Configuration> GetSizesTestSet(ComputationMethod method)
+    {
+        const std::map<ComputationMethod, MethodTestParams> map{ {
+            { ComputationMethod::Icp, { 1000, 4000, 100000 }},
+            { ComputationMethod::Cpd, { 100, 100, 1000 }},
+            { ComputationMethod::NoniterativeIcp, { 1000, 4000, 200000 }}
+        } };
+
+        std::vector<Configuration> configurations;
+
+        const auto params = map.find(method)->second;
+        for (int i = params.MinSize; i <= params.MaxSize; i += params.SizeSpan)
+        {
+            auto path = GetObjectWithMinSize(i);
+
+			Configuration config;
+            config.BeforePath = path;
+            config.AfterPath = path;
+            config.ComputationMethod = method;
+            config.MaxIterations = 50;
+            config.MaxDistanceSquared = 10000.f;
+            config.TransformationParameters = std::make_pair(.2f, 10.f);
+            config.CloudResize = i;
+            config.ExecutionPolicy = method == ComputationMethod::Icp ? ExecutionPolicy::Parallel : ExecutionPolicy::Sequential;
+            config.ApproximationType = ApproximationType::None;
+            config.CpdWeight = 0.1f;
+
+            configurations.push_back(config);
+        }
+
+        return configurations;
+	}
 }

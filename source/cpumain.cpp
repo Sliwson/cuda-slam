@@ -9,32 +9,46 @@
 #include "testrunner.h"
 #include "testset.h"
 
-//#define TEST
+#define TEST
 
 namespace {
-	std::pair<glm::mat3, glm::vec3> GetCpuSlamResult(const Common::CpuCloud& before, const Common::CpuCloud& after, Configuration configuration)
+	std::pair<glm::mat3, glm::vec3> GetCpuSlamResult(const Common::CpuCloud& before, const Common::CpuCloud& after, Configuration configuration, int* iterations)
 	{
 		switch (configuration.ComputationMethod) {
 			case Common::ComputationMethod::Icp:
-				return BasicICP::CalculateICPWithConfiguration(before, after, configuration);
-			case Common::ComputationMethod::Cpd:
-				return NonIterative::CalculateNonIterativeWithConfiguration(before, after, configuration);
+				return BasicICP::CalculateICPWithConfiguration(before, after, configuration, iterations);
 			case Common::ComputationMethod::NoniterativeIcp:
-				return CoherentPointDrift::CalculateCpdWithConfiguration(before, after, configuration);
+				return NonIterative::CalculateNonIterativeWithConfiguration(before, after, configuration, iterations);
+			case Common::ComputationMethod::Cpd:
+				return CoherentPointDrift::CalculateCpdWithConfiguration(before, after, configuration, iterations);
 			default:
-				assert(false, "Unknown method");
+				assert(false); //unknown method
 		}
 	}
 
 	int RunCpuTests()
 	{ 
-		auto testSet = Common::GetBasicTestSet();
-		auto runner = TestRunner(GetCpuSlamResult);
+		static_assert(static_cast<int>(ComputationMethod::Icp) == 0);
+		static_assert(static_cast<int>(ComputationMethod::NoniterativeIcp) == 1);
+		static_assert(static_cast<int>(ComputationMethod::Cpd) == 2);
 
-		for (const auto& test : testSet)
-			runner.AddTest(test);
+		const auto run_test_set = [](std::function<std::vector<Configuration>(ComputationMethod)> acquireFunc, std::string name) {
+			const std::vector<std::string> methods = { "icp", "nicp", "cpd" };
 
-		runner.RunAll();
+			for (int i = 0; i < methods.size(); i++)
+			{
+				auto testSet = acquireFunc(ComputationMethod(i));
+				const auto fileName = name + "-" + methods[i] + ".csv";
+				auto runner = TestRunner(GetCpuSlamResult, fileName);
+
+				for (const auto& test : testSet)
+					runner.AddTest(test);
+
+				runner.RunAll();
+			}
+		};
+
+		run_test_set(Common::GetSizesTestSet, "sizes");
 
 		return 0;
 	}
@@ -54,7 +68,8 @@ namespace {
 		auto [before, after] = Common::GetCloudsFromConfig(configuration);
 
 		//calculate
-		auto result = GetCpuSlamResult(before, after, configuration);
+		int iterations = 0;
+		auto result = GetCpuSlamResult(before, after, configuration, &iterations);
 
 		auto resultCloud = Common::GetTransformedCloud(before, result.first, result.second);
 

@@ -45,6 +45,15 @@ namespace Common
 		StopStage(name);
 	}
 
+	long long Timer::GetStageTime(const std::string& name) const
+	{
+		auto stage = GetStage(name);
+		if (stage == nullptr)
+			return 0;
+
+		return stage->MilisecondsElpased.count();
+	}
+
 	void Timer::PrintResults()
 	{
 		if (std::any_of(stages.begin(), stages.end(), [](auto prop) { return prop.second->IsRunning; }))
@@ -55,7 +64,7 @@ namespace Common
 			printf("%s -> %lldms\n", stage.first.c_str(), static_cast<long long int>(stage.second->MilisecondsElpased.count()));
 	}
 
-	std::shared_ptr<StageProperties> Timer::GetStage(const std::string& name)
+	std::shared_ptr<StageProperties> Timer::GetStage(const std::string& name) const
 	{
 		const auto it = stages.find(name);
 		if (it != stages.end())

@@ -16,7 +16,8 @@ namespace NonIterative
 	std::pair<glm::mat3, glm::vec3> CalculateNonIterativeWithConfiguration(
 		const std::vector<Point_f>& cloudBefore,
 		const std::vector<Point_f>& cloudAfter,
-		Common::Configuration config);
+		Common::Configuration config,
+		int* iterations);
 
 	NonIterativeSlamResult GetSingleNonIterativeSlamResult(
 		const std::vector<Point_f>& cloudBefore,

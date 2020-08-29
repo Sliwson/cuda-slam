@@ -11,7 +11,7 @@ namespace BasicICP
 {
 	constexpr float ICP_EPS = 1e-5;
 
-	std::pair<glm::mat3, glm::vec3> CalculateICPWithConfiguration(const std::vector<Common::Point_f>& cloudBefore, const std::vector<Common::Point_f>& cloudAfter, Common::Configuration config)
+	std::pair<glm::mat3, glm::vec3> CalculateICPWithConfiguration(const std::vector<Common::Point_f>& cloudBefore, const std::vector<Common::Point_f>& cloudAfter, Common::Configuration config, int* iterations)
 	{
 		auto maxIterations = config.MaxIterations.has_value() ? config.MaxIterations.value() : -1;
 
@@ -19,10 +19,8 @@ namespace BasicICP
 			config.ExecutionPolicy.value() == Common::ExecutionPolicy::Parallel :
 			true;
 
-		int iterations = 0;
 		float error = 0;
-
-		auto result = GetBasicICPTransformationMatrix(cloudBefore, cloudAfter, &iterations, &error, ICP_EPS, config.MaxDistanceSquared, maxIterations, parallel);
+		auto result = GetBasicICPTransformationMatrix(cloudBefore, cloudAfter, iterations, &error, ICP_EPS, config.MaxDistanceSquared, maxIterations, parallel);
 		return result;
 	}
 
