@@ -66,6 +66,9 @@ namespace
 		thrust::device_vector<glm::vec3> px(cloudTransformed.size());
 		thrust::device_vector<float> tmp(cloudTransformed.size());*/
 
+		thrust::fill(thrust::device, probabilities.p1.begin(), probabilities.p1.end(), 0.0f);
+		thrust::fill(thrust::device, probabilities.px.begin(), probabilities.px.end(), glm::vec3(0.0f));
+
 		thrust::counting_iterator<int> idxfirst = thrust::make_counting_iterator<int>(0);
 		thrust::counting_iterator<int> idxlast = thrust::make_counting_iterator<int>(cloudTransformed.size());
 
@@ -209,13 +212,15 @@ namespace
 		thrust::transform(thrust::device, zipScaleDenominatorBegin, zipScaleDenominatorEnd, params.afterT, calculateScaleDenominator);
 		float scaleDenominator = thrust::reduce(thrust::device, params.afterT, params.afterT + 3 * afterSize, 0.0f, thrust::plus<float>());
 
+		float hostCenterBefore[3], hostCenterAfter[3];
+		cudaMemcpy(hostCenterBefore, params.centerBefore, 3 * sizeof(float), cudaMemcpyDeviceToHost);
+		cudaMemcpy(hostCenterAfter, params.centerAfter, 3 * sizeof(float), cudaMemcpyDeviceToHost);
 
+		auto glmCenterBefore = glm::make_vec3(hostCenterBefore);
+		auto glmCenterAfter = glm::make_vec3(hostCenterAfter);
 
-		/*
-		const float sigmaSubtrahend = (EigenBeforeT.transpose().array().pow(2) * probabilities.pt1.replicate(1, DIMENSION).array()).sum()
-			- Np * EigenCenterBefore.transpose() * EigenCenterBefore;
-		const float scaleDenominator = (EigenAfterT.transpose().array().pow(2) * probabilities.p1.replicate(1, DIMENSION).array()).sum()
-			- Np * EigenCenterAfter.transpose() * EigenCenterAfter;
+		sigmaSubtrahend -= Np * glm::dot(glmCenterBefore, glmCenterBefore);
+		scaleDenominator -= Np * glm::dot(glmCenterAfter, glmCenterAfter);
 
 		if (const_scale == false)
 		{
@@ -227,13 +232,7 @@ namespace
 			*sigmaSquared = (InvertedNp * std::abs(sigmaSubtrahend + scaleDenominator - 2 * scaleNumerator)) / (float)DIMENSION;
 		}
 
-		const Eigen::Vector3f EigenTranslationVector = EigenCenterBefore - (*scale) * EigenRotationMatrix * EigenCenterAfter;
-
-		*translationVector = ConvertTranslationVector(EigenTranslationVector);
-
-		*rotationMatrix = ConvertRotationMatrix(EigenRotationMatrix);
-		*/
-
+		*translationVector = glmCenterBefore - (*scale) * (*rotationMatrix) * glmCenterAfter;
 
 		float BeforeCPU[30];
 		cudaMemcpy(BeforeCPU, params.beforeT, 30 * sizeof(float), cudaMemcpyDeviceToHost);
@@ -245,13 +244,7 @@ namespace
 		cudaMemcpy(p1CPU, params.p1, 10 * sizeof(float), cudaMemcpyDeviceToHost);
 
 		float pt1CPU[10];
-		cudaMemcpy(pt1CPU, params.pt1, 10 * sizeof(float), cudaMemcpyDeviceToHost);
-
-		float centerBeforeCPU[3];
-		cudaMemcpy(centerBeforeCPU, params.centerBefore, 3 * sizeof(float), cudaMemcpyDeviceToHost);
-
-		float centerAfterCPU[3];
-		cudaMemcpy(centerAfterCPU, params.centerAfter, 3 * sizeof(float), cudaMemcpyDeviceToHost);
+		cudaMemcpy(pt1CPU, params.pt1, 10 * sizeof(float), cudaMemcpyDeviceToHost);		
 
 		float result[9];
 		cudaMemcpy(result, params.AMatrix, 9 * sizeof(float), cudaMemcpyDeviceToHost);
@@ -301,14 +294,14 @@ namespace
 		printf("centerBeforeCPU\n");
 		for (size_t j = 0; j < 3; j++)
 		{
-			printf("%f ", centerBeforeCPU[j]);
+			printf("%f ", hostCenterBefore[j]);
 		}
 		printf("\n");
 
 		printf("centerAfterCPU\n");
 		for (size_t j = 0; j < 3; j++)
 		{
-			printf("%f ", centerAfterCPU[j]);
+			printf("%f ", hostCenterAfter[j]);
 		}
 		printf("\n");
 
@@ -357,6 +350,9 @@ namespace
 		printf("scale numerator %f\n", scaleNumerator);
 		printf("sigma subtrahend %f\n", sigmaSubtrahend);
 		printf("scaleDenominator %f\n", scaleDenominator);
+
+		printf("rotation matrix\n");
+		Common::PrintMatrix((*scale) * (*rotationMatrix), *translationVector);		
 	}
 
 	glm::mat4 CudaCPD(
@@ -417,14 +413,12 @@ namespace
 			//M-step
 			MStep(cloudBefore, cloudAfter, probabilities, mStepParams, const_scale, &rotationMatrix, &translationVector, &scale, &sigmaSquared);
 
-			//transformedCloud = GetTransformedCloud(cloudAfter, rotationMatrix, translationVector, scale);
+			TransformCloud(cloudAfter, transformedCloud, ConvertToTransformationMatrix(scale * rotationMatrix, translationVector));
 			(*error) = sigmaSquared;
 			(*iterations)++;
-			break;
 		}
-		//return std::make_pair(scale * rotationMatrix, translationVector);
 		mStepParams.Free();
-		return glm::mat4(0.0f);
+		return ConvertToTransformationMatrix(scale * rotationMatrix, translationVector);
 	}
 }
 
@@ -488,11 +482,11 @@ void CPDTest()
 
 	std::cout << "Transform Matrix" << std::endl;
 	PrintMatrix(transform);
-	//std::cout << "Inverted Transform Matrix" << std::endl;
-	//PrintMatrix(glm::inverse(transform));
+	std::cout << "Inverted Transform Matrix" << std::endl;
+	PrintMatrix(glm::inverse(transform));
 
-	//std::cout << "CPD1 Matrix" << std::endl;
-	//PrintMatrix(icpCalculatedTransform1.first, icpCalculatedTransform1.second);
+	std::cout << "CPD1 Matrix" << std::endl;
+	PrintMatrix(icpCalculatedTransform1);
 
 	//timer.PrintResults();
 
