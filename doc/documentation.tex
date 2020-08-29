@@ -92,7 +92,15 @@ Various modifications have been proposed to this algorithm (such as sampling poi
 \subsection{Coherent Point Drift}
 
 \section{Program architecture}
-Short description on the modules of the system, requirements, dependencies, etc.
+%Short description on the modules of the system, requirements, dependencies, etc.
+\subsection{Project structure}
+The solution consists of three projects:
+\begin{itemize}
+\item \textit{common} - static library project, contains all elements that are shared between cpu and gpu implementations.
+\item \textit{cpu-slam} - executable project, contains implementation of slam methods for cpu and cpu main.
+\item \textit{gpu-slam} - executable project, contains implementaion of slam methods for gpu and gpu main.
+\end{itemize}
+
 
 \section{Input data description}
 %File formats, api used to read, dependencies, data sources, etc.
