@@ -4,13 +4,30 @@
 
 namespace Common
 {
+	TestRunner::TestRunner(SlamFunc func, std::string file) : computeFunction(func), outputFile(file)
+	{
+		if (!outputFile.empty())
+			fileHandle = fopen(outputFile.c_str(), "w+");
+
+		if (fileHandle != nullptr)
+		{
+			fprintf(fileHandle, "test-no;cloud-size;rotation;translation;time(ms);iterations;error\n");
+		}
+	}
+
+	TestRunner::~TestRunner()
+	{
+		if (fileHandle != nullptr)
+			fclose(fileHandle);
+	}
+
 	void TestRunner::RunAll()
 	{
-		int testIdx = 0;
+		currentTestIndex = 0;
 		while (!tests.empty())
 		{
 			printf("==================================================================\n");
-			printf("Running test %d\n", testIdx);
+			printf("Running test %d\n", currentTestIndex);
 			printf("==================================================================\n");
 
 			auto test = tests.front();
@@ -21,7 +38,7 @@ namespace Common
 			printf("Test ended\n");
 			printf("==================================================================\n\n");
 
-			testIdx++;
+			currentTestIndex++;
 		}
 	}
 
@@ -41,5 +58,20 @@ namespace Common
 		const auto error = GetMeanSquaredError(resultCloud, after, std::get<2>(correspondingPoints), std::get<3>(correspondingPoints));
 
 		printf("Error: %f\n", error);
+
+		if (fileHandle != nullptr)
+		{
+			fprintf(
+				fileHandle, 
+				"%d;%zd;%f;%f;%lld;%d;%f\n",
+				currentTestIndex,
+				before.size(),
+				configuration.TransformationParameters.has_value() ? configuration.TransformationParameters.value().first : -1.f,
+				configuration.TransformationParameters.has_value() ? configuration.TransformationParameters.value().second : -1.f,
+				timer.GetStageTime("test"),
+				0,
+				error
+			);
+		}
 	}
 }

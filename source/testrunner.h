@@ -11,7 +11,9 @@ namespace Common
 	{
 	public:
 
-		TestRunner(SlamFunc func) : computeFunction(func) {}
+		TestRunner(SlamFunc func, std::string file = "");
+		~TestRunner();
+
 		TestRunner(const TestRunner&) = delete;
 		TestRunner& operator=(const TestRunner&) = delete;
 
@@ -20,6 +22,11 @@ namespace Common
 		void RunSingle(Configuration config);
 
 	private:
+
+		int currentTestIndex = 0;
+
+		std::string outputFile;
+		FILE* fileHandle = nullptr;
 
 		std::queue<Configuration> tests;
 		SlamFunc computeFunction;
