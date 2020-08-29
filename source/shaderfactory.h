@@ -11,15 +11,13 @@ namespace Common
 	class ShaderFactory
 	{
 	public:
-		static ShaderFactory& getInstance();
-
-		std::shared_ptr<Shader> getShader(ShaderType type);
-
+		ShaderFactory();
 		ShaderFactory(ShaderFactory const&) = delete;
 		void operator=(ShaderFactory const&) = delete;
+		
+		std::shared_ptr<Shader> GetShader(ShaderType type);
 
 	private:
-		ShaderFactory();
 
 		std::shared_ptr<Shader> simpleModel;
 	};
