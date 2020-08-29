@@ -17,15 +17,20 @@
 #include <random>
 #include <iostream>
 #include <functional>
+#include <optional>
+#include <queue>
 #include <thread>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "point.h"
+#include "enumerators.h"
 
 namespace Common
 {
 	constexpr int DIMENSION = 3;
 	using Point_f = Point<float>;
+
+	void PrintMatrix(const glm::mat3& matrix);
 }

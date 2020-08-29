@@ -2,10 +2,18 @@
 #include <utility>
 #include <tuple>
 #include "common.h"
-#include "fgttype.h"
+
+namespace Common {
+	struct Configuration;
+}
 
 namespace CoherentPointDrift
 {
+	std::pair<glm::mat3, glm::vec3> CalculateCpdWithConfiguration(
+		const std::vector<Common::Point_f>& cloudBefore,
+		const std::vector<Common::Point_f>& cloudAfter,
+		Common::Configuration configuration);
+
 	std::pair<glm::mat3, glm::vec3> GetRigidCPDTransformationMatrix(
 		const std::vector<Common::Point_f>& cloudBefore,
 		const std::vector<Common::Point_f>& cloudAfter,
@@ -16,5 +24,5 @@ namespace CoherentPointDrift
 		bool const_scale,
 		int maxIterations,
 		float tolerance,
-		FastGaussTransform::FGTType fgt);
+		Common::ApproximationType fgt);
 }

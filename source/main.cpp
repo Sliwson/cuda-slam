@@ -1,8 +1,8 @@
-#include "cuda.cuh"
+#include "cpdcuda.cuh"
 
 int main()
 {
 	NonIterativeCudaTest();
-	//CudaTest();
+	//CPDTest();
 	return 0;
 }

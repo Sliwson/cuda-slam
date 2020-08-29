@@ -3,6 +3,10 @@
 #include "_common.h"
 #include "common.h"
 
+#include <algorithm>
+#define _USE_MATH_DEFINES
+#include <math.h>
+
 #include <chrono>
 
 #include <glm/gtc/type_ptr.hpp>
@@ -16,6 +20,7 @@
 #include <thrust/sequence.h>
 #include <thrust/iterator/permutation_iterator.h>
 #include <thrust/transform_reduce.h>
+#include <thrust/functional.h>
 
 #include <cublas_v2.h>
 #include <cusolverDn.h>
@@ -24,7 +29,24 @@
 
 using namespace Common;
 
-glm::mat3 CreateGlmMatrix(float* squareMatrix);
+struct CudaSvdParams;
 
-void CudaTest();
-void NonIterativeCudaTest();
+namespace CUDACommon
+{
+	typedef thrust::device_vector<glm::vec3> GpuCloud;
+	typedef thrust::device_vector<int> IndexIterator;
+	typedef thrust::permutation_iterator<GpuCloud, IndexIterator> Permutation;	
+
+	__device__ float GetDistanceSquared(const glm::vec3& first, const glm::vec3& second);
+
+	thrust::host_vector<glm::vec3> CommonToThrustVector(const std::vector<Common::Point_f>& vec);
+	std::vector<Point_f> ThrustToCommonVector(const GpuCloud& vec);
+	glm::vec3 CalculateCentroid(const GpuCloud& vec);
+	void TransformCloud(const GpuCloud& vec, GpuCloud& out, const glm::mat4& transform);
+	float GetMeanSquaredError(const IndexIterator& permutation, const GpuCloud& before, const GpuCloud& after);
+	void GetAlignedCloud(const GpuCloud& source, GpuCloud& target);
+	void CuBlasMultiply(float* A, float* B, float* C, int size, CudaSvdParams& params);
+	glm::mat3 CreateGlmMatrix(float* squareMatrix);
+	glm::mat4 LeastSquaresSVD(const IndexIterator& permutation, const GpuCloud& before, const GpuCloud& after, GpuCloud& alignBefore, GpuCloud& alignAfter, CudaSvdParams params);
+	GpuCloud ApplyPermutation(const GpuCloud& inputCloud, IndexIterator permutation);
+}

@@ -11,8 +11,10 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="source\configparser.cpp" />
     <ClCompile Include="source\camera.cpp" />
     <ClCompile Include="source\common.cpp" />
+    <ClCompile Include="source\configuration.cpp" />
     <ClCompile Include="source\glad.c" />
     <ClCompile Include="source\Icosphere.cpp" />
     <ClCompile Include="source\loader.cpp" />
@@ -20,29 +22,36 @@
     <ClCompile Include="source\renderer.cpp" />
     <ClCompile Include="source\shader.cpp" />
     <ClCompile Include="source\shaderfactory.cpp" />
+    <ClCompile Include="source\testrunner.cpp" />
     <ClCompile Include="source\tests.cpp" />
+    <ClCompile Include="source\testset.cpp" />
     <ClCompile Include="source\testutils.cpp" />
     <ClCompile Include="source\timer.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="source\configparser.h" />
     <ClInclude Include="source\camera.h" />
-    <ClInclude Include="source\fgttype.h" />
+    <ClInclude Include="source\configuration.h" />
+    <ClInclude Include="source\enumerators.h" />
     <ClInclude Include="source\Icosphere.h" />
     <ClInclude Include="source\loader.h" />
     <ClInclude Include="source\moveablecamera.h" />
-    <ClInclude Include="source\noniterative_type.h" />
     <ClInclude Include="source\point.h" />
     <ClInclude Include="source\common.h" />
     <ClInclude Include="source\renderer.h" />
     <ClInclude Include="source\shader.h" />
     <ClInclude Include="source\shaderfactory.h" />
     <ClInclude Include="source\shadertype.h" />
+    <ClInclude Include="source\testrunner.h" />
     <ClInclude Include="source\tests.h" />
+    <ClInclude Include="source\testset.h" />
     <ClInclude Include="source\testutils.h" />
     <ClInclude Include="source\timer.h" />
     <ClInclude Include="source\_common.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="config\default.json" />
+    <None Include="config\schema.json" />
     <None Include="source\shaders\fragmentshader.frag" />
     <None Include="source\shaders\vertexshader.vert" />
   </ItemGroup>

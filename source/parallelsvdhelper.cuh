@@ -102,7 +102,7 @@ struct CudaParallelSvdHelper
 			error = cudaMemcpy(data, VT[i], 9 * sizeof(float), cudaMemcpyDeviceToHost);
 			assert(error == cudaSuccess);
 
-			result[i] = CreateGlmMatrix(data);
+			result[i] = CUDACommon::CreateGlmMatrix(data);
 		}
 		free(data);
 

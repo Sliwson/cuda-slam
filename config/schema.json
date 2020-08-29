@@ -1,0 +1,62 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema",
+  "type": "object",
+  "required": [ "before-path", "after-path", "method" ],
+  "properties": {
+    "before-path": {
+      "type": "string"
+    },
+    "after-path": {
+      "type": "string"
+    },
+    "method": {
+      "type": "string",
+      "enum": [ "icp", "nicp", "cpd" ]
+    },
+    "policy": {
+      "type": "string",
+      "enum": [ "sequential", "parallel" ]
+    },
+    "translation": {
+      "type": "array",
+      "minLength": 3,
+      "maxLength": 3,
+      "items": {
+        "type": "number"
+      }
+    },
+    "rotation": {
+      "type": "array",
+      "minLength": 9,
+      "maxLength": 9,
+      "items": {
+        "type": "number"
+      }
+    },
+    "translation-range": {
+      "type": "number"
+    },
+    "angle-range": {
+      "type": "number"
+    },
+    "max-iterations": {
+      "type": "integer"
+    },
+    "cloud-resize": {
+      "type": "integer"
+    },
+    "show-visualisation": {
+      "type": "boolean"
+    },
+    "max-distance-squared": {
+      "type": "number"
+    },
+    "nicp-type": {
+      "type": "string",
+      "enum": [ "none", "hybrid", "full" ]
+    }
+    "cpd-weight": {
+      "type": "number" 
+    }
+  }
+}
