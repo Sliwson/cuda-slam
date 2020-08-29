@@ -58,7 +58,7 @@ namespace NonIterative
 		const std::vector<Point_f>& cloudBefore,
 		const std::vector<Point_f>& cloudAfter,
 		Common::Configuration config,
-		int* iterations);
+		int* repetitions);
 
 	NonIterativeSlamResult GetSingleNonIterativeSlamResult(
 		const std::vector<Point_f>& cloudBefore,
@@ -67,6 +67,7 @@ namespace NonIterative
 	std::pair<glm::mat3, glm::vec3> GetNonIterativeTransformationMatrix(
 		const std::vector<Point_f>& cloudBefore, 
 		const std::vector<Point_f>& cloudAfter, 
+		int *repetitions,
 		float* error, 
 		float eps, 
 		int maxRepetitions, 
