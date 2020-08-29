@@ -17,9 +17,9 @@ namespace {
 		switch (configuration.ComputationMethod) {
 			case Common::ComputationMethod::Icp:
 				return BasicICP::CalculateICPWithConfiguration(before, after, configuration, iterations);
-			case Common::ComputationMethod::Cpd:
-				return NonIterative::CalculateNonIterativeWithConfiguration(before, after, configuration, iterations);
 			case Common::ComputationMethod::NoniterativeIcp:
+				return NonIterative::CalculateNonIterativeWithConfiguration(before, after, configuration, iterations);
+			case Common::ComputationMethod::Cpd:
 				return CoherentPointDrift::CalculateCpdWithConfiguration(before, after, configuration, iterations);
 			default:
 				assert(false); //unknown method
