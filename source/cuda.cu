@@ -1,9 +1,82 @@
 #include "cuda.cuh"
 #include "functors.cuh"
 #include "svdparams.cuh"
+#include "parallelsvdhelper.cuh"
 
 namespace CUDACommon
 {
+	const char* _cudaGetErrorEnum(cusolverStatus_t error)
+	{
+		switch (error)
+		{
+		case CUSOLVER_STATUS_SUCCESS:
+			return "CUSOLVER_SUCCESS";
+
+		case CUSOLVER_STATUS_NOT_INITIALIZED:
+			return "CUSOLVER_STATUS_NOT_INITIALIZED";
+
+		case CUSOLVER_STATUS_ALLOC_FAILED:
+			return "CUSOLVER_STATUS_ALLOC_FAILED";
+
+		case CUSOLVER_STATUS_INVALID_VALUE:
+			return "CUSOLVER_STATUS_INVALID_VALUE";
+
+		case CUSOLVER_STATUS_ARCH_MISMATCH:
+			return "CUSOLVER_STATUS_ARCH_MISMATCH";
+
+		case CUSOLVER_STATUS_EXECUTION_FAILED:
+			return "CUSOLVER_STATUS_EXECUTION_FAILED";
+
+		case CUSOLVER_STATUS_INTERNAL_ERROR:
+			return "CUSOLVER_STATUS_INTERNAL_ERROR";
+
+		case CUSOLVER_STATUS_MATRIX_TYPE_NOT_SUPPORTED:
+			return "CUSOLVER_STATUS_MATRIX_TYPE_NOT_SUPPORTED";
+
+		}
+
+		return "<unknown>";
+	}
+
+	inline void __cusolveSafeCall(cusolverStatus_t err, const char* file, const int line)
+	{
+		if (CUSOLVER_STATUS_SUCCESS != err) {
+			fprintf(stderr, "CUSOLVE error in file '%s', line %d\n %s\nerror %d: %s\nterminating!\n", __FILE__, __LINE__, err, \
+				_cudaGetErrorEnum(err)); \
+				cudaDeviceReset(); assert(0); \
+		}
+	}
+
+	extern "C" void cusolveSafeCall(cusolverStatus_t err) { __cusolveSafeCall(err, __FILE__, __LINE__); }
+
+	__device__ float GetDistanceSquared(const glm::vec3& first, const glm::vec3& second)
+	{
+		const auto d = second - first;
+		return d.x * d.x + d.y * d.y + d.z * d.z;
+	}
+
+	__global__ void FindCorrespondences(int* result, const glm::vec3* before, const glm::vec3* after, int beforeSize, int afterSize)
+	{
+		int targetIdx = blockDim.x * blockIdx.x + threadIdx.x;
+		if (targetIdx < beforeSize)
+		{
+			const glm::vec3 vector = before[targetIdx];
+			int nearestIdx = 0;
+			float smallestError = GetDistanceSquared(vector, after[0]);
+			for (int i = 1; i < afterSize; i++)
+			{
+				const auto dist = GetDistanceSquared(vector, after[i]);
+				if (dist < smallestError)
+				{
+					smallestError = dist;
+					nearestIdx = i;
+				}
+			}
+
+			result[targetIdx] = nearestIdx;
+		}
+	}
+
 	thrust::host_vector<glm::vec3> CommonToThrustVector(const std::vector<Common::Point_f>& vec)
 	{
 		thrust::host_vector<glm::vec3> hostCloud(vec.size());
@@ -33,12 +106,6 @@ namespace CUDACommon
 	{
 		const auto functor = Functors::MatrixTransform(transform);
 		thrust::transform(thrust::device, vec.begin(), vec.end(), out.begin(), functor);
-	}
-
-	__device__ float GetDistanceSquared(const glm::vec3& first, const glm::vec3& second)
-	{
-		const auto d = second - first;
-		return d.x * d.x + d.y * d.y + d.z * d.z;
 	}
 
 	float GetMeanSquaredError(const IndexIterator& permutation, const GpuCloud& before, const GpuCloud& after)
@@ -117,7 +184,7 @@ namespace CUDACommon
 		cudaMemcpy(params.multiplyResult, transposed, 9 * sizeof(float), cudaMemcpyHostToDevice);
 
 		//svd
-		cusolverDnSgesvd(params.solverHandle, 'A', 'A', 3, 3, params.multiplyResult, 3, params.S, params.U, 3, params.VT, 3, params.work, params.workSize, nullptr, params.devInfo);
+		cusolveSafeCall(cusolverDnSgesvd(params.solverHandle, 'A', 'A', params.m, params.n, params.multiplyResult, params.m, params.S, params.U, params.m, params.VT, params.n, params.work, params.workSize, nullptr, params.devInfo));
 		int svdResultInfo = 0;
 		cudaMemcpy(&svdResultInfo, params.devInfo, sizeof(int), cudaMemcpyDeviceToHost);
 		if (svdResultInfo != 0)
@@ -156,5 +223,41 @@ namespace CUDACommon
 		transformation[3][3] = 1.0f;
 
 		return transformation;
+	}
+
+	void ApplyPermutation(const GpuCloud& inputCloud, IndexIterator permutation, GpuCloud& outputCloud)
+	{
+		assert(outputCloud.size() == inputCloud.size());
+
+		int permutationSize = permutation.size();
+		if (permutationSize < inputCloud.size())
+		{
+			permutation.resize(inputCloud.size());
+			auto helperCountingIterator = thrust::make_counting_iterator(0);
+			thrust::copy(helperCountingIterator + permutationSize, helperCountingIterator + inputCloud.size(), permutation.begin() + permutationSize);
+		}
+
+		auto permutationIterBegin = thrust::make_permutation_iterator(inputCloud.begin(), permutation.begin());
+		auto permutationIterEnd = thrust::make_permutation_iterator(inputCloud.end(), permutation.end());
+		thrust::copy(permutationIterBegin, permutationIterEnd, outputCloud.begin());
+	}
+
+	void GetCorrespondingPoints(thrust::device_vector<int>& indices, const GpuCloud& before, const GpuCloud& after)
+	{
+#ifdef USE_CORRESPONDENCES_KERNEL
+		int* dIndices = thrust::raw_pointer_cast(indices.data());
+		const glm::vec3* dBefore = thrust::raw_pointer_cast(before.data());
+		const glm::vec3* dAfter = thrust::raw_pointer_cast(after.data());
+		int beforeSize = before.size();
+		int afterSize = after.size();
+
+		constexpr int threadsPerBlock = 256;
+		const int blocksPerGrid = (beforeSize + threadsPerBlock - 1) / threadsPerBlock;
+		FindCorrespondences << <blocksPerGrid, threadsPerBlock >> > (dIndices, dBefore, dAfter, beforeSize, afterSize);
+		cudaDeviceSynchronize();
+#else
+		const auto nearestFunctor = Functors::FindNearestIndex(after);
+		thrust::transform(thrust::device, before.begin(), before.end(), indices.begin(), nearestFunctor);
+#endif
 	}
 }

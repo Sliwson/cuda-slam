@@ -455,11 +455,11 @@ namespace Tests
 		//error = 1.0f;
 
 		timer.StartStage("non-iterative-ordered");
-		const auto orderedCalculatedTransform = NonIterative::GetNonIterativeTransformationMatrix(cloud, transformedCloud, &repetitionsOrdered, &errorOrdered, testEps, maxRepetitions, calculationType, subcloudSize);
+		const auto orderedCalculatedTransform = NonIterative::GetNonIterativeTransformationMatrix(cloud, transformedCloud, &repetitionsOrdered, &errorOrdered, testEps, maxRepetitions, calculationType, false, subcloudSize);
 		timer.StopStage("non-iterative-ordered");
 
 		timer.StartStage("non-iterative-permuted");
-		const auto permutedCalculatedTransform = NonIterative::GetNonIterativeTransformationMatrix(cloud, transformedPermutedCloud, &repetitionsPermuted, &errorPermuted, testEps, maxRepetitions, calculationType, subcloudSize);
+		const auto permutedCalculatedTransform = NonIterative::GetNonIterativeTransformationMatrix(cloud, transformedPermutedCloud, &repetitionsPermuted, &errorPermuted, testEps, maxRepetitions, calculationType, false, subcloudSize);
 		timer.StopStage("non-iterative-permuted");
 
 		printf("\nTransform Matrix\n");
@@ -467,10 +467,12 @@ namespace Tests
 
 		printf("\nResult matrix (for ordered test case)\n");
 		PrintMatrix(orderedCalculatedTransform.first, orderedCalculatedTransform.second);
+		printf("Repetitions: %d\n", repetitionsOrdered);
 		printf("Error: %f\n", errorOrdered);
 
 		printf("\nResult matrix (for permuted test case)\n");
 		PrintMatrix(permutedCalculatedTransform.first, permutedCalculatedTransform.second);
+		printf("Repetitions: %d\n", repetitionsPermuted);
 		printf("Error: %f\n", errorPermuted);
 
 		printf("\n");

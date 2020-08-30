@@ -92,7 +92,34 @@ Various modifications have been proposed to this algorithm (such as sampling poi
 \subsection{Coherent Point Drift}
 
 \section{Program architecture}
-Short description on the modules of the system, requirements, dependencies, etc.
+%Short description on the modules of the system, requirements, dependencies, etc.
+\subsection{Project structure}
+The solution consists of three projects:
+\begin{itemize}
+\item \textit{common} - static library project, contains all elements that are shared between cpu and gpu implementations.
+\item \textit{cpu-slam} - executable project, contains implementation of slam methods for cpu and cpu main.
+\item \textit{gpu-slam} - executable project, contains implementaion of slam methods for gpu and gpu main.
+\end{itemize}
+
+\subsection{Modules}
+The project is constructed using several modules:
+\begin{itemize}
+\item \textit{Renderer} - implemented in \textit{common} project. Capable of rendering point clouds in different colors. Can be used multiple times in one executable launch. Widely using for results visualisation.
+\item \textit{CloudLoader} - implemented in \textit{common} project. Module responsible for loading .obj point clouds.
+\item \textit{Configuration} - implemented in \textit{common} project. Module representing configuration, tightly coupled with \textit{ConfigParser} which allows loading configuration from .json files.
+\item \textit{TestRunner} - implemented in \textit{common} project. Module used to define and run benchmarks.
+\item \textit{Algorithms} - implemented in \textit{cuda-slam} as well as \textit{cpu-slam}. Each algorithm is implemented in separate file as a global function in appropriate namespace. Some operations that are common for cpu as well as gpu are implemented in \textit{common} project.
+\end{itemize}
+
+\subsection{Dependencies}
+\begin{itemize}
+\item \textit{Assimp} - for cloud loading.
+\item \textit{Eigen} - for cpu matrix operations.
+\item \textit{Glad} - wrapper for OpenGL.
+\item \textit{GLFW} - for window system.
+\item \textit{Nlohmann/json} - for configuration parsing.
+\item \textit{CuBLAS} - for gpu matrix operations.
+\end{itemize}
 
 \section{Input data description}
 %File formats, api used to read, dependencies, data sources, etc.
