@@ -63,23 +63,27 @@ CudaParallelSvdHelper::CudaParallelSvdHelper(int batchSize, int m, int n, bool u
 		error = cudaMalloc(&(work[i]), workSize[i] * sizeof(float));
 		assert(error == cudaSuccess);
 	}
+
+	dataMatrixVT = (float*)malloc(n * n * sizeof(float));
 }
 
-void CudaParallelSvdHelper::RunSVD(const thrust::host_vector<float*>& sourceMatrices)
+void CudaParallelSvdHelper::RunSVD(const thrust::host_vector<float*>& sourceMatrices, int threadsToRun)
 {
+	threadsNumber = threadsToRun == -1 ? batchSize : threadsToRun;
+
 	const auto thread_work = [&](int index) {
 		auto status = cusolverDnSgesvd(solverHandles[index], 'N', 'A', m, n, sourceMatrices[index], m, S[index], U[index], m, VT[index], n, work[index], workSize[index], nullptr, info[index]);
 		assert(status == CUSOLVER_STATUS_SUCCESS);
 	};
 
-	std::vector<std::thread> workerThreads(batchSize);
+	std::vector<std::thread> workerThreads(threadsNumber);
 
 	// SVD needs to be launched from separated threads to take full advantage of CUDA streams
-	for (int j = 0; j < batchSize; j++)
+	for (int j = 0; j < threadsNumber; j++)
 		workerThreads[j] = std::thread(thread_work, j);
 
 	// Wait for threads to finish
-	for (int j = 0; j < batchSize; j++)
+	for (int j = 0; j < threadsNumber; j++)
 		workerThreads[j].join();
 
 	error = cudaDeviceSynchronize();
@@ -88,19 +92,17 @@ void CudaParallelSvdHelper::RunSVD(const thrust::host_vector<float*>& sourceMatr
 
 thrust::host_vector<glm::mat3> CudaParallelSvdHelper::GetHostMatricesVT()
 {
-	thrust::host_vector<glm::mat3> result(batchSize);
+	thrust::host_vector<glm::mat3> result(threadsNumber);
 
-	float* data = (float*)malloc(n * n * sizeof(float));
-	for (int i = 0; i < batchSize; i++)
+	for (int i = 0; i < threadsNumber; i++)
 	{
 		// Use V^T matrix instead of U as we pass transposed matrix to cusolver
 		// A = U * S * V => A^T = V^T * S^T * U^T => U(A^T)  = V^T (more or less :) )
-		error = cudaMemcpy(data, VT[i], 9 * sizeof(float), cudaMemcpyDeviceToHost);
+		error = cudaMemcpy(dataMatrixVT, VT[i], 9 * sizeof(float), cudaMemcpyDeviceToHost);
 		assert(error == cudaSuccess);
 
-		result[i] = CUDACommon::CreateGlmMatrix(data);
+		result[i] = CUDACommon::CreateGlmMatrix(dataMatrixVT);
 	}
-	free(data);
 
 	return result;
 }
@@ -130,4 +132,6 @@ void CudaParallelSvdHelper::FreeMemory()
 		if (info[i])
 			cudaFree(info[i]);
 	}
+
+	free(dataMatrixVT);
 }

@@ -20,5 +20,6 @@
     <ClInclude Include="source\icpcuda.cuh" />
     <ClInclude Include="source\parallelsvdhelper.cuh" />
     <ClInclude Include="source\nicpcuda.cuh" />
+    <ClInclude Include="source\nicpslamargs.cuh" />
   </ItemGroup>
 </Project>

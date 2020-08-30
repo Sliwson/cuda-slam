@@ -39,6 +39,7 @@
     <ClInclude Include="source\functors.cuh" />
     <ClInclude Include="source\icpcuda.cuh" />
     <ClInclude Include="source\nicpcuda.cuh" />
+    <ClInclude Include="source\nicpslamargs.cuh" />
     <ClInclude Include="source\parallelsvdhelper.cuh" />
     <ClInclude Include="source\svdparams.cuh" />
   </ItemGroup>

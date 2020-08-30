@@ -48,6 +48,6 @@ namespace CUDACommon
 	void CuBlasMultiply(float* A, float* B, float* C, int size, CudaSvdParams& params);
 	glm::mat3 CreateGlmMatrix(float* squareMatrix);
 	glm::mat4 LeastSquaresSVD(const IndexIterator& permutation, const GpuCloud& before, const GpuCloud& after, GpuCloud& alignBefore, GpuCloud& alignAfter, CudaSvdParams params);
-	GpuCloud ApplyPermutation(const GpuCloud& inputCloud, IndexIterator permutation);
+	void ApplyPermutation(const GpuCloud& inputCloud, IndexIterator permutation, GpuCloud& outputCloud);
 	void GetCorrespondingPoints(thrust::device_vector<int>& indices, const GpuCloud& before, const GpuCloud& after);
 }

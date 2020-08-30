@@ -181,9 +181,9 @@ namespace CUDACommon
 		return transformation;
 	}
 
-	GpuCloud ApplyPermutation(const GpuCloud& inputCloud, IndexIterator permutation)
+	void ApplyPermutation(const GpuCloud& inputCloud, IndexIterator permutation, GpuCloud& outputCloud)
 	{
-		GpuCloud outputCloud(inputCloud.size());
+		outputCloud.resize(inputCloud.size());
 
 		int permutationSize = permutation.size();
 		if (permutationSize < inputCloud.size())
@@ -196,8 +196,6 @@ namespace CUDACommon
 		auto permutationIterBegin = thrust::make_permutation_iterator(inputCloud.begin(), permutation.begin());
 		auto permutationIterEnd = thrust::make_permutation_iterator(inputCloud.end(), permutation.end());
 		thrust::copy(permutationIterBegin, permutationIterEnd, outputCloud.begin());
-
-		return outputCloud;
 	}
 
 	void GetCorrespondingPoints(thrust::device_vector<int>& indices, const GpuCloud& before, const GpuCloud& after)

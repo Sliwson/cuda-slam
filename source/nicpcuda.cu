@@ -1,30 +1,15 @@
 #include "nicpcuda.cuh"
 #include "functors.cuh"
-#include "parallelsvdhelper.cuh"
 #include "nicputils.h"
+#include "nicpslamargs.cuh"
 
 using namespace CUDACommon;
 
 namespace
 {
-	void PrepareMatricesForParallelSVD(const GpuCloud& cloudBefore, const GpuCloud& cloudAfter, int batchSize, thrust::host_vector<float*>& outputBefore, thrust::host_vector<float*>& outputAfter)
+	void PrepareMatricesForParallelSVD(const GpuCloud& cloudBefore, const GpuCloud& cloudAfter, int batchSize, NonIterativeSLAMArgs &args)
 	{
 		int cloudSize = std::min(cloudBefore.size(), cloudAfter.size());
-
-		outputBefore.resize(batchSize);
-		outputAfter.resize(batchSize);
-		for (int i = 0; i < batchSize; i++)
-		{
-			cudaMalloc(&(outputBefore[i]), 3 * cloudBefore.size() * sizeof(float));
-			cudaMalloc(&(outputAfter[i]), 3 * cloudAfter.size() * sizeof(float));
-		}
-
-		GpuCloud alignBefore(cloudBefore.size());
-		GpuCloud alignAfter(cloudAfter.size());
-
-		// Align array
-		GetAlignedCloud(cloudBefore, alignBefore);
-		GetAlignedCloud(cloudAfter, alignAfter);
 
 		for (int i = 0; i < batchSize; i++)
 		{
@@ -32,54 +17,37 @@ namespace
 			std::vector<int> h_permutation = GetRandomPermutationVector(cloudSize);
 			IndexIterator d_permutation(h_permutation.size());
 			thrust::copy(h_permutation.begin(), h_permutation.end(), d_permutation.begin());
-			auto permutedBefore = ApplyPermutation(alignBefore, d_permutation);
-			auto permutedAfter = ApplyPermutation(alignAfter, d_permutation);
+			ApplyPermutation(args.alignedCloudBefore, d_permutation, args.permutedCloudBefore);
+			ApplyPermutation(args.alignedCloudAfter, d_permutation, args.permutedCloudAfter);
 
 			// Create counting iterators
 			auto beforeCountingBegin = thrust::make_counting_iterator<int>(0);
-			auto beforeCountingEnd = thrust::make_counting_iterator<int>(permutedBefore.size());
+			auto beforeCountingEnd = thrust::make_counting_iterator<int>(args.permutedCloudBefore.size());
 			auto afterCountingBegin = thrust::make_counting_iterator<int>(0);
-			auto afterCountingEnd = thrust::make_counting_iterator<int>(permutedAfter.size());
+			auto afterCountingEnd = thrust::make_counting_iterator<int>(args.permutedCloudAfter.size());
 
 			// Create array for SVD
-			const auto beforeZipBegin = thrust::make_zip_iterator(thrust::make_tuple(beforeCountingBegin, permutedBefore.begin()));
-			const auto beforeZipEnd = thrust::make_zip_iterator(thrust::make_tuple(beforeCountingEnd, permutedBefore.end()));
-			auto convertBefore = Functors::GlmToCuBlas(true, permutedBefore.size(), outputBefore[i]);
+			const auto beforeZipBegin = thrust::make_zip_iterator(thrust::make_tuple(beforeCountingBegin, args.permutedCloudBefore.begin()));
+			const auto beforeZipEnd = thrust::make_zip_iterator(thrust::make_tuple(beforeCountingEnd, args.permutedCloudBefore.end()));
+			auto convertBefore = Functors::GlmToCuBlas(true, args.permutedCloudBefore.size(), args.preparedBeforeClouds[i]);
 			thrust::for_each(thrust::device, beforeZipBegin, beforeZipEnd, convertBefore);
-			const auto afterZipBegin = thrust::make_zip_iterator(thrust::make_tuple(afterCountingBegin, permutedAfter.begin()));
-			const auto afterZipEnd = thrust::make_zip_iterator(thrust::make_tuple(afterCountingEnd, permutedAfter.end()));
-			auto convertAfter = Functors::GlmToCuBlas(true, permutedAfter.size(), outputAfter[i]);
+			const auto afterZipBegin = thrust::make_zip_iterator(thrust::make_tuple(afterCountingBegin, args.permutedCloudAfter.begin()));
+			const auto afterZipEnd = thrust::make_zip_iterator(thrust::make_tuple(afterCountingEnd, args.permutedCloudAfter.end()));
+			auto convertAfter = Functors::GlmToCuBlas(true, args.permutedCloudAfter.size(), args.preparedAfterClouds[i]);
 			thrust::for_each(thrust::device, afterZipBegin, afterZipEnd, convertAfter);
 		}
 	}
 
-	void GetSVDResultParallel(const GpuCloud& cloudBefore, const GpuCloud& cloudAfter, int batchSize, thrust::host_vector<glm::mat3>& outputBefore, thrust::host_vector<glm::mat3>& outputAfter)
+	void GetSVDResultParallel(const GpuCloud& cloudBefore, const GpuCloud& cloudAfter, int batchSize, NonIterativeSLAMArgs &args, thrust::host_vector<glm::mat3>& outputBefore, thrust::host_vector<glm::mat3>& outputAfter)
 	{
-		thrust::host_vector<float*> preparedBefore;
-		thrust::host_vector<float*> preparedAfter;
-
-		PrepareMatricesForParallelSVD(cloudBefore, cloudAfter, batchSize, preparedBefore, preparedAfter);
+		PrepareMatricesForParallelSVD(cloudBefore, cloudAfter, batchSize, args);
 
 		// Run SVD for cloud before
-		CudaParallelSvdHelper svdBefore(batchSize, cloudBefore.size(), 3, false);
-		svdBefore.RunSVD(preparedBefore);
-		outputBefore = svdBefore.GetHostMatricesVT();
-		svdBefore.FreeMemory();
+		args.svdHelperBefore.RunSVD(args.preparedBeforeClouds, batchSize);
+		outputBefore = args.svdHelperBefore.GetHostMatricesVT();
 
-		// Run SVD for cloud after
-		CudaParallelSvdHelper svdAfter(batchSize, cloudAfter.size(), 3, false);
-		svdAfter.RunSVD(preparedAfter);
-		outputAfter = svdAfter.GetHostMatricesVT();
-		svdAfter.FreeMemory();
-
-		for (int i = 0; i < batchSize; i++)
-		{
-			if (preparedBefore[i])
-				cudaFree(preparedBefore[i]);
-
-			if (preparedAfter[i])
-				cudaFree(preparedAfter[i]);
-		}
+		args.svdHelperAfter.RunSVD(args.preparedAfterClouds, batchSize);
+		outputAfter = args.svdHelperAfter.GetHostMatricesVT();
 	}
 
 	void GetSubcloud(const GpuCloud& cloud, int subcloudSize, GpuCloud &outputSubcloud)
@@ -125,6 +93,8 @@ namespace
 		thrust::counting_iterator<int> helperIterator(0);
 		thrust::copy(helperIterator, helperIterator + before.size(), nonPermutedIndices.begin());
 
+		NonIterativeSLAMArgs args(batchSize, before, after);
+
 		auto centroidBefore = CalculateCentroid(before);
 		auto centroidAfter = CalculateCentroid(after);
 
@@ -139,7 +109,7 @@ namespace
 					break;
 			}
 
-			GetSVDResultParallel(before, after, threadsToRun, matricesBefore, matricesAfter);
+			GetSVDResultParallel(before, after, threadsToRun, args, matricesBefore, matricesAfter);
 			*repetitions += threadsToRun;
 
 			for (int j = 0; j < threadsToRun; j++)
@@ -165,6 +135,7 @@ namespace
 						{
 							printf("Error: %f\n", minError);
 							*repetitions = i;
+							args.Free();
 							return currentTransformation;
 						}
 					}
@@ -197,6 +168,7 @@ namespace
 
 					if (minError <= eps)
 					{
+						args.Free();
 						return bestTransformation;
 					}
 				}
@@ -204,6 +176,7 @@ namespace
 		}
 
 		*error = minError;
+		args.Free();
 		return bestTransformation;
 	}
 }
@@ -222,7 +195,7 @@ void NonIterativeCudaTest()
 	const auto testCorrupted = LoadCloud("data/bunny.obj");
 	int repetitions;
 	float error;
-	const int maxRepetitions = 20;
+	const int maxRepetitions = 22;
 	const int subcloudSize = 1000;
 	const float eps = 1e-5;
 	const int cpuThreadsCount = (int)std::thread::hardware_concurrency();
