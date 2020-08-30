@@ -5,7 +5,7 @@
 
 namespace CUDACommon
 {
-	static const char* _cudaGetErrorEnum(cusolverStatus_t error)
+	const char* _cudaGetErrorEnum(cusolverStatus_t error)
 	{
 		switch (error)
 		{
@@ -227,7 +227,7 @@ namespace CUDACommon
 
 	void ApplyPermutation(const GpuCloud& inputCloud, IndexIterator permutation, GpuCloud& outputCloud)
 	{
-		outputCloud.resize(inputCloud.size());
+		assert(outputCloud.size() == inputCloud.size());
 
 		int permutationSize = permutation.size();
 		if (permutationSize < inputCloud.size())
