@@ -31,6 +31,7 @@
     <ClCompile Include="source\configuration.cpp" />
     <ClCompile Include="source\testrunner.cpp" />
     <ClCompile Include="source\testset.cpp" />
+    <ClCompile Include="source\nicputils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\loader.h" />
@@ -66,6 +67,7 @@
     <ClInclude Include="source\enumerators.h" />
     <ClInclude Include="source\testrunner.h" />
     <ClInclude Include="source\testset.h" />
+    <ClInclude Include="source\nicputils.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="GUI">

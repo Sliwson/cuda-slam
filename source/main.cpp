@@ -1,7 +1,9 @@
 #include "cpdcuda.cuh"
+#include "nicpcuda.cuh"
 
 int main()
 {
-	CPDTest();
+	NonIterativeCudaTest();
+	//CPDTest();
 	return 0;
 }

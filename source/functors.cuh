@@ -110,3 +110,4 @@ namespace Functors
 		float denominator = 0.f;
 	};
 }
+
