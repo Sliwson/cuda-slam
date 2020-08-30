@@ -27,6 +27,5 @@ struct CudaParallelSvdHelper
 	thrust::host_vector<float*> work;
 	thrust::host_vector<int*> info;
 
-	cudaError_t error = cudaSuccess;
 	cusolverStatus_t cusolverStatus = CUSOLVER_STATUS_SUCCESS;
 };

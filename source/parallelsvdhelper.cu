@@ -6,15 +6,13 @@ CudaParallelSvdHelper::CudaParallelSvdHelper(int batchSize, int m, int n, bool u
 	info.resize(batchSize);
 	for (int i = 0; i < batchSize; i++)
 	{
-		error = cudaMalloc(&(info[i]), sizeof(int));
-		assert(error == cudaSuccess);
+		checkCudaErrors(cudaMalloc((void**)&(info[i]), sizeof(int)));
 	}
 
 	S.resize(batchSize);
 	for (int i = 0; i < batchSize; i++)
 	{
-		error = cudaMalloc(&(S[i]), n * n * sizeof(float));
-		assert(error == cudaSuccess);
+		checkCudaErrors(cudaMalloc((void**)&(S[i]), n * n * sizeof(float)));
 	}
 
 	VT.resize(batchSize);
@@ -22,8 +20,7 @@ CudaParallelSvdHelper::CudaParallelSvdHelper(int batchSize, int m, int n, bool u
 	{
 		for (int i = 0; i < batchSize; i++)
 		{
-			error = cudaMalloc(&(VT[i]), n * n * sizeof(float));
-			assert(error == cudaSuccess);
+			checkCudaErrors(cudaMalloc((void**)&(VT[i]), n * n * sizeof(float)));
 		}
 	}
 
@@ -32,8 +29,7 @@ CudaParallelSvdHelper::CudaParallelSvdHelper(int batchSize, int m, int n, bool u
 	{
 		for (int i = 0; i < batchSize; i++)
 		{
-			error = cudaMalloc(&(U[i]), m * m * sizeof(float));
-			assert(error == cudaSuccess);
+			checkCudaErrors(cudaMalloc((void**)&(U[i]), m * m * sizeof(float)));
 		}
 	}
 
@@ -45,8 +41,7 @@ CudaParallelSvdHelper::CudaParallelSvdHelper(int batchSize, int m, int n, bool u
 		cusolverStatus = cusolverDnCreate(&(solverHandles[i]));
 		assert(cusolverStatus == CUSOLVER_STATUS_SUCCESS);
 
-		error = cudaStreamCreateWithFlags(&(streams[i]), cudaStreamNonBlocking);
-		assert(error == cudaSuccess);
+		checkCudaErrors(cudaStreamCreateWithFlags(&(streams[i]), cudaStreamNonBlocking));
 
 		cusolverStatus = cusolverDnSetStream(solverHandles[i], streams[i]);
 		assert(cusolverStatus == CUSOLVER_STATUS_SUCCESS);
@@ -60,8 +55,7 @@ CudaParallelSvdHelper::CudaParallelSvdHelper(int batchSize, int m, int n, bool u
 		cusolverStatus = cusolverDnSgesvd_bufferSize(solverHandles[i], m, n, &(workSize[i]));
 		assert(cusolverStatus == CUSOLVER_STATUS_SUCCESS);
 
-		error = cudaMalloc(&(work[i]), workSize[i] * sizeof(float));
-		assert(error == cudaSuccess);
+		checkCudaErrors(cudaMalloc((void**)&(work[i]), workSize[i] * sizeof(float)));
 	}
 
 	dataMatrixVT = (float*)malloc(n * n * sizeof(float));
@@ -86,8 +80,7 @@ void CudaParallelSvdHelper::RunSVD(const thrust::host_vector<float*>& sourceMatr
 	for (int j = 0; j < threadsNumber; j++)
 		workerThreads[j].join();
 
-	error = cudaDeviceSynchronize();
-	assert(error == cudaSuccess);
+	checkCudaErrors(cudaDeviceSynchronize());
 }
 
 thrust::host_vector<glm::mat3> CudaParallelSvdHelper::GetHostMatricesVT()
@@ -98,9 +91,7 @@ thrust::host_vector<glm::mat3> CudaParallelSvdHelper::GetHostMatricesVT()
 	{
 		// Use V^T matrix instead of U as we pass transposed matrix to cusolver
 		// A = U * S * V => A^T = V^T * S^T * U^T => U(A^T)  = V^T (more or less :) )
-		error = cudaMemcpy(dataMatrixVT, VT[i], 9 * sizeof(float), cudaMemcpyDeviceToHost);
-		assert(error == cudaSuccess);
-
+		checkCudaErrors(cudaMemcpy(dataMatrixVT, VT[i], 9 * sizeof(float), cudaMemcpyDeviceToHost));
 		result[i] = CUDACommon::CreateGlmMatrix(dataMatrixVT);
 	}
 

@@ -22,6 +22,7 @@
 #include <thrust/transform_reduce.h>
 #include <thrust/functional.h>
 
+#include <helper_cuda.h>
 #include <cublas_v2.h>
 #include <cusolverDn.h>
 
