@@ -59,79 +59,128 @@ namespace NonIterative
 		return NonIterativeSlamResult(rotationMatrix, translationVector, error);
 	}
 
-	std::pair<glm::mat3, glm::vec3> GetNonIterativeTransformationMatrixParallel(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, int *repetitions, float* error, float eps, int maxRepetitions, const ApproximationType& calculationType, int subcloudSize)
+	std::pair<glm::mat3, glm::vec3> GetNonIterativeTransformationMatrixParallel(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, int *repetitions, float* error, float eps, int maxRepetitions, int batchSize, const ApproximationType& calculationType, int subcloudSize)
 	{
+		int cloudSize = std::min(cloudBefore.size(), cloudAfter.size());
+		if (maxRepetitions == -1)
+			maxRepetitions = 20;
+
+		// Split number of repetitions to batches
+		auto batchesCount = maxRepetitions / batchSize;
+		auto lastBatchSize = maxRepetitions % batchSize;
+		auto threadsToRun = batchSize;
+
 		std::pair<glm::mat3, glm::vec3> bestTransformation;
-		
-		//TODO: implement
-		/*float minError = std::numeric_limits<float>::max();
+		float minError = std::numeric_limits<float>::max();
 
 		// Get subcloud for comparison
-		if (subcloudSize == -1)
-			subcloudSize = cloudBefore.size();
-
-		std::vector<int> subcloudIndices = GetRandomPermutationVector(subcloudSize);
-		std::vector<Point_f>subcloudVertices = GetSubcloud(cloudBefore, subcloudIndices);
+		std::vector<Point_f>subcloudVertices = GetSubcloud(cloudBefore, subcloudSize);
 		const float maxDistanceForComparison = 1e6;
-		*repetitions = maxRepetitions;
 
-		const auto threadCount = std::thread::hardware_concurrency();
-		
-		const auto work_thread = [&](float* error, glm::mat3* rotation, glm::vec3* translation) {
-			const auto permutationBefore = GetRandomPermutationVector(cloudBefore.size());
-			const auto permutationAfter = GetRandomPermutationVector(cloudAfter.size());
-			const auto permutedBefore = ApplyPermutation(cloudBefore, permutationBefore);
-			const auto permutedAfter = ApplyPermutation(cloudAfter, permutationAfter);
-		};
-
-		
 		// Run NonIterative SLAM for multiple permutations and return the best fit
 		std::vector<NonIterativeSlamResult> bestResults;
-		for (int i = 0; i < maxRepetitions; i++)
-		{
 
-			NonIterativeSlamResult transformationResult = GetSingleNonIterativeSlamResult(permutedBefore, permutedAfter);
-			*error = transformationResult.getApproximatedError();
+		std::vector<std::thread> threads(batchSize);
+		std::vector<NonIterativeSlamResult> transformationResults(batchSize);
+		std::vector<float> errors(batchSize);
+
+		const auto slam_thread_work = [&](int index) {
+			const auto permutation = GetRandomPermutationVector(cloudSize);
+			const auto permutedBefore = ApplyPermutation(cloudBefore, permutation);
+			const auto permutedAfter = ApplyPermutation(cloudAfter, permutation);
+
+			const auto transformationResult = GetSingleNonIterativeSlamResult(permutedBefore, permutedAfter);
+			errors[index] = transformationResults[index].getApproximatedError();
+
 			// If not using approximation, calculate error for selected subcloud
 			if (calculationType == ApproximationType::None)
 			{
 				std::vector<Point_f> transformedSubcloud = GetTransformedCloud(subcloudVertices, transformationResult.getRotationMatrix(), transformationResult.getTranslationVector());
 				CorrespondingPointsTuple correspondingPoints = GetCorrespondingPoints(transformedSubcloud, permutedAfter, maxDistanceForComparison, true);
-				*error = GetMeanSquaredError(std::get<0>(correspondingPoints), std::get<1>(correspondingPoints));
+				errors[index] = GetMeanSquaredError(std::get<0>(correspondingPoints), std::get<1>(correspondingPoints));
+			}
 
-				if (*error < minError)
+			transformationResults[index] = transformationResult;
+		};
+
+		for (int i = 0; i <= batchesCount; i++)
+		{
+			if (i == batchesCount)
+			{
+				if (lastBatchSize != 0)
+					threadsToRun = lastBatchSize;
+				else
+					break;
+			}
+
+			for (int j = 0; j < threadsToRun; j++)
+			{
+				threads[j] = std::thread(slam_thread_work, j);
+			}
+			
+			for (int j = 0; j < threadsToRun; j++)
+			{
+				threads[j].join();
+
+				*error = errors[j];
+
+				// If not using approximation, calculate error for selected subcloud
+				if (calculationType == ApproximationType::None)
 				{
-					minError = *error;
-					bestTransformation = transformationResult.getTransformation();
-
-					if (minError <= eps)
+					if (*error < minError)
 					{
-						return bestTransformation;
+						minError = *error;
+						bestTransformation = transformationResults[j].getTransformation();
+
+						if (minError <= eps)
+						{
+							*repetitions = i;
+							return bestTransformation;
+						}
 					}
 				}
-			}
-			// If using hybrid approximation, select 5 best fits for further analysis
-			else if (calculationType == ApproximationType::Hybrid)
-			{
-				StoreResultIfOptimal(bestResults, transformationResult, 5);
-			}
-			// If using full approximation, select the best result for further error calculation
-			else if(calculationType == ApproximationType::Full)
-			{
-				StoreResultIfOptimal(bestResults, transformationResult, 1);
+				// If using hybrid approximation, select 5 best fits for further analysis
+				else if (calculationType == ApproximationType::Hybrid)
+				{
+					StoreResultIfOptimal(bestResults, transformationResults[j], 5);
+				}
+				// If using full approximation, select the best result for further error calculation
+				else if (calculationType == ApproximationType::Full)
+				{
+					StoreResultIfOptimal(bestResults, transformationResults[j], 1);
+				}
 			}
 		}
 
+		std::vector<float> exactErrors(bestResults.size());
+		const auto get_exact_error = [&](int index) {
+			std::vector<Point_f> transformedSubcloud = GetTransformedCloud(subcloudVertices, bestResults[index].getRotationMatrix(), bestResults[index].getTranslationVector());
+			CorrespondingPointsTuple correspondingPoints = GetCorrespondingPoints(transformedSubcloud, cloudAfter, maxDistanceForComparison, true);
+			exactErrors[index] = GetMeanSquaredError(std::get<0>(correspondingPoints), std::get<1>(correspondingPoints));
+		};
+
 		// If using hybrid approximation, select best result
-		// If using full approximation, calculate exact error for the best result
-		if (calculationType != ApproximationType::None)
+		if (calculationType == ApproximationType::Full)
+		{
+			get_exact_error(0);
+
+			*error = exactErrors[0];
+			return bestResults[0].getTransformation();
+		}
+		else if (calculationType == ApproximationType::Hybrid)
 		{
 			minError = std::numeric_limits<float>::max();
+			std::vector<std::thread> errorThreads(bestResults.size());
+
 			for (int i = 0; i < bestResults.size(); i++)
 			{
-				std::vector<Point_f> transformedSubcloud = GetTransformedCloud(subcloudVertices, bestResults[i].getRotationMatrix(), bestResults[i].getTranslationVector());
-				CorrespondingPointsTuple correspondingPoints = GetCorrespondingPoints(transformedSubcloud, bestResults[i].getCloudAfter(), maxDistanceForComparison, true);
-				*error = GetMeanSquaredError(std::get<0>(correspondingPoints), std::get<1>(correspondingPoints));
+				errorThreads[i] = std::thread(get_exact_error, i);
+			}
+			
+			for (int i = 0; i < bestResults.size(); i++)
+			{
+				errorThreads[i].join();
+				*error = exactErrors[i];
 
 				if (*error < minError)
 				{
@@ -146,7 +195,7 @@ namespace NonIterative
 			}
 		}
 
-		*error = minError; */
+		*error = minError;
 		return bestTransformation;
 	}
 
@@ -235,7 +284,7 @@ namespace NonIterative
 	std::pair<glm::mat3, glm::vec3> GetNonIterativeTransformationMatrix(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, int *repetitions, float* error, float eps, int maxRepetitions, const ApproximationType& calculationType, bool parallel, int subcloudSize)
 	{
 		if (parallel)
-			return GetNonIterativeTransformationMatrixParallel(cloudBefore, cloudAfter, repetitions, error, eps, maxRepetitions, calculationType, subcloudSize);
+			return GetNonIterativeTransformationMatrixParallel(cloudBefore, cloudAfter, repetitions, error, eps, maxRepetitions, (int)std::thread::hardware_concurrency(), calculationType, subcloudSize);
 		else
 			return GetNonIterativeTransformationMatrixSequential(cloudBefore, cloudAfter, repetitions, error, eps, maxRepetitions, calculationType, subcloudSize);
 	}
