@@ -1,6 +1,6 @@
 #pragma once
 
-#include "_common.h"
+#include "common.h"
 
 namespace Common
 {
@@ -15,7 +15,7 @@ namespace Common
 		glm::vec3 getTranslationVector() const { return translationVector; }
 		float getApproximatedError() const { return approximatedError; }
 		std::pair<glm::mat3, glm::vec3> getTransformation() const { return std::make_pair(rotationMatrix, translationVector); }
-		glm::mat4 getTransformationMatrix() const { auto result = glm::mat4(rotationMatrix); result[3] = glm::vec4(translationVector, 1.f); return result; }
+		glm::mat4 getTransformationMatrix() const { return ConvertToTransformationMatrix(rotationMatrix, translationVector); }
 
 	private:
 		glm::mat3 rotationMatrix;

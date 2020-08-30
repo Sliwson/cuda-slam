@@ -109,15 +109,5 @@ namespace Functors
 		glm::vec3* px;
 		float denominator = 0.f;
 	};
-
-	struct Permutation : thrust::unary_function<int, glm::vec3>
-	{
-		Permutation(const thrust::device_vector<glm::vec3>& sourceCloud);
-
-		__device__ __host__ glm::vec3 operator()(const int& index);
-
-	private:
-		const glm::vec3* sourceCloud;
-	};
 }
 

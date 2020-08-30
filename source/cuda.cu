@@ -193,8 +193,9 @@ namespace CUDACommon
 			thrust::copy(helperCountingIterator + permutationSize, helperCountingIterator + inputCloud.size(), permutation.begin() + permutationSize);
 		}
 
-		const auto applyPermutationFunctor = Functors::Permutation(inputCloud);
-		thrust::transform(thrust::device, permutation.begin(), permutation.end(), outputCloud.begin(), applyPermutationFunctor);
+		auto permutationIterBegin = thrust::make_permutation_iterator(inputCloud.begin(), permutation.begin());
+		auto permutationIterEnd = thrust::make_permutation_iterator(inputCloud.end(), permutation.end());
+		thrust::copy(permutationIterBegin, permutationIterEnd, outputCloud.begin());
 
 		return outputCloud;
 	}

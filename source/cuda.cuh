@@ -35,7 +35,6 @@ namespace CUDACommon
 {
 	typedef thrust::device_vector<glm::vec3> GpuCloud;
 	typedef thrust::device_vector<int> IndexIterator;
-	typedef thrust::permutation_iterator<GpuCloud, IndexIterator> Permutation;	
 
 	__device__ float GetDistanceSquared(const glm::vec3& first, const glm::vec3& second);
 	__global__ void FindCorrespondences(int* result, const glm::vec3* before, const glm::vec3* after, int beforeSize, int afterSize);

@@ -82,43 +82,53 @@ namespace
 		}
 	}
 
-	GpuCloud GetSubcloud(const GpuCloud& cloud, int subcloudSize)
+	void GetSubcloud(const GpuCloud& cloud, int subcloudSize, GpuCloud &outputSubcloud)
 	{
 		if (subcloudSize >= cloud.size())
-			return cloud;
-		std::vector<int> subcloudIndices = GetRandomPermutationVector(cloud.size());
-		subcloudIndices.resize(subcloudSize);
-		thrust::device_vector<int> indices(subcloudIndices);
+			outputSubcloud = cloud;
 
-		GpuCloud subcloud(subcloudIndices.size());
-		const auto getSubcloudFunctor = Functors::Permutation(cloud);
-		thrust::transform(thrust::device, indices.begin(), indices.end(), subcloud.begin(), getSubcloudFunctor);
+		outputSubcloud.resize(subcloudSize);
 
-		return subcloud;
+		std::vector<int> h_indices = GetRandomPermutationVector(cloud.size());
+		h_indices.resize(subcloudSize);
+		thrust::device_vector<int> d_indices(h_indices);
+
+		auto permutationIterBegin = thrust::make_permutation_iterator(cloud.begin(), d_indices.begin());
+		auto permutationIterEnd = thrust::make_permutation_iterator(cloud.end(), d_indices.end());
+		thrust::copy(permutationIterBegin, permutationIterEnd, outputSubcloud.begin());
 	}
 
-	glm::mat4 CudaNonIterative(const GpuCloud& before, const GpuCloud& after, int* repetitions, float* error, float eps, int maxRepetitions, int batchSize, const ApproximationType& approximationType, const int subcloudSize)
+	std::pair<glm::mat3, glm::vec3> CudaNonIterative(const GpuCloud& before, const GpuCloud& after, int* repetitions, float* error, float eps, int maxRepetitions, int batchSize, const ApproximationType& approximationType, const int subcloudSize)
 	{
-		auto minError = std::numeric_limits<float>::max();
+		// Set the number of results to store - 1 for Full, 5 for Hybrid, unused for None
 		auto resultsNumber = approximationType == ApproximationType::Full ? 1 : 5;
-		glm::mat4 bestTransformation(1.0f);
-		glm::mat4 currentTransformation(1.0f);
-		std::vector<NonIterativeSlamResult> bestResults(resultsNumber);
+		
+		// Prepare stuctures for storing transformation results for subsequent executions
+		std::pair<glm::mat3, glm::vec3> bestTransformation;
+		std::pair<glm::mat3, glm::vec3> currentTransformation;
 		thrust::host_vector<glm::mat3> matricesBefore(batchSize);
 		thrust::host_vector<glm::mat3> matricesAfter(batchSize);
+		std::vector<NonIterativeSlamResult> bestResults(resultsNumber);
 
+		// Split number of repetitions to batches
 		auto batchesCount = maxRepetitions / batchSize;
 		auto lastBatchSize = maxRepetitions % batchSize;
 		auto threadsToRun = batchSize;
 
+		// Prepare helper structures
+		auto minError = *error = std::numeric_limits<float>::max();
+		GpuCloud subcloud(subcloudSize);
+		GpuCloud transformedSubcloud(subcloudSize);
+		GetSubcloud(before, subcloudSize, subcloud);
+		thrust::device_vector<int> permutedIndices(subcloudSize);
+		thrust::device_vector<int> nonPermutedIndices(before.size());
+		thrust::counting_iterator<int> helperIterator(0);
+		thrust::copy(helperIterator, helperIterator + before.size(), nonPermutedIndices.begin());
+
 		auto centroidBefore = CalculateCentroid(before);
 		auto centroidAfter = CalculateCentroid(after);
 
-		*error = std::numeric_limits<float>::max();
-		const auto subcloud = GetSubcloud(before, subcloudSize);
-		GpuCloud workingSubcloud(subcloudSize);
-		thrust::device_vector<int> indices(subcloudSize);
-
+		// Run actual SLAM in batches
 		for (int i = 0; i <= batchesCount; i++)
 		{
 			if (i == batchesCount)
@@ -136,26 +146,15 @@ namespace
 			{
 				glm::mat3 rotationMatrix = matricesAfter[j] * glm::transpose(matricesBefore[j]);
 				glm::vec3 translationVector = centroidAfter - (rotationMatrix * centroidBefore);
-				currentTransformation = glm::mat4(rotationMatrix);
-				currentTransformation[3] = glm::vec4(translationVector, 1.f);
+				currentTransformation = std::make_pair(rotationMatrix, translationVector);
 
-				// Get error without finding correspondences - quick and efficient for poorly permuted clouds
-				// Used for Full approximation and partially for Hybrid
-				if (approximationType != ApproximationType::None)
+				// If using approximation, get error without finding correspondences - quick and efficient for poorly permuted clouds
+				// Do find correspondences if using approximationType == None
+				if (approximationType == ApproximationType::None)
 				{
-					thrust::device_vector<int> nonPermutedIndices(before.size());
-					thrust::counting_iterator<int> helperIterator(0);
-					thrust::copy(helperIterator, helperIterator + before.size(), nonPermutedIndices.begin());
-					*error = GetMeanSquaredError(nonPermutedIndices, before, after);
-
-					NonIterativeSlamResult transformationResult(rotationMatrix, translationVector, *error);
-					StoreResultIfOptimal(bestResults, transformationResult, resultsNumber);
-				}
-				else
-				{
-					TransformCloud(subcloud, workingSubcloud, currentTransformation);
-					GetCorrespondingPoints(indices, workingSubcloud, after);
-					*error = GetMeanSquaredError(indices, workingSubcloud, after);
+					TransformCloud(subcloud, transformedSubcloud, ConvertToTransformationMatrix(currentTransformation.first, currentTransformation.second));
+					GetCorrespondingPoints(permutedIndices, transformedSubcloud, after);
+					*error = GetMeanSquaredError(permutedIndices, transformedSubcloud, after);
 
 					if (*error < minError)
 					{
@@ -170,6 +169,13 @@ namespace
 						}
 					}
 				}
+				else
+				{
+					*error = GetMeanSquaredError(nonPermutedIndices, before, after);
+
+					NonIterativeSlamResult transformationResult(rotationMatrix, translationVector, *error);
+					StoreResultIfOptimal(bestResults, transformationResult, resultsNumber);
+				}
 			}
 		}
 
@@ -180,14 +186,14 @@ namespace
 			minError = std::numeric_limits<float>::max();
 			for (int i = 0; i < bestResults.size(); i++)
 			{
-				TransformCloud(subcloud, workingSubcloud, bestResults[i].getTransformationMatrix());
-				GetCorrespondingPoints(indices, workingSubcloud, after);
-				*error = GetMeanSquaredError(indices, workingSubcloud, after);
+				TransformCloud(subcloud, transformedSubcloud, bestResults[i].getTransformationMatrix());
+				GetCorrespondingPoints(permutedIndices, transformedSubcloud, after);
+				*error = GetMeanSquaredError(permutedIndices, transformedSubcloud, after);
 
 				if (*error < minError)
 				{
 					minError = *error;
-					bestTransformation = bestResults[i].getTransformationMatrix();
+					bestTransformation = bestResults[i].getTransformation();
 
 					if (minError <= eps)
 					{
@@ -255,7 +261,7 @@ void NonIterativeCudaTest()
 	auto stop = std::chrono::high_resolution_clock::now();
 	printf("Size: %d points, duration: %dms\n", testCloud.size(), std::chrono::duration_cast<std::chrono::milliseconds>(stop - start));
 
-	TransformCloud(deviceCloudBefore, calculatedCloud, result);
+	TransformCloud(deviceCloudBefore, calculatedCloud, ConvertToTransformationMatrix(result.first, result.second));
 
 	Common::Renderer renderer(
 		Common::ShaderType::SimpleModel,

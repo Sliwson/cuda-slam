@@ -157,14 +157,4 @@ namespace Functors
 			px[index] += cloudBeforeItem * value;
 		}
 	}
-
-	Permutation::Permutation(const thrust::device_vector<glm::vec3>& sourceCloud)
-	{
-		this->sourceCloud = thrust::raw_pointer_cast(sourceCloud.data());
-	}
-
-	__device__ __host__ glm::vec3 Permutation::operator()(const int& index)
-	{
-		return sourceCloud[index];
-	}
 }
