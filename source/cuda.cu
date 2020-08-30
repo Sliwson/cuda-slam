@@ -2,6 +2,8 @@
 #include "functors.cuh"
 #include "svdparams.cuh"
 
+using namespace Common;
+
 namespace CUDACommon
 {
 	void PrintVector(thrust::host_vector<float> vector)

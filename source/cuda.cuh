@@ -29,8 +29,6 @@
 
 #define USE_CORRESPONDENCES_KERNEL
 
-using namespace Common;
-
 struct CudaSvdParams;
 
 namespace CUDACommon
@@ -44,7 +42,7 @@ namespace CUDACommon
 	void PrintVector(thrust::device_vector<float> vector);
 	void PrintVector(thrust::device_vector<glm::vec3> vector);
 	thrust::host_vector<glm::vec3> CommonToThrustVector(const std::vector<Common::Point_f>& vec);
-	std::vector<Point_f> ThrustToCommonVector(const Cloud& vec);
+	std::vector<Common::Point_f> ThrustToCommonVector(const Cloud& vec);
 	glm::vec3 CalculateCentroid(const Cloud& vec);
 	void TransformCloud(const Cloud& vec, Cloud& out, const glm::mat4& transform);
 	__device__ float GetDistanceSquared(const glm::vec3& first, const glm::vec3& second);
