@@ -5,6 +5,50 @@
 
 namespace CUDACommon
 {
+	static const char* _cudaGetErrorEnum(cusolverStatus_t error)
+	{
+		switch (error)
+		{
+		case CUSOLVER_STATUS_SUCCESS:
+			return "CUSOLVER_SUCCESS";
+
+		case CUSOLVER_STATUS_NOT_INITIALIZED:
+			return "CUSOLVER_STATUS_NOT_INITIALIZED";
+
+		case CUSOLVER_STATUS_ALLOC_FAILED:
+			return "CUSOLVER_STATUS_ALLOC_FAILED";
+
+		case CUSOLVER_STATUS_INVALID_VALUE:
+			return "CUSOLVER_STATUS_INVALID_VALUE";
+
+		case CUSOLVER_STATUS_ARCH_MISMATCH:
+			return "CUSOLVER_STATUS_ARCH_MISMATCH";
+
+		case CUSOLVER_STATUS_EXECUTION_FAILED:
+			return "CUSOLVER_STATUS_EXECUTION_FAILED";
+
+		case CUSOLVER_STATUS_INTERNAL_ERROR:
+			return "CUSOLVER_STATUS_INTERNAL_ERROR";
+
+		case CUSOLVER_STATUS_MATRIX_TYPE_NOT_SUPPORTED:
+			return "CUSOLVER_STATUS_MATRIX_TYPE_NOT_SUPPORTED";
+
+		}
+
+		return "<unknown>";
+	}
+
+	inline void __cusolveSafeCall(cusolverStatus_t err, const char* file, const int line)
+	{
+		if (CUSOLVER_STATUS_SUCCESS != err) {
+			fprintf(stderr, "CUSOLVE error in file '%s', line %d\n %s\nerror %d: %s\nterminating!\n", __FILE__, __LINE__, err, \
+				_cudaGetErrorEnum(err)); \
+				cudaDeviceReset(); assert(0); \
+		}
+	}
+
+	extern "C" void cusolveSafeCall(cusolverStatus_t err) { __cusolveSafeCall(err, __FILE__, __LINE__); }
+
 	__device__ float GetDistanceSquared(const glm::vec3& first, const glm::vec3& second)
 	{
 		const auto d = second - first;
@@ -140,7 +184,7 @@ namespace CUDACommon
 		cudaMemcpy(params.multiplyResult, transposed, 9 * sizeof(float), cudaMemcpyHostToDevice);
 
 		//svd
-		cusolverDnSgesvd(params.solverHandle, 'A', 'A', params.m, params.n, params.multiplyResult, params.m, params.S, params.U, params.m, params.VT, params.n, params.work, params.workSize, nullptr, params.devInfo);
+		cusolveSafeCall(cusolverDnSgesvd(params.solverHandle, 'A', 'A', params.m, params.n, params.multiplyResult, params.m, params.S, params.U, params.m, params.VT, params.n, params.work, params.workSize, nullptr, params.devInfo));
 		int svdResultInfo = 0;
 		cudaMemcpy(&svdResultInfo, params.devInfo, sizeof(int), cudaMemcpyDeviceToHost);
 		if (svdResultInfo != 0)

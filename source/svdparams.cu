@@ -1,39 +1,41 @@
 #include "svdparams.cuh"
 
+using namespace CUDACommon;
+
 CudaSvdParams::CudaSvdParams(int beforeLength, int afterLength, int m, int n, bool useMatrixU, bool useMatrixV)
 	:m(m), n(n), useMatrixU(useMatrixU), useMatrixV(useMatrixV)
 {
-	cudaMalloc(&workBefore, beforeLength * n * sizeof(float));
-	cudaMalloc(&workAfter, afterLength * n * sizeof(float));
-	cudaMalloc(&multiplyResult, n * m * sizeof(float));
+	checkCudaErrors(cudaMalloc((void**)&workBefore, beforeLength * n * sizeof(float)));
+	checkCudaErrors(cudaMalloc((void**)&workAfter, afterLength * n * sizeof(float)));
+	checkCudaErrors(cudaMalloc((void**)&multiplyResult, n * m * sizeof(float)));
 	cublasCreate(&multiplyHandle);
 
-	cudaMalloc(&devInfo, sizeof(int));
-	cudaMalloc(&S, n * n * sizeof(float));
+	checkCudaErrors(cudaMalloc((void**)&devInfo, sizeof(int)));
+	checkCudaErrors(cudaMalloc((void**)&S, n * n * sizeof(float)));
 	if (useMatrixV)
-		cudaMalloc(&VT, n * n * sizeof(float));
+		checkCudaErrors(cudaMalloc((void**)&VT, n * n * sizeof(float)));
 	if (useMatrixU)
-		cudaMalloc(&U, m * m * sizeof(float));
-	cusolverDnCreate(&solverHandle);
+		checkCudaErrors(cudaMalloc((void**)&U, m * m * sizeof(float)));
+	cusolveSafeCall(cusolverDnCreate(&solverHandle));
 
-	cusolverDnSgesvd_bufferSize(solverHandle, m, n, &workSize);
+	cusolveSafeCall(cusolverDnSgesvd_bufferSize(solverHandle, m, n, &workSize));
 
-	cudaMalloc(&work, workSize * sizeof(float));
+	checkCudaErrors(cudaMalloc((void**)&work, workSize * sizeof(float)));
 }
 
 void CudaSvdParams::Free()
 {
-	cudaFree(workBefore);
-	cudaFree(workAfter);
-	cudaFree(multiplyResult);
+	checkCudaErrors(cudaFree(workBefore));
+	checkCudaErrors(cudaFree(workAfter));
+	checkCudaErrors(cudaFree(multiplyResult));
 	cublasDestroy(multiplyHandle);
 
-	cudaFree(work);
-	cudaFree(devInfo);
-	cudaFree(S);
+	checkCudaErrors(cudaFree(work));
+	checkCudaErrors(cudaFree(devInfo));
+	checkCudaErrors(cudaFree(S));
 	if (useMatrixV)
-		cudaFree(VT);
+		checkCudaErrors(cudaFree(VT));
 	if (useMatrixU)
-		cudaFree(U);
-	cusolverDnDestroy(solverHandle);
+		checkCudaErrors(cudaFree(U));
+	cusolveSafeCall(cusolverDnDestroy(solverHandle));
 }

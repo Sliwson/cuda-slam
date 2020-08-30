@@ -1,5 +1,7 @@
 #include "parallelsvdhelper.cuh"
 
+using namespace CUDACommon;
+
 CudaParallelSvdHelper::CudaParallelSvdHelper(int batchSize, int m, int n, bool useMatrixU, bool useMatrixV)
 	:batchSize(batchSize), m(m), n(n), useMatrixU(useMatrixU), useMatrixV(useMatrixV)
 {
@@ -38,13 +40,9 @@ CudaParallelSvdHelper::CudaParallelSvdHelper(int batchSize, int m, int n, bool u
 	streams.resize(batchSize);
 	for (int i = 0; i < batchSize; i++)
 	{
-		cusolverStatus = cusolverDnCreate(&(solverHandles[i]));
-		assert(cusolverStatus == CUSOLVER_STATUS_SUCCESS);
-
+		cusolveSafeCall(cusolverDnCreate(&(solverHandles[i])));
 		checkCudaErrors(cudaStreamCreateWithFlags(&(streams[i]), cudaStreamNonBlocking));
-
-		cusolverStatus = cusolverDnSetStream(solverHandles[i], streams[i]);
-		assert(cusolverStatus == CUSOLVER_STATUS_SUCCESS);
+		cusolveSafeCall(cusolverDnSetStream(solverHandles[i], streams[i]));
 	}
 
 	// Allocate memory for SVD work
@@ -52,9 +50,7 @@ CudaParallelSvdHelper::CudaParallelSvdHelper(int batchSize, int m, int n, bool u
 	workSize.resize(batchSize);
 	for (int i = 0; i < batchSize; i++)
 	{
-		cusolverStatus = cusolverDnSgesvd_bufferSize(solverHandles[i], m, n, &(workSize[i]));
-		assert(cusolverStatus == CUSOLVER_STATUS_SUCCESS);
-
+		cusolveSafeCall(cusolverDnSgesvd_bufferSize(solverHandles[i], m, n, &(workSize[i])));
 		checkCudaErrors(cudaMalloc((void**)&(work[i]), workSize[i] * sizeof(float)));
 	}
 
@@ -66,8 +62,7 @@ void CudaParallelSvdHelper::RunSVD(const thrust::host_vector<float*>& sourceMatr
 	threadsNumber = threadsToRun == -1 ? batchSize : threadsToRun;
 
 	const auto thread_work = [&](int index) {
-		auto status = cusolverDnSgesvd(solverHandles[index], 'N', 'A', m, n, sourceMatrices[index], m, S[index], U[index], m, VT[index], n, work[index], workSize[index], nullptr, info[index]);
-		assert(status == CUSOLVER_STATUS_SUCCESS);
+		cusolveSafeCall(cusolverDnSgesvd(solverHandles[index], 'N', 'A', m, n, sourceMatrices[index], m, S[index], U[index], m, VT[index], n, work[index], workSize[index], nullptr, info[index]));
 	};
 
 	std::vector<std::thread> workerThreads(threadsNumber);
@@ -103,25 +98,25 @@ void CudaParallelSvdHelper::FreeMemory()
 	for (int i = 0; i < batchSize; i++)
 	{
 		if (streams[i])
-			cudaStreamDestroy(streams[i]);
+			checkCudaErrors(cudaStreamDestroy(streams[i]));
 
 		if (solverHandles[i])
-			cusolverDnDestroy(solverHandles[i]);
+			cusolveSafeCall(cusolverDnDestroy(solverHandles[i]));
 
 		if (work[i])
-			cudaFree(work[i]);
+			checkCudaErrors(cudaFree(work[i]));
 
 		if (S[i])
-			cudaFree(S[i]);
+			checkCudaErrors(cudaFree(S[i]));
 
 		if (VT[i])
-			cudaFree(VT[i]);
+			checkCudaErrors(cudaFree(VT[i]));
 
 		if (U[i])
-			cudaFree(U[i]);
+			checkCudaErrors(cudaFree(U[i]));
 
 		if (info[i])
-			cudaFree(info[i]);
+			checkCudaErrors(cudaFree(info[i]));
 	}
 
 	free(dataMatrixVT);

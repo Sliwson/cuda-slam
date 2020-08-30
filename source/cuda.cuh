@@ -34,6 +34,8 @@ struct CudaSvdParams;
 
 namespace CUDACommon
 {
+	extern "C" void cusolveSafeCall(cusolverStatus_t);
+
 	typedef thrust::device_vector<glm::vec3> GpuCloud;
 	typedef thrust::device_vector<int> IndexIterator;
 
