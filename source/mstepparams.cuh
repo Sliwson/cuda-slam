@@ -14,9 +14,9 @@ namespace MStepParams
 			cudaMalloc((void**)&centerBefore, 3 * sizeof(float));
 			cudaMalloc((void**)&centerAfter, 3 * sizeof(float));
 			cudaMalloc((void**)&AMatrix, 9 * sizeof(float));
-			cudaMalloc((void**)&px, 3 * afterLength * sizeof(float));
+			cudaMalloc((void**)&px, 3 * beforeLength * sizeof(float));
 			cudaMalloc((void**)&afterTxPX, 9 * sizeof(float));
-			cudaMalloc((void**)&centerBeforexCenterAfter, 9 * sizeof(float));
+			cudaMalloc((void**)&centerAfterxCenterBefore, 9 * sizeof(float));
 
 			p1 = thrust::raw_pointer_cast(probabilities.p1.data());
 			pt1 = thrust::raw_pointer_cast(probabilities.pt1.data());
@@ -42,7 +42,7 @@ namespace MStepParams
 			cudaFree(AMatrix);
 			cudaFree(px);
 			cudaFree(afterTxPX);
-			cudaFree(centerBeforexCenterAfter);
+			cudaFree(centerAfterxCenterBefore);
 
 			cublasDestroy(multiplyHandle);
 
@@ -63,7 +63,7 @@ namespace MStepParams
 		const float* pt1 = nullptr;
 		float* px = nullptr;
 		float* afterTxPX = nullptr;
-		float* centerBeforexCenterAfter = nullptr;
+		float* centerAfterxCenterBefore = nullptr;
 
 		cublasHandle_t multiplyHandle = nullptr;
 

@@ -174,28 +174,28 @@ namespace
 		float* sigmaSquared)
 	{
 		const float alpha = 1.f, beta = 0.f;
-		const int beforeSize = cloudAfter.size();
-		const int afterSize = cloudBefore.size();
+		const int beforeSize = cloudBefore.size();
+		const int afterSize = cloudAfter.size();		
 		const float Np = thrust::reduce(thrust::device, probabilities.p1.begin(), probabilities.p1.end(), 0.0f, thrust::plus<float>());
 		const float InvertedNp = 1.0f / Np;
 
 		//create array beforeT
 		auto countingBeforeBegin = thrust::make_counting_iterator<int>(0);
 		auto countingBeforeEnd = thrust::make_counting_iterator<int>(beforeSize);
-		auto zipBeforeBegin = thrust::make_zip_iterator(thrust::make_tuple(countingBeforeBegin, cloudAfter.begin()));
-		auto zipBeforeEnd = thrust::make_zip_iterator(thrust::make_tuple(countingBeforeEnd, cloudAfter.end()));
-
-		auto convertBefore = Functors::GlmToCuBlas(false, beforeSize, params.beforeT);
-		thrust::for_each(thrust::device, zipBeforeBegin, zipBeforeEnd, convertBefore);
+		auto zipBeforeBegin = thrust::make_zip_iterator(thrust::make_tuple(countingBeforeBegin, cloudBefore.begin()));
+		auto zipBeforeEnd = thrust::make_zip_iterator(thrust::make_tuple(countingBeforeEnd, cloudBefore.end()));
 
 		//create array afterT
 		auto countingAfterBegin = thrust::make_counting_iterator<int>(0);
 		auto countingAfterEnd = thrust::make_counting_iterator<int>(afterSize);
-		auto zipAfterBegin = thrust::make_zip_iterator(thrust::make_tuple(countingAfterBegin, cloudBefore.begin()));
-		auto zipAfterEnd = thrust::make_zip_iterator(thrust::make_tuple(countingAfterEnd, cloudBefore.end()));
+		auto zipAfterBegin = thrust::make_zip_iterator(thrust::make_tuple(countingAfterBegin, cloudAfter.begin()));
+		auto zipAfterEnd = thrust::make_zip_iterator(thrust::make_tuple(countingAfterEnd, cloudAfter.end()));
 
 		auto convertAfter = Functors::GlmToCuBlas(false, afterSize, params.afterT);
-		thrust::for_each(thrust::device, zipAfterBegin, zipAfterEnd, convertAfter);
+		thrust::for_each(thrust::device, zipAfterBegin, zipAfterEnd, convertAfter);		
+
+		auto convertBefore = Functors::GlmToCuBlas(false, beforeSize, params.beforeT);
+		thrust::for_each(thrust::device, zipBeforeBegin, zipBeforeEnd, convertBefore);
 
 		//create array px
 		auto countingPXBegin = thrust::make_counting_iterator<int>(0);
@@ -206,16 +206,16 @@ namespace
 		auto convertPX = Functors::GlmToCuBlas(true, probabilities.px.size(), params.px);
 		thrust::for_each(thrust::device, zipPXBegin, zipPXEnd, convertPX);
 
-		cublasSgemv(params.multiplyHandle, CUBLAS_OP_N, 3, beforeSize, &InvertedNp, params.beforeT, 3, params.pt1, 1, &beta, params.centerBefore, 1);
+		cublasSgemv(params.multiplyHandle, CUBLAS_OP_N, 3, beforeSize, &InvertedNp, params.beforeT, 3, params.p1, 1, &beta, params.centerBefore, 1);
 
-		cublasSgemv(params.multiplyHandle, CUBLAS_OP_N, 3, afterSize, &InvertedNp, params.afterT, 3, params.p1, 1, &beta, params.centerAfter, 1);
+		cublasSgemv(params.multiplyHandle, CUBLAS_OP_N, 3, afterSize, &InvertedNp, params.afterT, 3, params.pt1, 1, &beta, params.centerAfter, 1);
 
-		cublasSgemm(params.multiplyHandle, CUBLAS_OP_N, CUBLAS_OP_N, 3, 3, afterSize, &alpha, params.afterT, 3, params.px, afterSize, &beta, params.afterTxPX, 3);
+		cublasSgemm(params.multiplyHandle, CUBLAS_OP_N, CUBLAS_OP_N, 3, 3, beforeSize, &alpha, params.beforeT, 3, params.px, beforeSize, &beta, params.afterTxPX, 3);
 
-		cublasSgemm(params.multiplyHandle, CUBLAS_OP_N, CUBLAS_OP_T, 3, 3, 1, &Np, params.centerBefore, 3, params.centerAfter, 3, &beta, params.centerBeforexCenterAfter, 3);
+		cublasSgemm(params.multiplyHandle, CUBLAS_OP_N, CUBLAS_OP_T, 3, 3, 1, &Np, params.centerAfter, 3, params.centerBefore, 3, &beta, params.centerAfterxCenterBefore, 3);
 
 		float minus = -1.0f;
-		cublasSgeam(params.multiplyHandle, CUBLAS_OP_T, CUBLAS_OP_N, 3, 3, &alpha, params.afterTxPX, 3, &minus, params.centerBeforexCenterAfter, 3, params.AMatrix, 3);
+		cublasSgeam(params.multiplyHandle, CUBLAS_OP_T, CUBLAS_OP_N, 3, 3, &alpha, params.afterTxPX, 3, &minus, params.centerAfterxCenterBefore, 3, params.AMatrix, 3);
 
 		//TODO: try jacobi svd
 		//SVD
@@ -250,34 +250,34 @@ namespace
 		const float scaleNumerator = scaleNumeratorMatrix[0][0] + scaleNumeratorMatrix[1][1] + scaleNumeratorMatrix[2][2];
 
 		auto countingSigmaSubtrahendBegin = thrust::make_counting_iterator<int>(0);
-		auto countingSigmaSubtrahendEnd = thrust::make_counting_iterator<int>(3 * beforeSize);
-		auto zipSigmaSubtrahendBegin = thrust::make_zip_iterator(thrust::make_tuple(countingSigmaSubtrahendBegin, params.beforeT));
-		auto zipSigmaSubtrahendEnd = thrust::make_zip_iterator(thrust::make_tuple(countingSigmaSubtrahendEnd, params.beforeT + 3 * beforeSize));
+		auto countingSigmaSubtrahendEnd = thrust::make_counting_iterator<int>(3 * afterSize);
+		auto zipSigmaSubtrahendBegin = thrust::make_zip_iterator(thrust::make_tuple(countingSigmaSubtrahendBegin, params.afterT));
+		auto zipSigmaSubtrahendEnd = thrust::make_zip_iterator(thrust::make_tuple(countingSigmaSubtrahendEnd, params.afterT + 3 * afterSize));
 
 		auto calculateSigmaSubtrahend = Functors::CalculateSigmaSubtrahend(params.pt1);
 
-		thrust::transform(thrust::device, zipSigmaSubtrahendBegin, zipSigmaSubtrahendEnd, params.beforeT, calculateSigmaSubtrahend);
-		float sigmaSubtrahend = thrust::reduce(thrust::device, params.beforeT, params.beforeT + 3 * beforeSize, 0.0f, thrust::plus<float>());
+		thrust::transform(thrust::device, zipSigmaSubtrahendBegin, zipSigmaSubtrahendEnd, params.afterT, calculateSigmaSubtrahend);
+		float sigmaSubtrahend = thrust::reduce(thrust::device, params.afterT, params.afterT + 3 * afterSize, 0.0f, thrust::plus<float>());
 
 		auto countingScaleDenominatorBegin = thrust::make_counting_iterator<int>(0);
-		auto countingScaleDenominatorEnd = thrust::make_counting_iterator<int>(3 * afterSize);
-		auto zipScaleDenominatorBegin = thrust::make_zip_iterator(thrust::make_tuple(countingScaleDenominatorBegin, params.afterT));
-		auto zipScaleDenominatorEnd = thrust::make_zip_iterator(thrust::make_tuple(countingScaleDenominatorEnd, params.afterT + 3 * afterSize));
+		auto countingScaleDenominatorEnd = thrust::make_counting_iterator<int>(3 * beforeSize);
+		auto zipScaleDenominatorBegin = thrust::make_zip_iterator(thrust::make_tuple(countingScaleDenominatorBegin, params.beforeT));
+		auto zipScaleDenominatorEnd = thrust::make_zip_iterator(thrust::make_tuple(countingScaleDenominatorEnd, params.beforeT + 3 * beforeSize));
 
 		auto calculateScaleDenominator = Functors::CalculateSigmaSubtrahend(params.p1);
 
-		thrust::transform(thrust::device, zipScaleDenominatorBegin, zipScaleDenominatorEnd, params.afterT, calculateScaleDenominator);
-		float scaleDenominator = thrust::reduce(thrust::device, params.afterT, params.afterT + 3 * afterSize, 0.0f, thrust::plus<float>());
+		thrust::transform(thrust::device, zipScaleDenominatorBegin, zipScaleDenominatorEnd, params.beforeT, calculateScaleDenominator);
+		float scaleDenominator = thrust::reduce(thrust::device, params.beforeT, params.beforeT + 3 * beforeSize, 0.0f, thrust::plus<float>());
 
 		float hostCenterBefore[3], hostCenterAfter[3];
 		cudaMemcpy(hostCenterBefore, params.centerBefore, 3 * sizeof(float), cudaMemcpyDeviceToHost);
-		cudaMemcpy(hostCenterAfter, params.centerAfter, 3 * sizeof(float), cudaMemcpyDeviceToHost);
+		cudaMemcpy(hostCenterAfter, params.centerAfter, 3 * sizeof(float), cudaMemcpyDeviceToHost);		
 
 		auto glmCenterBefore = glm::make_vec3(hostCenterBefore);
-		auto glmCenterAfter = glm::make_vec3(hostCenterAfter);
+		auto glmCenterAfter = glm::make_vec3(hostCenterAfter);		
 
-		sigmaSubtrahend -= Np * glm::dot(glmCenterBefore, glmCenterBefore);
-		scaleDenominator -= Np * glm::dot(glmCenterAfter, glmCenterAfter);
+		sigmaSubtrahend -= Np * glm::dot(glmCenterAfter, glmCenterAfter);
+		scaleDenominator -= Np * glm::dot(glmCenterBefore, glmCenterBefore);
 
 		if (const_scale == false)
 		{
@@ -289,7 +289,7 @@ namespace
 			*sigmaSquared = (InvertedNp * std::abs(sigmaSubtrahend + scaleDenominator - 2 * scaleNumerator)) / (float)DIMENSION;
 		}
 
-		*translationVector = glmCenterBefore - (*scale) * (*rotationMatrix) * glmCenterAfter;
+		*translationVector = glmCenterAfter - (*scale) * (*rotationMatrix) * glmCenterBefore;
 	}
 
 	glm::mat4 CudaCPD(
@@ -357,10 +357,10 @@ void CPDTest()
 	const char* objectPath = "data/bunny.obj";
 	int pointCount = -1;
 	float testEps = 1e-4f;
-	float weight = 0.1f;
+	float weight = 0.0f;
 	bool const_scale = false;
 	const int max_iterations = 50;
-	Common::ApproximationType fgt = Common::ApproximationType::Hybrid;
+	Common::ApproximationType fgt = Common::ApproximationType::None;
 
 	//reading data from terminal
 	//

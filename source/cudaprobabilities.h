@@ -8,11 +8,11 @@ namespace CUDAProbabilities
 	{
 		Probabilities(const int& cloudBeforeSize, const int& cloudAfterSize)
 		{
-			p1 = thrust::device_vector<float>(cloudAfterSize);
-			pt1 = thrust::device_vector<float>(cloudBeforeSize);//UWAGA tu zmieniam xd
-			px = thrust::device_vector<glm::vec3>(cloudAfterSize);
-			p = thrust::device_vector<float>(cloudAfterSize);
-			tmp = thrust::device_vector<float>(cloudAfterSize);
+			p1 = thrust::device_vector<float>(cloudBeforeSize);
+			pt1 = thrust::device_vector<float>(cloudAfterSize);
+			px = thrust::device_vector<glm::vec3>(cloudBeforeSize);
+			p = thrust::device_vector<float>(cloudBeforeSize);
+			tmp = thrust::device_vector<float>(cloudBeforeSize);
 			error = 0.0f;
 		}
 
