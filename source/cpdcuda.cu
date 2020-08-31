@@ -13,8 +13,6 @@ using namespace MStepParams;
 
 namespace
 {
-	//typedef thrust::device_vector<glm::vec3> Cloud;
-
 	float CalculateSigmaSquared(const Cloud& cloudBefore, const Cloud& cloudAfter);
 	void ComputePMatrix(
 		const Cloud& cloudBefore,
@@ -84,11 +82,6 @@ namespace
 		float truncate)
 	{
 		const float multiplier = -0.5f / sigmaSquared;
-		/*thrust::device_vector<float> p(cloudTransformed.size());
-		thrust::device_vector<float> p1(cloudTransformed.size());
-		thrust::device_vector<float> pt1(cloudBefore.size());
-		thrust::device_vector<glm::vec3> px(cloudTransformed.size());
-		thrust::device_vector<float> tmp(cloudTransformed.size());*/
 
 		thrust::fill(thrust::device, probabilities.p1.begin(), probabilities.p1.end(), 0.0f);
 		thrust::fill(thrust::device, probabilities.px.begin(), probabilities.px.end(), glm::vec3(0.0f));
@@ -96,14 +89,8 @@ namespace
 		thrust::counting_iterator<int> idxfirst = thrust::make_counting_iterator<int>(0);
 		thrust::counting_iterator<int> idxlast = thrust::make_counting_iterator<int>(cloudTransformed.size());
 
-		////maybe use auto instead of this
-		//thrust::zip_iterator<thrust::tuple<Cloud::iterator, thrust::counting_iterator<int>>> cloudTransformed_first = thrust::make_zip_iterator(thrust::make_tuple(cloudTransformed.begin(), idxfirst));
 		auto cloudTransformed_first = thrust::make_zip_iterator<>(thrust::make_tuple(cloudTransformed.begin(), idxfirst));
 		auto cloudTransformed_last = thrust::make_zip_iterator(thrust::make_tuple(cloudTransformed.end(), idxlast));
-		//thrust::zip_iterator<thrust::tuple<Cloud::iterator, thrust::counting_iterator<int>>> cloudTransformed_last = thrust::make_zip_iterator(thrust::make_tuple(cloudTransformed.end(), idxlast));
-
-		//auto cloudTransformed_first = thrust::make_zip_iterator(thrust::make_tuple(p.begin(), idxfirst));
-		//auto cloudTransformed_last = thrust::make_zip_iterator(thrust::make_tuple(p.end(), idxlast));
 
 		probabilities.error = 0.0f;
 		if (doTruncate)
@@ -112,13 +99,8 @@ namespace
 		for (size_t x = 0; x < cloudBefore.size(); x++)
 		{
 			const auto functorDenominator = Functors::CalculateDenominator(cloudBefore[x], probabilities.p, multiplier, doTruncate, truncate);
-			//const auto functorDenominator = Functors::CalculateDenominator2();
-			//const float denominator = thrust::transform_reduce(thrust::device, cloudTransformed_first, cloudTransformed_last, functorDenominator, constant, thrust::plus<float>());
 			thrust::transform(thrust::device, cloudTransformed_first, cloudTransformed_last, probabilities.tmp.begin(), functorDenominator);
 			const float denominator = thrust::reduce(thrust::device, probabilities.tmp.begin(), probabilities.tmp.end(), constant, thrust::plus<float>());
-
-			//std::cout << "denominator: " << denominator << std::endl;
-
 			probabilities.pt1[x] = 1.0f - constant / denominator;
 
 			const auto functor = Functors::CalculateP1AndPX(cloudBefore[x], probabilities.p, probabilities.p1, probabilities.px, denominator);
@@ -176,12 +158,6 @@ namespace
 		cudaMemcpy(thrust::raw_pointer_cast(probabilities.pt1.data()), prob.pt1.data(), cloudBeforeCPU.size() * sizeof(float), cudaMemcpyHostToDevice);
 		cudaMemcpy(thrust::raw_pointer_cast(probabilities.px.data()), px.data(), cloudAfterCPU.size() * 3 * sizeof(float), cudaMemcpyHostToDevice);
 		probabilities.error = prob.error;
-		//std::cout << "P1 CPU" << std::endl;
-		//std::cout << prob.p1 << std::endl;
-		//std::cout << "Pt1 CPU" << std::endl;
-		//std::cout << prob.pt1 << std::endl;
-		//std::cout << "PX CPU" << std::endl;
-		//std::cout << prob.px << std::endl;
 	}
 
 	void MStep(
@@ -312,126 +288,6 @@ namespace
 		}
 
 		*translationVector = glmCenterBefore - (*scale) * (*rotationMatrix) * glmCenterAfter;
-
-		/*float BeforeCPU[30];
-		cudaMemcpy(BeforeCPU, params.beforeT, 30 * sizeof(float), cudaMemcpyDeviceToHost);
-
-		float AfterCPU[30];
-		cudaMemcpy(AfterCPU, params.afterT, 30 * sizeof(float), cudaMemcpyDeviceToHost);
-
-		float p1CPU[10];
-		cudaMemcpy(p1CPU, params.p1, 10 * sizeof(float), cudaMemcpyDeviceToHost);
-
-		float pt1CPU[10];
-		cudaMemcpy(pt1CPU, params.pt1, 10 * sizeof(float), cudaMemcpyDeviceToHost);
-
-		float result[9];
-		cudaMemcpy(result, params.AMatrix, 9 * sizeof(float), cudaMemcpyDeviceToHost);
-
-		float afterTxPX[9];
-		cudaMemcpy(afterTxPX, params.afterTxPX, 9 * sizeof(float), cudaMemcpyDeviceToHost);
-
-		float centerBeforexCenterAfter[9];
-		cudaMemcpy(centerBeforexCenterAfter, params.centerBeforexCenterAfter, 9 * sizeof(float), cudaMemcpyDeviceToHost);
-
-		printf("np %f\n", Np);
-
-		printf("BeforeCPU\n");
-		for (size_t i = 0; i < 3; i++)
-		{
-			for (size_t j = 0; j < 10; j++)
-			{
-				printf("%f ", BeforeCPU[10 * i + j]);
-			}
-			printf("\n");
-		}
-
-		printf("AfterCPU\n");
-		for (size_t i = 0; i < 3; i++)
-		{
-			for (size_t j = 0; j < 10; j++)
-			{
-				printf("%f ", AfterCPU[10 * i + j]);
-			}
-			printf("\n");
-		}
-
-		printf("p1CPU\n");
-		for (size_t j = 0; j < 10; j++)
-		{
-			printf("%f ", p1CPU[j]);
-		}
-		printf("\n");
-
-		printf("pt1CPU\n");
-		for (size_t j = 0; j < 10; j++)
-		{
-			printf("%f ", pt1CPU[j]);
-		}
-		printf("\n");
-
-		printf("centerBeforeCPU\n");
-		for (size_t j = 0; j < 3; j++)
-		{
-			printf("%f ", hostCenterBefore[j]);
-		}
-		printf("\n");
-
-		printf("centerAfterCPU\n");
-		for (size_t j = 0; j < 3; j++)
-		{
-			printf("%f ", hostCenterAfter[j]);
-		}
-		printf("\n");
-
-		printf("afterTxPX\n");
-		for (size_t i = 0; i < 3; i++)
-		{
-			for (size_t j = 0; j < 3; j++)
-			{
-				printf("%f ", afterTxPX[3 * j + i]);
-			}
-			printf("\n");
-		}
-
-		printf("centerBeforexCenterAfter\n");
-		for (size_t i = 0; i < 3; i++)
-		{
-			for (size_t j = 0; j < 3; j++)
-			{
-				printf("%f ", centerBeforexCenterAfter[3 * j + i]);
-			}
-			printf("\n");
-		}
-
-		printf("AMatrix\n");
-		for (size_t i = 0; i < 3; i++)
-		{
-			for (size_t j = 0; j < 3; j++)
-			{
-				printf("%f ", result[3 * j + i]);
-			}
-			printf("\n");
-		}
-
-		printf("matrix U\n");
-		Common::PrintMatrix(gU);
-		printf("matrix VT\n");
-		Common::PrintMatrix(gVT);
-
-		printf("S Matrix\n");
-		for (size_t i = 0; i < 3; i++)
-		{
-			printf("%f ", hostS[i]);
-			printf("\n");
-		}
-
-		printf("scale numerator %f\n", scaleNumerator);
-		printf("sigma subtrahend %f\n", sigmaSubtrahend);
-		printf("scaleDenominator %f\n", scaleDenominator);
-
-		printf("rotation matrix\n");
-		Common::PrintMatrix((*scale) * (*rotationMatrix), *translationVector);*/
 	}
 
 	glm::mat4 CudaCPD(
@@ -448,6 +304,10 @@ namespace
 		const std::vector<Point_f>& cloudBeforeCPU,
 		const std::vector<Point_f>& cloudAfterCPU)
 	{
+		//allocate memory
+		CUDAProbabilities::Probabilities probabilities(cloudBefore.size(), cloudAfter.size());
+		CUDAMStepParams mStepParams(cloudBefore.size(), cloudAfter.size(), probabilities);
+
 		*iterations = 0;
 		*error = 1e5;
 		glm::mat3 rotationMatrix = glm::mat3(1.0f);
@@ -455,9 +315,6 @@ namespace
 		float scale = 1.0f;
 		float sigmaSquared = CalculateSigmaSquared(cloudBefore, cloudAfter);
 		float sigmaSquared_init = sigmaSquared;
-
-		CUDAProbabilities::Probabilities probabilities(cloudBefore.size(), cloudAfter.size());
-		CUDAMStepParams mStepParams(cloudBefore.size(), cloudAfter.size(), probabilities);
 
 		if (weight <= 0.0f)
 			weight = 1e-6f;
@@ -480,17 +337,6 @@ namespace
 			ntol = std::abs((probabilities.error - l) / probabilities.error);
 			l = probabilities.error;
 
-			thrust::host_vector<float> p1 = probabilities.p1;
-			thrust::host_vector<float> pt1 = probabilities.pt1;
-			thrust::host_vector<glm::vec3> px = probabilities.px;
-
-			/*std::cout << "P1 GPU" << std::endl;
-			PrintVector(probabilities.p1);
-			std::cout << std::endl << "Pt1 GPU" << std::endl;
-			PrintVector(probabilities.pt1);
-			std::cout << std::endl << "PX GPU" << std::endl;
-			PrintVector(probabilities.px);*/
-
 			//M-step
 			MStep(cloudBefore, cloudAfter, probabilities, mStepParams, const_scale, &rotationMatrix, &translationVector, &scale, &sigmaSquared);
 
@@ -505,15 +351,45 @@ namespace
 
 void CPDTest()
 {
-	const char* objectPath = "data/bunny.obj";
-	const int pointCount = -1;
-	const float testEps = 1e-4f;
-	const float weight = 0.1f;
-	const bool const_scale = false;
-	const int max_iterations = 50;
-	const Common::ApproximationType fgt = Common::ApproximationType::Hybrid;
-
 	srand(666);
+	const char* objectPath = "data/bunny.obj";
+	int pointCount = 5000;
+	float testEps = 1e-4f;
+	float weight = 0.1f;
+	bool const_scale = false;
+	const int max_iterations = 50;
+	Common::ApproximationType fgt = Common::ApproximationType::Hybrid;
+
+	//reading data from terminal
+	//
+	/*
+	int weight_int = 0;
+	int const_scale_int = 0;
+	int fgt_int = 0;
+
+	std::cout << "Point count" << std::endl;
+	std::cin >> pointCount;
+	std::cout << "Weight * 100" << std::endl;
+	std::cin >> weight_int;
+	std::cout << "const_scale [0-false, 1-true]" << std::endl;
+	std::cin >> const_scale_int;
+	std::cout << "fgt type [0-None, 1-Hybrid, 2-Full]" << std::endl;
+	std::cin >> fgt_int;
+
+	weight = (float)weight_int / 100.0f;
+
+	if (const_scale_int == 0) const_scale = false;
+	if (const_scale_int == 1) const_scale = true;
+
+	if (fgt_int == 0) fgt = Common::ApproximationType::None;
+	if (fgt_int == 1) fgt = Common::ApproximationType::Hybrid;
+	if (fgt_int == 2) fgt = Common::ApproximationType::Full;
+
+	std::cout << "Point count: " << pointCount << " weight: " << weight << " const_scale: " << const_scale << " fgt: " << (int)(fgt) << std::endl;
+	//
+	*/
+	const float scale = 2.0f;
+
 	int iterations = 0;
 	float error = 1.0f;
 	Timer timer("Cpu timer");
@@ -534,11 +410,11 @@ void CPDTest()
 	const auto translation_vector = glm::vec3(15.0f, 0.0f, 0.0f);
 	const auto rotation_matrix = Tests::GetRotationMatrix({ 1.0f, 0.4f, -0.3f }, glm::radians(50.0f));
 
-	const auto transform = ConvertToTransformationMatrix(rotation_matrix, translation_vector);
+	const auto transform = ConvertToTransformationMatrix(scale * rotation_matrix, translation_vector);
 	//const auto transform = GetRandomTransformMatrix({ 0.f, 0.f, 0.f }, { 10.0f, 10.0f, 10.0f }, glm::radians(35.f));
 	const auto permutation = GetRandomPermutationVector(cloudSize);
-	auto permutedCloud = cloud;// ApplyPermutation(cloud, permutation);
-	std::transform(permutedCloud.begin(), permutedCloud.end(), permutedCloud.begin(), [](const Point_f& point) { return Point_f{ point.x * 2.f, point.y * 2.f, point.z * 2.f }; });
+	auto permutedCloud = ApplyPermutation(cloud, permutation);
+	//std::transform(permutedCloud.begin(), permutedCloud.end(), permutedCloud.begin(), [](const Point_f& point) { return Point_f{ point.x * 2.f, point.y * 2.f, point.z * 2.f }; });
 	const auto transformedCloud = GetTransformedCloud(cloud, transform);
 	const auto transformedPermutedCloud = GetTransformedCloud(permutedCloud, transform);
 	timer.StopStage("processing");
@@ -553,13 +429,7 @@ void CPDTest()
 	const auto icpCalculatedTransform1 = CudaCPD(deviceCloudBefore, deviceCloudAfter, &iterations, &error, testEps, weight, const_scale, max_iterations, testEps, fgt, transformedPermutedCloud, cloud);
 	timer.StopStage("cpd1");
 
-	//iterations = 0;
-	//error = 1.0f;
-	//timer.StartStage("icp2");
-	////const auto icpCalculatedTransform2 = CoherentPointDrift::GetRigidCPDTransformationMatrix(cloud, transformedPermutedCloud, &iterations, &error, testEps, weigth, const_scale, max_iterations, testEps, fgt);
-	//timer.StopStage("icp2");
-
-	//printf("ICP test (%d iterations) error = %g\n", iterations, error);
+	printf("ICP test (%d iterations) error = %g\n", iterations, error);
 
 	std::cout << "Transform Matrix" << std::endl;
 	PrintMatrix(transform);
