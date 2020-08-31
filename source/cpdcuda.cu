@@ -75,8 +75,8 @@ namespace
 	}
 
 	void ComputePMatrix(
-		const Cloud& cloudBefore,
-		const Cloud& cloudTransformed,
+		const GpuCloud& cloudBefore,
+		const GpuCloud& cloudTransformed,
 		CUDAProbabilities::Probabilities& probabilities,
 		const float& constant,
 		const float& sigmaSquared,
@@ -113,8 +113,8 @@ namespace
 	}
 
 	void ComputePMatrixFast(
-		const Cloud& cloudBefore,
-		const Cloud& cloudTransformed,
+		const GpuCloud& cloudBefore,
+		const GpuCloud& cloudTransformed,
 		CUDAProbabilities::Probabilities& probabilities,
 		const float& constant,
 		const float& weight,
@@ -163,8 +163,8 @@ namespace
 	}
 
 	void MStep(
-		const Cloud& cloudBefore,
-		const Cloud& cloudAfter,
+		const GpuCloud& cloudBefore,
+		const GpuCloud& cloudAfter,
 		const CUDAProbabilities::Probabilities& probabilities,
 		CUDAMStepParams& params,
 		const bool& const_scale,
@@ -326,7 +326,7 @@ namespace
 		const float constant = (std::pow(2 * M_PI * sigmaSquared, (float)DIMENSION * 0.5f) * weight * cloudAfter.size()) / ((1 - weight) * cloudBefore.size());
 		float ntol = tolerance + 10.0f;
 		float l = 0.0f;
-		Cloud transformedCloud = cloudAfter;
+		GpuCloud transformedCloud = cloudAfter;
 		//EM optimization
 		while (*iterations < maxIterations && ntol > tolerance && sigmaSquared > eps)
 		{
