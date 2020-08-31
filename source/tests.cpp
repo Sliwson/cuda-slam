@@ -207,6 +207,9 @@ namespace Tests
 		srand(RANDOM_SEED);
 		int iterations = 0;
 		float error = 1.0f;
+
+		const float scale = 2.0f;
+
 		Timer timer("Cpu timer");
 
 		timer.StartStage("cloud-loading");
@@ -225,23 +228,19 @@ namespace Tests
 		const auto translation_vector = glm::vec3(15.0f, 0.0f, 0.0f);
 		const auto rotation_matrix = GetRotationMatrix({ 1.0f, 0.4f, -0.3f }, glm::radians(50.0f));
 
-		const auto transform = ConvertToTransformationMatrix(rotation_matrix, translation_vector);
+		const auto transform = ConvertToTransformationMatrix(scale * rotation_matrix, translation_vector);
 		//const auto transform = GetRandomTransformMatrix({ 0.f, 0.f, 0.f }, { 10.0f, 10.0f, 10.0f }, glm::radians(35.f));
 		const auto permutation = GetRandomPermutationVector(cloudSize);
-		auto permutedCloud = cloud;//ApplyPermutation(cloud, permutation);
-		std::transform(permutedCloud.begin(), permutedCloud.end(), permutedCloud.begin(), [](const Point_f& point) { return Point_f{ point.x * 2.f, point.y * 2.f, point.z * 2.f }; });
+		auto permutedCloud = ApplyPermutation(cloud, permutation);
+		//std::transform(permutedCloud.begin(), permutedCloud.end(), permutedCloud.begin(), [](const Point_f& point) { return Point_f{ point.x * 2.f, point.y * 2.f, point.z * 2.f }; });
 		const auto transformedCloud = GetTransformedCloud(cloud, transform);
 		const auto transformedPermutedCloud = GetTransformedCloud(permutedCloud, transform);
 		timer.StopStage("processing");
 
 		timer.StartStage("cpd1");
-		const auto icpCalculatedTransform1 = CoherentPointDrift::GetRigidCPDTransformationMatrix(transformedPermutedCloud, cloud, &iterations, &error, testEps, weight, const_scale, max_iterations, testEps, fgt);
+		//const auto icpCalculatedTransform1 = CoherentPointDrift::GetRigidCPDTransformationMatrix(transformedPermutedCloud, cloud, &iterations, &error, testEps, weight, const_scale, max_iterations, testEps, fgt);
+		const auto icpCalculatedTransform1 = CoherentPointDrift::GetRigidCPDTransformationMatrix(cloud, transformedPermutedCloud, &iterations, &error, testEps, weight, const_scale, max_iterations, testEps, fgt);
 		timer.StopStage("cpd1");
-		iterations = 0;
-		error = 1.0f;
-		timer.StartStage("icp2");
-		//const auto icpCalculatedTransform2 = CoherentPointDrift::GetRigidCPDTransformationMatrix(cloud, transformedPermutedCloud, &iterations, &error, testEps, weigth, const_scale, max_iterations, testEps, fgt);
-		timer.StopStage("icp2");
 
 		printf("ICP test (%d iterations) error = %g\n", iterations, error);
 
