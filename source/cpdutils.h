@@ -20,8 +20,8 @@ namespace CoherentPointDrift
 namespace CPDutils
 {
 	CoherentPointDrift::Probabilities ComputePMatrixWithFGT(
-		const std::vector<Common::Point_f>& cloudBefore,
 		const std::vector<Common::Point_f>& cloudTransformed,
+		const std::vector<Common::Point_f>& cloudAfter,
 		const float& weight,
 		const float& sigmaSquared,
 		const float& sigmaSquaredInit);

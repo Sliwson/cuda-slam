@@ -16,24 +16,24 @@ namespace CoherentPointDrift
 
 	float CalculateSigmaSquared(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter);
 	Probabilities ComputePMatrixFast(
-		const std::vector<Point_f>& cloudAfter,
 		const std::vector<Point_f>& cloudTransformed,
+		const std::vector<Point_f>& cloudAfter,
 		const float& constant,
 		const float& weight,
 		float* sigmaSquared,
 		const float& sigmaSquaredInit,
 		const ApproximationType& fgt);
 	Probabilities ComputePMatrix(
-		const std::vector<Point_f>& cloudAfter,
 		const std::vector<Point_f>& cloudTransformed,
+		const std::vector<Point_f>& cloudAfter,
 		const float& constant,
 		const float& sigmaSquared,
 		const bool& doTruncate = false,
 		float truncate = -1.0f);
 	void MStep(
-		const Probabilities& probabilities,
 		const std::vector<Point_f>& cloudBefore,
 		const std::vector<Point_f>& cloudAfter,
+		const Probabilities& probabilities,
 		bool const_scale,
 		glm::mat3* rotationMatrix,
 		glm::vec3* translationVector,
@@ -92,15 +92,15 @@ namespace CoherentPointDrift
 		{
 			//E-step
 			if (fgt == ApproximationType::None)
-				probabilities = ComputePMatrix(cloudAfter, transformedCloud, constant, sigmaSquared);
+				probabilities = ComputePMatrix(transformedCloud, cloudAfter, constant, sigmaSquared);
 			else
-				probabilities = ComputePMatrixFast(cloudAfter, transformedCloud, constant, weight, &sigmaSquared, sigmaSquared_init, fgt);
+				probabilities = ComputePMatrixFast(transformedCloud, cloudAfter, constant, weight, &sigmaSquared, sigmaSquared_init, fgt);
 
 			ntol = std::abs((probabilities.error - l) / probabilities.error);
 			l = probabilities.error;
 
 			//M-step
-			MStep(probabilities, cloudBefore, cloudAfter, const_scale, &rotationMatrix, &translationVector, &scale, &sigmaSquared);
+			MStep(cloudBefore, cloudAfter, probabilities, const_scale, &rotationMatrix, &translationVector, &scale, &sigmaSquared);
 
 			transformedCloud = GetTransformedCloud(cloudBefore, rotationMatrix, translationVector, scale);
 			(*error) = sigmaSquared;
@@ -125,8 +125,8 @@ namespace CoherentPointDrift
 	}
 
 	Probabilities ComputePMatrixFast(
-		const std::vector<Point_f>& cloudAfter,
 		const std::vector<Point_f>& cloudTransformed,
+		const std::vector<Point_f>& cloudAfter,
 		const float& constant,
 		const float& weight,
 		float* sigmaSquared,
@@ -137,21 +137,21 @@ namespace CoherentPointDrift
 		{
 			if (*sigmaSquared < 0.05)
 				*sigmaSquared = 0.05;
-			return CPDutils::ComputePMatrixWithFGT(cloudAfter, cloudTransformed, weight, *sigmaSquared, sigmaSquaredInit);
+			return CPDutils::ComputePMatrixWithFGT(cloudTransformed, cloudAfter, weight, *sigmaSquared, sigmaSquaredInit);
 		}
 		if (fgt == ApproximationType::Hybrid)
 		{
 			if (*sigmaSquared > 0.015 * sigmaSquaredInit)
-				return CPDutils::ComputePMatrixWithFGT(cloudAfter, cloudTransformed, weight, *sigmaSquared, sigmaSquaredInit);
+				return CPDutils::ComputePMatrixWithFGT(cloudTransformed, cloudAfter, weight, *sigmaSquared, sigmaSquaredInit);
 			else
-				return ComputePMatrix(cloudAfter, cloudTransformed, constant, *sigmaSquared, true, 1e-3f);
+				return ComputePMatrix(cloudTransformed, cloudAfter, constant, *sigmaSquared, true, 1e-3f);
 		}
 		return Probabilities();
 	}
 
 	Probabilities ComputePMatrix(
-		const std::vector<Point_f>& cloudAfter,
 		const std::vector<Point_f>& cloudTransformed,
+		const std::vector<Point_f>& cloudAfter,
 		const float& constant,
 		const float& sigmaSquared,
 		const bool& doTruncate,
@@ -205,9 +205,9 @@ namespace CoherentPointDrift
 	}
 
 	void MStep(
-		const Probabilities& probabilities,
 		const std::vector<Point_f>& cloudBefore,
 		const std::vector<Point_f>& cloudAfter,
+		const Probabilities& probabilities,
 		bool const_scale,
 		glm::mat3* rotationMatrix,
 		glm::vec3* translationVector,

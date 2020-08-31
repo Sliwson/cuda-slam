@@ -3,7 +3,7 @@
 
 int main()
 {
-	NonIterativeCudaTest();
-	//CPDTest();
+	//NonIterativeCudaTest();
+	CPDTest();
 	return 0;
 }

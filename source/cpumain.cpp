@@ -102,12 +102,12 @@ int main(int argc, char** argv)
 #endif
 
 	const char* objectPath = "data/bunny.obj";
-	int pointCount = 1000;
+	int pointCount = -1;
 	float testEps = 1e-4f;
-	float weight = 0.0f;
+	float weight = 0.1f;
 	bool const_scale = false;
 	const int max_iterations = 50;
-	Common::ApproximationType fgt = Common::ApproximationType::None;
+	Common::ApproximationType fgt = Common::ApproximationType::Full;
 
 	Tests::RigidCPDTest(objectPath, pointCount, testEps, weight, const_scale, max_iterations, fgt);
 }

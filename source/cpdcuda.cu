@@ -17,16 +17,16 @@ namespace
 
 	float CalculateSigmaSquared(const GpuCloud& cloudBefore, const GpuCloud& cloudAfter);
 	void ComputePMatrix(
-		const GpuCloud& cloudBefore,
 		const GpuCloud& cloudTransformed,
+		const GpuCloud& cloudAfter,		
 		CUDAProbabilities::Probabilities& probabilities,
 		const float& constant,
 		const float& sigmaSquared,
 		const bool& doTruncate,
 		float truncate);
 	void ComputePMatrixFast(
-		const GpuCloud& cloudBefore,
 		const GpuCloud& cloudTransformed,
+		const GpuCloud& cloudAfter,
 		CUDAProbabilities::Probabilities& probabilities,
 		const float& constant,
 		const float& weight,
@@ -75,8 +75,8 @@ namespace
 	}
 
 	void ComputePMatrix(
-		const GpuCloud& cloudBefore,
 		const GpuCloud& cloudTransformed,
+		const GpuCloud& cloudAfter,
 		CUDAProbabilities::Probabilities& probabilities,
 		const float& constant,
 		const float& sigmaSquared,
@@ -98,23 +98,23 @@ namespace
 		if (doTruncate)
 			truncate = std::log(truncate);
 
-		for (size_t x = 0; x < cloudBefore.size(); x++)
+		for (size_t x = 0; x < cloudAfter.size(); x++)
 		{
-			const auto functorDenominator = Functors::CalculateDenominator(cloudBefore[x], probabilities.p, multiplier, doTruncate, truncate);
+			const auto functorDenominator = Functors::CalculateDenominator(cloudAfter[x], probabilities.p, multiplier, doTruncate, truncate);
 			thrust::transform(thrust::device, cloudTransformed_first, cloudTransformed_last, probabilities.tmp.begin(), functorDenominator);
 			const float denominator = thrust::reduce(thrust::device, probabilities.tmp.begin(), probabilities.tmp.end(), constant, thrust::plus<float>());
 			probabilities.pt1[x] = 1.0f - constant / denominator;
 
-			const auto functor = Functors::CalculateP1AndPX(cloudBefore[x], probabilities.p, probabilities.p1, probabilities.px, denominator);
+			const auto functor = Functors::CalculateP1AndPX(cloudAfter[x], probabilities.p, probabilities.p1, probabilities.px, denominator);
 			thrust::for_each(thrust::device, idxfirst, idxlast, functor);
 			probabilities.error -= std::log(denominator);
 		}
-		probabilities.error += DIMENSION * cloudBefore.size() * std::log(sigmaSquared) / 2.0f;
+		probabilities.error += DIMENSION * cloudAfter.size() * std::log(sigmaSquared) / 2.0f;
 	}
 
 	void ComputePMatrixFast(
-		const GpuCloud& cloudBefore,
 		const GpuCloud& cloudTransformed,
+		const GpuCloud& cloudAfter,
 		CUDAProbabilities::Probabilities& probabilities,
 		const float& constant,
 		const float& weight,
@@ -138,7 +138,7 @@ namespace
 			if (*sigmaSquared > 0.015 * sigmaSquaredInit)
 				ComputePMatrixWithFGTOnCPU(cloudBeforeCPU, cloudAfterCPU, probabilities, weight, *sigmaSquared, sigmaSquaredInit, rotationMatrix, translationVector, scale);
 			else
-				ComputePMatrix(cloudBefore, cloudTransformed, probabilities, constant, *sigmaSquared, true, 1e-3f);
+				ComputePMatrix(cloudTransformed, cloudAfter, probabilities, constant, *sigmaSquared, true, 1e-3f);
 		}
 	}
 
@@ -153,12 +153,12 @@ namespace
 		const glm::vec3& translationVector,
 		const float& scale)
 	{
-		auto cloudTransformedCPU = Common::GetTransformedCloud(cloudAfterCPU, rotationMatrix, translationVector, scale);
-		auto prob = CPDutils::ComputePMatrixWithFGT(cloudBeforeCPU, cloudTransformedCPU, weight, sigmaSquared, sigmaSquaredInit);
+		auto cloudTransformedCPU = Common::GetTransformedCloud(cloudBeforeCPU, rotationMatrix, translationVector, scale);
+		auto prob = CPDutils::ComputePMatrixWithFGT(cloudTransformedCPU, cloudAfterCPU, weight, sigmaSquared, sigmaSquaredInit);
 		Eigen::Matrix<float, -1, 3, Eigen::RowMajor> px = prob.px;
-		cudaMemcpy(thrust::raw_pointer_cast(probabilities.p1.data()), prob.p1.data(), cloudAfterCPU.size() * sizeof(float), cudaMemcpyHostToDevice);
-		cudaMemcpy(thrust::raw_pointer_cast(probabilities.pt1.data()), prob.pt1.data(), cloudBeforeCPU.size() * sizeof(float), cudaMemcpyHostToDevice);
-		cudaMemcpy(thrust::raw_pointer_cast(probabilities.px.data()), px.data(), cloudAfterCPU.size() * 3 * sizeof(float), cudaMemcpyHostToDevice);
+		cudaMemcpy(thrust::raw_pointer_cast(probabilities.p1.data()), prob.p1.data(), cloudBeforeCPU.size() * sizeof(float), cudaMemcpyHostToDevice);
+		cudaMemcpy(thrust::raw_pointer_cast(probabilities.pt1.data()), prob.pt1.data(), cloudAfterCPU.size() * sizeof(float), cudaMemcpyHostToDevice);
+		cudaMemcpy(thrust::raw_pointer_cast(probabilities.px.data()), px.data(), cloudBeforeCPU.size() * 3 * sizeof(float), cudaMemcpyHostToDevice);
 		probabilities.error = prob.error;
 	}
 
@@ -174,16 +174,16 @@ namespace
 		float* sigmaSquared)
 	{
 		const float alpha = 1.f, beta = 0.f;
-		const int beforeSize = cloudBefore.size();
-		const int afterSize = cloudAfter.size();
+		const int beforeSize = cloudAfter.size();
+		const int afterSize = cloudBefore.size();
 		const float Np = thrust::reduce(thrust::device, probabilities.p1.begin(), probabilities.p1.end(), 0.0f, thrust::plus<float>());
 		const float InvertedNp = 1.0f / Np;
 
 		//create array beforeT
 		auto countingBeforeBegin = thrust::make_counting_iterator<int>(0);
 		auto countingBeforeEnd = thrust::make_counting_iterator<int>(beforeSize);
-		auto zipBeforeBegin = thrust::make_zip_iterator(thrust::make_tuple(countingBeforeBegin, cloudBefore.begin()));
-		auto zipBeforeEnd = thrust::make_zip_iterator(thrust::make_tuple(countingBeforeEnd, cloudBefore.end()));
+		auto zipBeforeBegin = thrust::make_zip_iterator(thrust::make_tuple(countingBeforeBegin, cloudAfter.begin()));
+		auto zipBeforeEnd = thrust::make_zip_iterator(thrust::make_tuple(countingBeforeEnd, cloudAfter.end()));
 
 		auto convertBefore = Functors::GlmToCuBlas(false, beforeSize, params.beforeT);
 		thrust::for_each(thrust::device, zipBeforeBegin, zipBeforeEnd, convertBefore);
@@ -191,8 +191,8 @@ namespace
 		//create array afterT
 		auto countingAfterBegin = thrust::make_counting_iterator<int>(0);
 		auto countingAfterEnd = thrust::make_counting_iterator<int>(afterSize);
-		auto zipAfterBegin = thrust::make_zip_iterator(thrust::make_tuple(countingAfterBegin, cloudAfter.begin()));
-		auto zipAfterEnd = thrust::make_zip_iterator(thrust::make_tuple(countingAfterEnd, cloudAfter.end()));
+		auto zipAfterBegin = thrust::make_zip_iterator(thrust::make_tuple(countingAfterBegin, cloudBefore.begin()));
+		auto zipAfterEnd = thrust::make_zip_iterator(thrust::make_tuple(countingAfterEnd, cloudBefore.end()));
 
 		auto convertAfter = Functors::GlmToCuBlas(false, afterSize, params.afterT);
 		thrust::for_each(thrust::device, zipAfterBegin, zipAfterEnd, convertAfter);
@@ -323,18 +323,18 @@ namespace
 		if (weight >= 1.0f)
 			weight = 1.0f - 1e-6f;
 
-		const float constant = (std::pow(2 * M_PI * sigmaSquared, (float)DIMENSION * 0.5f) * weight * cloudAfter.size()) / ((1 - weight) * cloudBefore.size());
+		const float constant = (std::pow(2 * M_PI * sigmaSquared, (float)DIMENSION * 0.5f) * weight * cloudBefore.size()) / ((1 - weight) * cloudAfter.size());
 		float ntol = tolerance + 10.0f;
 		float l = 0.0f;
-		GpuCloud transformedCloud = cloudAfter;
+		GpuCloud transformedCloud = cloudBefore;
 		//EM optimization
 		while (*iterations < maxIterations && ntol > tolerance && sigmaSquared > eps)
 		{
 			//E-step
 			if (fgt == Common::ApproximationType::None)
-				ComputePMatrix(cloudBefore, transformedCloud, probabilities, constant, sigmaSquared, false, -1.0f);
+				ComputePMatrix(transformedCloud, cloudAfter, probabilities, constant, sigmaSquared, false, -1.0f);
 			else
-				ComputePMatrixFast(cloudBefore, transformedCloud, probabilities, constant, weight, &sigmaSquared, sigmaSquared_init, fgt, cloudBeforeCPU, cloudAfterCPU, rotationMatrix, translationVector, scale);
+				ComputePMatrixFast(transformedCloud, cloudAfter, probabilities, constant, weight, &sigmaSquared, sigmaSquared_init, fgt, cloudBeforeCPU, cloudAfterCPU, rotationMatrix, translationVector, scale);
 
 			ntol = std::abs((probabilities.error - l) / probabilities.error);
 			l = probabilities.error;
@@ -342,7 +342,7 @@ namespace
 			//M-step
 			MStep(cloudBefore, cloudAfter, probabilities, mStepParams, const_scale, &rotationMatrix, &translationVector, &scale, &sigmaSquared);
 
-			TransformCloud(cloudAfter, transformedCloud, ConvertToTransformationMatrix(scale * rotationMatrix, translationVector));
+			TransformCloud(cloudBefore, transformedCloud, ConvertToTransformationMatrix(scale * rotationMatrix, translationVector));
 			(*error) = sigmaSquared;
 			(*iterations)++;
 		}
@@ -355,7 +355,7 @@ void CPDTest()
 {
 	srand(666);
 	const char* objectPath = "data/bunny.obj";
-	int pointCount = 5000;
+	int pointCount = -1;
 	float testEps = 1e-4f;
 	float weight = 0.1f;
 	bool const_scale = false;
@@ -421,14 +421,14 @@ void CPDTest()
 	const auto transformedPermutedCloud = GetTransformedCloud(permutedCloud, transform);
 	timer.StopStage("processing");
 
-	const auto hostBefore = CommonToThrustVector(transformedPermutedCloud);
-	const auto hostAfter = CommonToThrustVector(cloud);
+	const auto hostBefore = CommonToThrustVector(cloud);
+	const auto hostAfter = CommonToThrustVector(transformedPermutedCloud);
 
 	GpuCloud deviceCloudBefore = hostBefore;
 	GpuCloud deviceCloudAfter = hostAfter;
 
 	timer.StartStage("cpd1");
-	const auto icpCalculatedTransform1 = CudaCPD(deviceCloudBefore, deviceCloudAfter, &iterations, &error, testEps, weight, const_scale, max_iterations, testEps, fgt, transformedPermutedCloud, cloud);
+	const auto icpCalculatedTransform1 = CudaCPD(deviceCloudBefore, deviceCloudAfter, &iterations, &error, testEps, weight, const_scale, max_iterations, testEps, fgt, cloud, transformedPermutedCloud);
 	timer.StopStage("cpd1");
 
 	printf("ICP test (%d iterations) error = %g\n", iterations, error);

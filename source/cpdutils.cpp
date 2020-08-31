@@ -18,13 +18,13 @@ namespace CPDutils
 		const int& row);
 
 	Probabilities ComputePMatrixWithFGT(
-		const std::vector<Point_f>& cloudBefore,
 		const std::vector<Point_f>& cloudTransformed,
+		const std::vector<Point_f>& cloudAfter,		
 		const float& weight,
 		const float& sigmaSquared,
 		const float& sigmaSquaredInit)
 	{
-		const int N = cloudBefore.size();
+		const int N = cloudAfter.size();
 		const int M = cloudTransformed.size();
 
 		const float hsigma = std::sqrt(2.0f * sigmaSquared);
@@ -38,7 +38,7 @@ namespace CPDutils
 
 		//compute pt1 and denom
 		fgt_model = ComputeFGTModel(cloudTransformed, std::vector<float>(M, 1.0f), hsigma, K_param, p_param);
-		auto Kt1 = ComputeFGTPredict(cloudBefore, fgt_model, hsigma, e_param, K_param, p_param);
+		auto Kt1 = ComputeFGTPredict(cloudAfter, fgt_model, hsigma, e_param, K_param, p_param);
 
 		const float ndi = (std::pow(2 * M_PI * sigmaSquared, (float)DIMENSION * 0.5f) * weight * M) / ((1 - weight) * N);
 
@@ -49,7 +49,7 @@ namespace CPDutils
 		Eigen::VectorXf pt1 = CalculatePt1(invDenomP, ndi);
 
 		//compute P1
-		fgt_model = ComputeFGTModel(cloudBefore, invDenomP, hsigma, K_param, p_param);
+		fgt_model = ComputeFGTModel(cloudAfter, invDenomP, hsigma, K_param, p_param);
 		auto P1_vector = ComputeFGTPredict(cloudTransformed, fgt_model, hsigma, e_param, K_param, p_param);
 		Eigen::VectorXf p1 = GetVectorXFromPointsVector(P1_vector);
 
@@ -57,7 +57,7 @@ namespace CPDutils
 		Eigen::MatrixXf px = Eigen::MatrixXf::Zero(cloudTransformed.size(), DIMENSION);
 		for (int i = 0; i < DIMENSION; i++)
 		{
-			fgt_model = ComputeFGTModel(cloudBefore, CalculateWeightsForPX(cloudBefore, invDenomP, i), hsigma, K_param, p_param);
+			fgt_model = ComputeFGTModel(cloudAfter, CalculateWeightsForPX(cloudAfter, invDenomP, i), hsigma, K_param, p_param);
 			auto result_vector = ComputeFGTPredict(cloudTransformed, fgt_model, hsigma, e_param, K_param, p_param);
 			Eigen::VectorXf result_eigen = GetVectorXFromPointsVector(result_vector);
 			px.col(i) = result_eigen;
