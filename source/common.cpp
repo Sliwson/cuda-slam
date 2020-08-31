@@ -77,20 +77,27 @@ namespace Common
 
 	std::pair<std::vector<Point_f>, std::vector<Point_f>> GetCloudsFromConfig(Configuration config)
 	{
+		const auto sameClouds = config.BeforePath == config.AfterPath;
+
 		auto before = LoadCloud(config.BeforePath);
-		auto after = LoadCloud(config.AfterPath);
+		auto after = sameClouds ? before : LoadCloud(config.AfterPath);
 
 		// scale clouds if necessary
 		if (config.CloudResize.has_value())
 		{
 			const auto newSize = config.CloudResize.value();
 			before = GetSubcloud(before, newSize);
-			after = GetSubcloud(after, newSize);
+			after = sameClouds ? before : GetSubcloud(after, newSize);
 		}
 
 		// normalize clouds to standart value
 		before = NormalizeCloud(before, CLOUD_BOUNDARY);
 		after = NormalizeCloud(after, CLOUD_BOUNDARY);
+
+
+		// shuffle clouds
+		std::shuffle(before.begin(), before.end(), std::mt19937{ std::random_device{}() });
+		std::shuffle(after.begin(), after.end(), std::mt19937{ std::random_device{}() });
 
 		// apply transformation and return
 		if (config.Transformation.has_value())

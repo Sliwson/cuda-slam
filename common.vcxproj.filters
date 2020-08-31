@@ -29,6 +29,9 @@
     <ClCompile Include="source\timer.cpp" />
     <ClCompile Include="source\configparser.cpp" />
     <ClCompile Include="source\configuration.cpp" />
+    <ClCompile Include="source\testrunner.cpp" />
+    <ClCompile Include="source\testset.cpp" />
+    <ClCompile Include="source\nicputils.cpp" />
     <ClCompile Include="source\fgt.cpp" />
     <ClCompile Include="source\cpdutils.cpp" />
   </ItemGroup>
@@ -64,6 +67,9 @@
     <ClInclude Include="source\configparser.h" />
     <ClInclude Include="source\configuration.h" />
     <ClInclude Include="source\enumerators.h" />
+    <ClInclude Include="source\testrunner.h" />
+    <ClInclude Include="source\testset.h" />
+    <ClInclude Include="source\nicputils.h" />
     <ClInclude Include="source\cpdutils.h" />
     <ClInclude Include="source\fgt.h" />
     <ClInclude Include="source\fgt_model.h" />

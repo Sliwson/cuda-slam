@@ -7,48 +7,7 @@ using namespace CUDACommon;
 
 namespace
 {
-	__global__ void FindCorrespondences(int* result, const glm::vec3* before, const glm::vec3* after, int beforeSize, int afterSize)
-	{
-		int targetIdx = blockDim.x * blockIdx.x + threadIdx.x;
-		if (targetIdx < beforeSize)
-		{
-			const glm::vec3 vector = before[targetIdx];
-			int nearestIdx = 0;
-			float smallestError = GetDistanceSquared(vector, after[0]);
-			for (int i = 1; i < afterSize; i++)
-			{
-				const auto dist = GetDistanceSquared(vector, after[i]);
-				if (dist < smallestError)
-				{
-					smallestError = dist;
-					nearestIdx = i;
-				}
-			}
-
-			result[targetIdx] = nearestIdx;
-		}
-	}
-
-	void GetCorrespondingPoints(thrust::device_vector<int>& indices, const Cloud& before, const Cloud& after)
-	{
-#ifdef USE_CORRESPONDENCES_KERNEL
-		int* dIndices = thrust::raw_pointer_cast(indices.data());
-		const glm::vec3* dBefore = thrust::raw_pointer_cast(before.data());
-		const glm::vec3* dAfter = thrust::raw_pointer_cast(after.data());
-		int beforeSize = before.size();
-		int afterSize = after.size();
-
-		constexpr int threadsPerBlock = 256;
-		const int blocksPerGrid = (beforeSize + threadsPerBlock - 1) / threadsPerBlock;
-		FindCorrespondences << <blocksPerGrid, threadsPerBlock >> > (dIndices, dBefore, dAfter, beforeSize, afterSize);
-		cudaDeviceSynchronize();
-#else
-		const auto nearestFunctor = Functors::FindNearestIndex(after);
-		thrust::transform(thrust::device, before.begin(), before.end(), indices.begin(), nearestFunctor);
-#endif
-	}
-
-	glm::mat4 CudaICP(const Cloud& before, const Cloud& after)
+	glm::mat4 CudaICP(const GpuCloud& before, const GpuCloud& after)
 	{
 		const int maxIterations = 60;
 		const float TEST_EPS = 1e-5;
@@ -58,16 +17,20 @@ namespace
 		glm::mat4 transformationMatrix(1.0f);
 		glm::mat4 previousTransformationMatrix = transformationMatrix;
 
+
 		//do not change before vector - copy it for calculations
-		const int size = std::max(before.size(), after.size());
-		Cloud workingBefore(size);
-		Cloud alignBefore(size);
-		Cloud alignAfter(size);
-		thrust::device_vector<int> indices(before.size());
+		const int beforeSize = before.size();
+		const int afterSize = after.size();
+
+		GpuCloud workingBefore(beforeSize);
+		GpuCloud alignBefore(beforeSize);
+		GpuCloud alignAfter(beforeSize);
+
+		thrust::device_vector<int> indices(beforeSize);
 		thrust::copy(thrust::device, before.begin(), before.end(), workingBefore.begin());
 
 		//allocate memory for cuBLAS
-		CudaSvdParams params(size, size);
+		CudaSvdParams params(beforeSize, beforeSize, 3, 3);
 
 		while (iterations < maxIterations)
 		{
@@ -133,7 +96,7 @@ namespace
 		for (int i = 0; i < 3 * size; i++)
 			ones[i] = 1.f;
 
-		CudaSvdParams params(size, size);
+		CudaSvdParams params(size, size, 3, 3);
 		cudaMemcpy(params.workBefore, ones, 3 * size * sizeof(float), cudaMemcpyHostToDevice);
 		cudaMemcpy(params.workAfter, ones, 3 * size * sizeof(float), cudaMemcpyHostToDevice);
 
@@ -169,10 +132,10 @@ void CudaTest()
 	const auto hostBefore = CommonToThrustVector(testCloud);
 	const auto hostAfter = CommonToThrustVector(testCorrupted);
 
-	Cloud deviceCloudBefore = hostBefore;
-	Cloud deviceCloudAfter = hostAfter;
+	GpuCloud deviceCloudBefore = hostBefore;
+	GpuCloud deviceCloudAfter = hostAfter;
 
-	Cloud calculatedCloud(hostAfter.size());
+	GpuCloud calculatedCloud(hostAfter.size());
 
 	const auto scaleInput = Functors::ScaleTransform(1000.f);
 	thrust::transform(thrust::device, deviceCloudBefore.begin(), deviceCloudBefore.end(), deviceCloudBefore.begin(), scaleInput);

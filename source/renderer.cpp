@@ -475,8 +475,8 @@ namespace Common
 
 	void Renderer::SetShader()
 	{
-		ShaderFactory& sf = ShaderFactory::getInstance();
-		shader = sf.getShader(shaderType);
+		ShaderFactory factory;
+		shader = factory.GetShader(shaderType);
 	}
 
 	void Renderer::SetCamera(glm::vec3 position)

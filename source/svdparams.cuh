@@ -4,39 +4,10 @@
 
 struct CudaSvdParams
 {
-	CudaSvdParams(int beforeLength, int afterLength)
-	{
-		cudaMalloc(&workBefore, beforeLength * 3 * sizeof(float));
-		cudaMalloc(&workAfter, afterLength * 3 * sizeof(float));
-		cudaMalloc(&multiplyResult, 3 * 3 * sizeof(float));
-		cublasCreate(&multiplyHandle);
+	CudaSvdParams(int beforeLength, int afterLength, int m, int n, bool useMatrixU = true, bool useMatrixV = true);
+	void Free();
 
-		cudaMalloc(&devInfo, sizeof(int));
-		cudaMalloc(&S, 9 * sizeof(float));
-		cudaMalloc(&VT, 9 * sizeof(float));
-		cudaMalloc(&U, 9 * sizeof(float));
-		cusolverDnCreate(&solverHandle);
-		
-		cusolverDnDgesvd_bufferSize(solverHandle, 3, 3, &workSize);
-		cudaMalloc(&work, workSize * sizeof(float));
-	}
-
-	void Free()
-	{
-		cudaFree(workBefore);
-		cudaFree(workAfter);
-		cudaFree(multiplyResult);
-		cublasDestroy(multiplyHandle);
-		
-		cudaFree(work);
-		cudaFree(devInfo);
-		cudaFree(S);
-		cudaFree(VT);
-		cudaFree(U);
-		cusolverDnDestroy(solverHandle);
-	}
-
-	//for multiplication
+	//for multiplication 
 	float* workBefore = nullptr;
 	float* workAfter = nullptr;
 	float* multiplyResult = nullptr;
@@ -49,5 +20,9 @@ struct CudaSvdParams
 	float* work = nullptr;
 	int* devInfo = nullptr;
 	int workSize = 0;
+	int m = 0;
+	int n = 0;
+	bool useMatrixU = true;
+	bool useMatrixV = true;
 	cusolverDnHandle_t solverHandle = nullptr;
 };

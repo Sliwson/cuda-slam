@@ -24,6 +24,7 @@
 #include <thrust/transform_reduce.h>
 #include <thrust/functional.h>
 
+#include <helper_cuda.h>
 #include <cublas_v2.h>
 #include <cusolverDn.h>
 
@@ -33,22 +34,28 @@ struct CudaSvdParams;
 
 namespace CUDACommon
 {
-	typedef thrust::device_vector<glm::vec3> Cloud;
+	extern "C" void cusolveSafeCall(cusolverStatus_t);
+
+	typedef thrust::device_vector<glm::vec3> GpuCloud;
 	typedef thrust::device_vector<int> IndexIterator;
-	typedef thrust::permutation_iterator<Cloud, IndexIterator> Permutation;
+
+	__device__ float GetDistanceSquared(const glm::vec3& first, const glm::vec3& second);
+	__global__ void FindCorrespondences(int* result, const glm::vec3* before, const glm::vec3* after, int beforeSize, int afterSize);
 
 	void PrintVector(thrust::host_vector<float> vector);
 	void PrintVector(thrust::host_vector<glm::vec3> vector);
 	void PrintVector(thrust::device_vector<float> vector);
 	void PrintVector(thrust::device_vector<glm::vec3> vector);
+
 	thrust::host_vector<glm::vec3> CommonToThrustVector(const std::vector<Common::Point_f>& vec);
-	std::vector<Common::Point_f> ThrustToCommonVector(const Cloud& vec);
-	glm::vec3 CalculateCentroid(const Cloud& vec);
-	void TransformCloud(const Cloud& vec, Cloud& out, const glm::mat4& transform);
-	__device__ float GetDistanceSquared(const glm::vec3& first, const glm::vec3& second);
-	float GetMeanSquaredError(const IndexIterator& permutation, const Cloud& before, const Cloud& after);
-	void GetAlignedCloud(const Cloud& source, Cloud& target);
+	std::vector<Point_f> ThrustToCommonVector(const GpuCloud& vec);
+	glm::vec3 CalculateCentroid(const GpuCloud& vec);
+	void TransformCloud(const GpuCloud& vec, GpuCloud& out, const glm::mat4& transform);
+	float GetMeanSquaredError(const IndexIterator& permutation, const GpuCloud& before, const GpuCloud& after);
+	void GetAlignedCloud(const GpuCloud& source, GpuCloud& target);
 	void CuBlasMultiply(float* A, float* B, float* C, int size, CudaSvdParams& params);
 	glm::mat3 CreateGlmMatrix(float* squareMatrix);
-	glm::mat4 LeastSquaresSVD(const IndexIterator& permutation, const Cloud& before, const Cloud& after, Cloud& alignBefore, Cloud& alignAfter, CudaSvdParams params);
+	glm::mat4 LeastSquaresSVD(const IndexIterator& permutation, const GpuCloud& before, const GpuCloud& after, GpuCloud& alignBefore, GpuCloud& alignAfter, CudaSvdParams params);
+	void ApplyPermutation(const GpuCloud& inputCloud, IndexIterator permutation, GpuCloud& outputCloud);
+	void GetCorrespondingPoints(thrust::device_vector<int>& indices, const GpuCloud& before, const GpuCloud& after);
 }

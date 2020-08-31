@@ -13,18 +13,20 @@ using namespace MStepParams;
 
 namespace
 {
-	float CalculateSigmaSquared(const Cloud& cloudBefore, const Cloud& cloudAfter);
+	typedef thrust::device_vector<glm::vec3> GpuCloud;
+
+	float CalculateSigmaSquared(const GpuCloud& cloudBefore, const GpuCloud& cloudAfter);
 	void ComputePMatrix(
-		const Cloud& cloudBefore,
-		const Cloud& cloudTransformed,
+		const GpuCloud& cloudBefore,
+		const GpuCloud& cloudTransformed,
 		CUDAProbabilities::Probabilities& probabilities,
 		const float& constant,
 		const float& sigmaSquared,
 		const bool& doTruncate,
 		float truncate);
 	void ComputePMatrixFast(
-		const Cloud& cloudBefore,
-		const Cloud& cloudTransformed,
+		const GpuCloud& cloudBefore,
+		const GpuCloud& cloudTransformed,
 		CUDAProbabilities::Probabilities& probabilities,
 		const float& constant,
 		const float& weight,
@@ -47,8 +49,8 @@ namespace
 		const glm::vec3& translationVector,
 		const float& scale);
 	void MStep(
-		const Cloud& cloudBefore,
-		const Cloud& cloudAfter,
+		const GpuCloud& cloudBefore,
+		const GpuCloud& cloudAfter,
 		const CUDAProbabilities::Probabilities& probabilities,
 		CUDAMStepParams& params,
 		const bool& const_scale,
@@ -57,7 +59,7 @@ namespace
 		float* scale,
 		float* sigmaSquared);
 
-	float CalculateSigmaSquared(const Cloud& cloudBefore, const Cloud& cloudAfter)
+	float CalculateSigmaSquared(const GpuCloud& cloudBefore, const GpuCloud& cloudAfter)
 	{
 		if (cloudBefore.size() > cloudAfter.size())
 		{
@@ -291,8 +293,8 @@ namespace
 	}
 
 	glm::mat4 CudaCPD(
-		const Cloud& cloudBefore,
-		const Cloud& cloudAfter,
+		const GpuCloud& cloudBefore,
+		const GpuCloud& cloudAfter,
 		int* iterations,
 		float* error,
 		float eps,
@@ -422,8 +424,8 @@ void CPDTest()
 	const auto hostBefore = CommonToThrustVector(transformedPermutedCloud);
 	const auto hostAfter = CommonToThrustVector(cloud);
 
-	Cloud deviceCloudBefore = hostBefore;
-	Cloud deviceCloudAfter = hostAfter;
+	GpuCloud deviceCloudBefore = hostBefore;
+	GpuCloud deviceCloudAfter = hostAfter;
 
 	timer.StartStage("cpd1");
 	const auto icpCalculatedTransform1 = CudaCPD(deviceCloudBefore, deviceCloudAfter, &iterations, &error, testEps, weight, const_scale, max_iterations, testEps, fgt, transformedPermutedCloud, cloud);
