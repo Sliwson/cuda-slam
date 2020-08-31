@@ -47,6 +47,7 @@ namespace Common
 
 		std::vector<Point_f>& GetVector(int index);
 		glm::vec3 GetColor(int index);
+		const char* GetColorName(int index);
 
 		void SetModelMatrixToData();
 
