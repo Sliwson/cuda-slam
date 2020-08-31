@@ -9,10 +9,6 @@
 #include "testrunner.h"
 #include "testset.h"
 
-#include "tests.h"
-
-//#define TEST
-
 namespace {
 	std::pair<glm::mat3, glm::vec3> GetCpuSlamResult(const Common::CpuCloud& before, const Common::CpuCloud& after, Configuration configuration, int* iterations)
 	{
@@ -98,16 +94,6 @@ int main(int argc, char** argv)
 #ifdef TEST
 	return RunCpuTests();
 #else
-	//return CpuMain(argc, argv);
+	return CpuMain(argc, argv);
 #endif
-
-	const char* objectPath = "data/bunny.obj";
-	int pointCount = -1;
-	float testEps = 1e-4f;
-	float weight = 0.1f;
-	bool const_scale = false;
-	const int max_iterations = 50;
-	Common::ApproximationType fgt = Common::ApproximationType::Full;
-
-	Tests::RigidCPDTest(objectPath, pointCount, testEps, weight, const_scale, max_iterations, fgt);
 }
