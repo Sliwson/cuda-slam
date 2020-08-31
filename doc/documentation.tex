@@ -88,6 +88,10 @@ The most widely described and most popular method for solving SLAM problem is It
 Various modifications have been proposed to this algorithm (such as sampling point sets, weighting the correspondences or rejecting outliers). However, in this project we focused on the base version of the method as it is good enough for comparison with the other algorithms.
 
 \subsection{Noniterative Closest Point}
+Interesting alternative to iterative point cloud matching algorithms is a noniterative SVD-based solution. The idea have been most commonly described by Shinji Oomori, Takeshi Nishida, and Shuichi Kurogi of Kyushu Institute of Technology. Method is described to match clouds "with less than 4\% of the computational
+time of the ICP (iterative closest point) algorithm with nearly identical accuracy".\\
+The idea of algorithm is based on preparing just two SVDs of large matrices built from source and target points and multiplication of results. Unfortunately, for permuted clouds of different sizes this does not necesarilly mean the results always converge. In original solution this effect is reduced by running the computations for a few different perspectives of observed item. Therefore it can be used with promising results in situations where the item is observed from different angles.\\
+Implementation described in this paper presents different approach - the clouds are randomly permuted and for the received result transformation, the mean squared error is computed for subcloud of given size.
 
 \subsection{Coherent Point Drift}
 
