@@ -216,12 +216,12 @@ namespace CoherentPointDrift
 	{
 		const float Np = probabilities.p1.sum();
 		const float InvertedNp = 1.0f / Np;
-		auto EigenBeforeT = GetMatrix3XFromPointsVector(cloudAfter);
-		auto EigenAfterT = GetMatrix3XFromPointsVector(cloudBefore);
-		Eigen::Vector3f EigenCenterBefore = InvertedNp * EigenBeforeT * probabilities.pt1;
-		Eigen::Vector3f EigenCenterAfter = InvertedNp * EigenAfterT * probabilities.p1;
+		auto EigenBefore = GetMatrix3XFromPointsVector(cloudBefore);
+		auto EigenAfterT = GetMatrix3XFromPointsVector(cloudAfter);
+		Eigen::Vector3f EigenCenterBefore = InvertedNp * EigenBefore * probabilities.p1;
+		Eigen::Vector3f EigenCenterAfter = InvertedNp * EigenAfterT * probabilities.pt1;		
 
-		const Eigen::MatrixXf AMatrix = (EigenAfterT * probabilities.px).transpose() - Np * (EigenCenterBefore * EigenCenterAfter.transpose());
+		const Eigen::MatrixXf AMatrix = (EigenBefore * probabilities.px).transpose() - Np * (EigenCenterAfter * EigenCenterBefore.transpose());
 
 		const Eigen::JacobiSVD<Eigen::MatrixXf> svd = Eigen::JacobiSVD<Eigen::MatrixXf>(AMatrix, Eigen::ComputeThinU | Eigen::ComputeThinV);
 
@@ -238,13 +238,10 @@ namespace CoherentPointDrift
 		const Eigen::Matrix3f EigenScaleNumerator = svd.singularValues().asDiagonal() * diag;
 
 		const float scaleNumerator = EigenScaleNumerator.trace();
-		const float sigmaSubtrahend = (EigenBeforeT.transpose().array().pow(2) * probabilities.pt1.replicate(1, DIMENSION).array()).sum()
-			- Np * EigenCenterBefore.transpose() * EigenCenterBefore;
-		const float scaleDenominator = (EigenAfterT.transpose().array().pow(2) * probabilities.p1.replicate(1, DIMENSION).array()).sum()
+		const float sigmaSubtrahend = (EigenAfterT.transpose().array().pow(2) * probabilities.pt1.replicate(1, DIMENSION).array()).sum()
 			- Np * EigenCenterAfter.transpose() * EigenCenterAfter;
-
-		float tmp1 = Np * EigenCenterBefore.transpose() * EigenCenterBefore;
-		float tmp2 = Np * EigenCenterAfter.transpose() * EigenCenterAfter;
+		const float scaleDenominator = (EigenBefore.transpose().array().pow(2) * probabilities.p1.replicate(1, DIMENSION).array()).sum()
+			- Np * EigenCenterBefore.transpose() * EigenCenterBefore;
 
 		if (const_scale == false)
 		{
@@ -256,7 +253,7 @@ namespace CoherentPointDrift
 			*sigmaSquared = (InvertedNp * std::abs(sigmaSubtrahend + scaleDenominator - 2 * scaleNumerator)) / (float)DIMENSION;
 		}
 
-		const Eigen::Vector3f EigenTranslationVector = EigenCenterBefore - (*scale) * EigenRotationMatrix * EigenCenterAfter;
+		const Eigen::Vector3f EigenTranslationVector = EigenCenterAfter - (*scale) * EigenRotationMatrix * EigenCenterBefore;
 
 		*translationVector = ConvertTranslationVector(EigenTranslationVector);
 
