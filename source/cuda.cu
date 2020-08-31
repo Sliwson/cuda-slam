@@ -34,7 +34,6 @@ namespace CUDACommon
 
 		case CUSOLVER_STATUS_MATRIX_TYPE_NOT_SUPPORTED:
 			return "CUSOLVER_STATUS_MATRIX_TYPE_NOT_SUPPORTED";
-
 		}
 
 		return "<unknown>";

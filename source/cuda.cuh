@@ -48,7 +48,7 @@ namespace CUDACommon
 	void PrintVector(thrust::device_vector<glm::vec3> vector);
 
 	thrust::host_vector<glm::vec3> CommonToThrustVector(const std::vector<Common::Point_f>& vec);
-	std::vector<Point_f> ThrustToCommonVector(const GpuCloud& vec);
+	std::vector<Common::Point_f> ThrustToCommonVector(const GpuCloud& vec);
 	glm::vec3 CalculateCentroid(const GpuCloud& vec);
 	void TransformCloud(const GpuCloud& vec, GpuCloud& out, const glm::mat4& transform);
 	float GetMeanSquaredError(const IndexIterator& permutation, const GpuCloud& before, const GpuCloud& after);

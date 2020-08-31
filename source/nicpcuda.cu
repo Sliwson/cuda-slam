@@ -4,6 +4,7 @@
 #include "nicpslamargs.cuh"
 
 using namespace CUDACommon;
+using namespace Common;
 
 namespace
 {
