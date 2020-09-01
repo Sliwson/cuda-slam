@@ -9,8 +9,6 @@
 #include "testrunner.h"
 #include "testset.h"
 
-//#define TEST
-
 namespace {
 	std::pair<glm::mat3, glm::vec3> GetCpuSlamResult(const Common::CpuCloud& before, const Common::CpuCloud& after, Configuration configuration, int* iterations)
 	{

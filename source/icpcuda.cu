@@ -2,6 +2,7 @@
 #include "functors.cuh"
 #include "svdparams.cuh"
 
+using namespace Common;
 using namespace CUDACommon;
 
 namespace

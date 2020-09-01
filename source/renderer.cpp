@@ -122,15 +122,31 @@ namespace Common
 				break;
 			case GLFW_KEY_1:
 				renderer->isVisible[0] = !renderer->isVisible[0];
+				if (renderer->isVisible[0])
+					printf("%s cloud is now visible\n", renderer->GetColorName(0));
+				else
+					printf("%s cloud is now invisible\n", renderer->GetColorName(0));
 				break;
 			case GLFW_KEY_2:
 				renderer->isVisible[1] = !renderer->isVisible[1];
+				if (renderer->isVisible[1])
+					printf("%s cloud is now visible\n", renderer->GetColorName(1));
+				else
+					printf("%s cloud is now invisible\n", renderer->GetColorName(1));
 				break;
 			case GLFW_KEY_3:
 				renderer->isVisible[2] = !renderer->isVisible[2];
+				if (renderer->isVisible[2])
+					printf("%s cloud is now visible\n", renderer->GetColorName(2));
+				else
+					printf("%s cloud is now invisible\n", renderer->GetColorName(2));
 				break;
 			case GLFW_KEY_4:
 				renderer->isVisible[3] = !renderer->isVisible[3];
+				if (renderer->isVisible[3])
+					printf("%s cloud is now visible\n", renderer->GetColorName(3));
+				else
+					printf("%s cloud is now invisible\n", renderer->GetColorName(3));
 				break;
 			default:
 				break;
@@ -408,15 +424,32 @@ namespace Common
 		switch (index)
 		{
 		case 0://origin
-			return glm::vec3(1.0f, 0.0f, 0.0f);
+			return glm::vec3(1.0f, 0.0f, 0.0f);//red
 		case 1://result
-			return glm::vec3(0.0f, 1.0f, 0.0f);
+			return glm::vec3(0.0f, 1.0f, 0.0f);//green
 		case 2://cpu
-			return glm::vec3(1.0f, 1.0f, 0.0f);
+			return glm::vec3(1.0f, 1.0f, 0.0f);//yellow
 		case 3://gpu
-			return glm::vec3(0.0f, 0.0f, 1.0f);
+			return glm::vec3(0.0f, 0.0f, 1.0f);//blue
 		default:
-			return glm::vec3(0.8f, 0.8f, 0.8f);
+			return glm::vec3(0.8f, 0.8f, 0.8f);//gray
+		}
+	}
+
+	const char* Renderer::GetColorName(int index)
+	{
+		switch (index)
+		{
+		case 0://origin
+			return "Red";//red
+		case 1://result
+			return "Green";//green
+		case 2://cpu
+			return "Yellow";//yellow
+		case 3://gpu
+			return "Blue";//blue
+		default:
+			return "Gray";
 		}
 	}
 

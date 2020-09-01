@@ -21,5 +21,7 @@
     <ClInclude Include="source\parallelsvdhelper.cuh" />
     <ClInclude Include="source\nicpcuda.cuh" />
     <ClInclude Include="source\nicpslamargs.cuh" />
+    <ClInclude Include="source\mstepparams.cuh" />
+    <ClInclude Include="source\cudaprobabilities.h" />
   </ItemGroup>
 </Project>

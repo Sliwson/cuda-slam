@@ -15,6 +15,8 @@
     <ClCompile Include="source\camera.cpp" />
     <ClCompile Include="source\common.cpp" />
     <ClCompile Include="source\configuration.cpp" />
+    <ClCompile Include="source\cpdutils.cpp" />
+    <ClCompile Include="source\fgt.cpp" />
     <ClCompile Include="source\glad.c" />
     <ClCompile Include="source\Icosphere.cpp" />
     <ClCompile Include="source\loader.cpp" />
@@ -33,7 +35,10 @@
     <ClInclude Include="source\configparser.h" />
     <ClInclude Include="source\camera.h" />
     <ClInclude Include="source\configuration.h" />
+    <ClInclude Include="source\cpdutils.h" />
     <ClInclude Include="source\enumerators.h" />
+    <ClInclude Include="source\fgt.h" />
+    <ClInclude Include="source\fgt_model.h" />
     <ClInclude Include="source\Icosphere.h" />
     <ClInclude Include="source\loader.h" />
     <ClInclude Include="source\moveablecamera.h" />

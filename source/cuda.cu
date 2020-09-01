@@ -3,6 +3,8 @@
 #include "svdparams.cuh"
 #include "parallelsvdhelper.cuh"
 
+using namespace Common;
+
 namespace CUDACommon
 {
 	const char* _cudaGetErrorEnum(cusolverStatus_t error)
@@ -32,7 +34,6 @@ namespace CUDACommon
 
 		case CUSOLVER_STATUS_MATRIX_TYPE_NOT_SUPPORTED:
 			return "CUSOLVER_STATUS_MATRIX_TYPE_NOT_SUPPORTED";
-
 		}
 
 		return "<unknown>";
@@ -75,6 +76,34 @@ namespace CUDACommon
 
 			result[targetIdx] = nearestIdx;
 		}
+	}
+
+	void PrintVector(const thrust::host_vector<float>& vector)
+	{
+		for (int i = 0; i < vector.size(); i++)
+		{
+			printf("%f\n", vector[i]);
+		}
+	}
+
+	void PrintVector(const thrust::host_vector<glm::vec3>& vector)
+	{
+		for (int i = 0; i < vector.size(); i++)
+		{
+			printf("%f %f %f\n", vector[i].x, vector[i].y, vector[i].z);
+		}
+	}
+
+	void PrintVector(const thrust::device_vector<float>& vector)
+	{
+		thrust::host_vector<float> vec = vector;
+		PrintVector(vec);
+	}
+
+	void PrintVector(const thrust::device_vector<glm::vec3>& vector)
+	{
+		thrust::host_vector<glm::vec3> vec = vector;
+		PrintVector(vec);
 	}
 
 	thrust::host_vector<glm::vec3> CommonToThrustVector(const std::vector<Common::Point_f>& vec)

@@ -119,12 +119,12 @@ namespace Functors
 
 	__device__ __host__ float CalculateDenominator::operator()(const thrust::tuple<glm::vec3, int>& vector)
 	{
-		float index = multiplier * GetDistanceSquared(cloudBeforeItem, vector.get<0>());
+		const float index = multiplier * GetDistanceSquared(cloudBeforeItem, vector.get<0>());
+		//const float index = 3.0f;
 
 		if (doTruncate && index < truncate)
 		{
 			p[vector.get<1>()] = 0.0f;
-			return 0.0f;
 		}
 		else
 		{
@@ -132,6 +132,7 @@ namespace Functors
 			p[vector.get<1>()] = value;
 			return value;
 		}
+		return 0.0f;
 	}
 
 	CalculateP1AndPX::CalculateP1AndPX(
@@ -156,5 +157,14 @@ namespace Functors
 			p1[index] += value;
 			px[index] += cloudBeforeItem * value;
 		}
+	}
+
+	CalculateSigmaSubtrahend::CalculateSigmaSubtrahend(const float* pt1) : pt1(pt1) { }
+
+	__device__ __host__ float CalculateSigmaSubtrahend::operator()(const thrust::tuple<int, float>& pair)
+	{
+		const int idx = pair.get<0>();
+		const float val = pair.get<1>();
+		return val * val * pt1[idx / 3];
 	}
 }

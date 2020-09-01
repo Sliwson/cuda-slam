@@ -91,7 +91,6 @@
     <ClCompile Include="source\coherentpointdrift.cpp" />
     <ClCompile Include="source\coherentpointdrift.h" />
     <ClCompile Include="source\cpumain.cpp" />
-    <ClCompile Include="source\fgt.cpp" />
     <ClCompile Include="source\noniterative.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -102,8 +101,6 @@
   <ItemGroup>
     <ClInclude Include="source\noniterative.h" />
     <ClInclude Include="source\basicicp.h" />
-    <ClInclude Include="source\fgt.h" />
-    <ClInclude Include="source\fgt_model.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
