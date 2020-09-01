@@ -5,11 +5,10 @@
 #include "fgt.h"
 #include "fgt_model.h"
 
-using namespace CoherentPointDrift;
 using namespace Common;
 using namespace FastGaussTransform;
 
-namespace CPDutils
+namespace CoherentPointDrift
 {
 	Eigen::VectorXf CalculatePt1(const std::vector<float>& Kt1, const float& ndi);
 	std::vector<float> CalculateWeightsForPX(

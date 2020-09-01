@@ -15,11 +15,8 @@ namespace CoherentPointDrift
 		// The total error.
 		float error;
 	};
-}
 
-namespace CPDutils
-{
-	CoherentPointDrift::Probabilities ComputePMatrixWithFGT(
+	Probabilities ComputePMatrixWithFGT(
 		const std::vector<Common::Point_f>& cloudTransformed,
 		const std::vector<Common::Point_f>& cloudAfter,
 		const float& weight,

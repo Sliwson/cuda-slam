@@ -137,12 +137,12 @@ namespace CoherentPointDrift
 		{
 			if (*sigmaSquared < 0.05)
 				*sigmaSquared = 0.05;
-			return CPDutils::ComputePMatrixWithFGT(cloudTransformed, cloudAfter, weight, *sigmaSquared, sigmaSquaredInit);
+			return ComputePMatrixWithFGT(cloudTransformed, cloudAfter, weight, *sigmaSquared, sigmaSquaredInit);
 		}
 		if (fgt == ApproximationType::Hybrid)
 		{
 			if (*sigmaSquared > 0.015 * sigmaSquaredInit)
-				return CPDutils::ComputePMatrixWithFGT(cloudTransformed, cloudAfter, weight, *sigmaSquared, sigmaSquaredInit);
+				return ComputePMatrixWithFGT(cloudTransformed, cloudAfter, weight, *sigmaSquared, sigmaSquaredInit);
 			else
 				return ComputePMatrix(cloudTransformed, cloudAfter, constant, *sigmaSquared, true, 1e-3f);
 		}

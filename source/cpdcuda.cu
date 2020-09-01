@@ -154,7 +154,7 @@ namespace
 		const float& scale)
 	{
 		auto cloudTransformedCPU = Common::GetTransformedCloud(cloudBeforeCPU, rotationMatrix, translationVector, scale);
-		auto prob = CPDutils::ComputePMatrixWithFGT(cloudTransformedCPU, cloudAfterCPU, weight, sigmaSquared, sigmaSquaredInit);
+		auto prob = CoherentPointDrift::ComputePMatrixWithFGT(cloudTransformedCPU, cloudAfterCPU, weight, sigmaSquared, sigmaSquaredInit);
 		Eigen::Matrix<float, -1, 3, Eigen::RowMajor> px = prob.px;
 		cudaMemcpy(thrust::raw_pointer_cast(probabilities.p1.data()), prob.p1.data(), cloudBeforeCPU.size() * sizeof(float), cudaMemcpyHostToDevice);
 		cudaMemcpy(thrust::raw_pointer_cast(probabilities.pt1.data()), prob.pt1.data(), cloudAfterCPU.size() * sizeof(float), cudaMemcpyHostToDevice);
