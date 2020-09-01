@@ -50,6 +50,7 @@ The report is devoted to a research of SLAM methods using CUDA technology. We wa
 %Description of the problem, motivating example, killer application, etc.
 
 \subsection{Theoretical background}
+\label{sec:theory}
 \textbf{Simultaneous localization and mapping} (in short SLAM) is the computational problem of constructing or updating a map of an unknown environment while simultaneously keeping track of an agent's location within it \cite{ms-wiki1}. In theory the problem can be simplified to more mathematical definition - given two point sets $P_1 = \{x_1,\dots, x_n\}$ and $P_2=\{y_1, \dots, y_n\}$ find translation $t$ and rotation $R$ that minimizes the mean square error:
 $$MSE(R, t) = \frac{1}{N}\sum_{i=1}{N}(x_i - Ry_i - t)^2$$
 
@@ -79,7 +80,7 @@ Another popular application is mapping real life environments to digital equival
 The most widely described and most popular method for solving SLAM problem is Iterative Closest Point algorithm. The main idea of the algorithm is stated below \cite{ms-pres1}:
 \begin{enumerate}
 \item Determine corresponding points.
-\item Calculate translation and rotation using Singular Value Decomposition.
+\item Calculate translation and rotation using Singular Value Decomposition (in short SVD).
 \item Apply calculated rotation and translation to the point cloud.
 \item Compute Mean Squared Error.
 \item If error decreased and it is greater than given threshold repeat all the steps.
@@ -90,8 +91,8 @@ Various modifications have been proposed to this algorithm (such as sampling poi
 \subsection{Noniterative Closest Point}
 Interesting alternative to an iterative point cloud matching algorithms is a noniterative SVD-based solution. The idea have been described by Shinji Oomori, Takeshi Nishida, and Shuichi Kurogi of Kyushu Institute of Technology. Method is announced to match clouds "with less than 4\% of the computational
 time of the ICP (iterative closest point) algorithm with nearly identical accuracy"\cite{nicp}.\\
-The idea of algorithm is based on computing just two SVDs of large matrices built from respectively source and target points and multiplication of results. Unfortunately, for permuted clouds of different sizes this does not necesarilly mean the results always converge. In original solution this effect is reduced by running the computations for a few different perspectives of observed item. Therefore it can be used with promising results in situations where the item is observed from multiple angles.\\
-Implementation described in this paper presents different approach - the clouds are randomly permuted and for the received result transformation, the mean squared error is computed for subcloud of given size.
+The idea of this algorithm is based on computing just two SVDs of large matrices built from respectively source and target points and multiplication of results. Unfortunately, for permuted clouds of different sizes this does not necesarilly mean the results always converge. In the original solution mentioned above, this effect is reduced by running the computations for a few different perspectives of observed item. Therefore it can be used with promising results in situations where the item is observed from multiple angles.\\
+Implementation described in this paper covers different approach - the copies of source and target clouds are created, each copy with differently permuted points. Transformation matrices received for various permutations can differ, so the result is chosen among them based on the minimal value of mean square error (see section \ref{sec:theory}).
 
 \subsection{Coherent Point Drift}
 
@@ -104,6 +105,27 @@ The solution consists of three projects:
 \item \textit{cpu-slam} - executable project, contains implementation of slam methods for cpu and cpu main.
 \item \textit{gpu-slam} - executable project, contains implementaion of slam methods for gpu and gpu main.
 \end{itemize}
+
+\section{Implementation details}
+%What do we thing is worth mentioning when it comes to implementation?
+%What path has been chosen to parallelize execution especially for GPU?
+%What obstacles have we met when implementing?
+%Why have we chosen to use that libraries
+\subsection{Common elements}
+All of the methods implemented in scope of this project base to a greater or lesser extent on singular value decomposition (SVD), which has significant impact on computation times and quality of the results. Unfortunately, there is no solid library offering that functionallity both for CPU and GPU computations at the same time. For this reason we decided to choose three libraries allowing to receive satisfying results no matter what method is used:
+\begin{itemize}
+\item \textit{Eigen} - widely recommended, open source library for CPU matrix operations
+\item \textit{cuBLAS} and \textit{cuSOLVER} - library created and natively supported by Nvidia for GPU accelerated matrix operations using CUDA technology
+\item \textit{glm} - OpenGL Mathematics library used mainly for storing common parts like point clouds, vectors, transformation matrices and basic operations on them. This library is avaliable also for both host and device managed code what allows to reuse some parts of it for CPU and GPU computations and at the same time simplifies visualising the results
+\end{itemize}
+It is worth clarifying that Eigen has implemented the partial support for CUDA kernels but this feature is still experimental and there are multiple known issues (for example with support for gcc or MS Visual Studio). Adding that to potential problems with performance, we decided not to use this library for GPU accelerated operations in order to maintain higher scalability and stability of the project.
+
+\subsection{Iterative Closest Point}
+
+\subsection{Noniterative closest point}
+The noniterative algorithm does not offer too many ways to benefit from parallel CUDA operations. For that reason the most natural path for parallelizing the code is to run SVDs for multiple permutations of source and target clouds on parallel. Unfortunately, natively supported solution from cuSOLVER library - so called "batched SVD" is not an option due to limitations for decomposed matrices size (it cannot be greater than 32 x 32 which corresponds point clouds of 32 points). For that reason another solution has been developed - each decomposition uses its own CUDA stream which are run parallely in batches of configured size.
+
+\subsection{Coherent point drift}
 
 \subsection{Modules}
 The project is constructed using several modules:
@@ -142,28 +164,6 @@ As we wanted to keep the input simple we decided to use .obj files as the point 
 How can one replicate the experiments?
 Any relevant information and runtime howtos.
 
-\section{Implementation details}
-%What do we thing is worth mentioning when it comes to implementation?
-%What path has been chosen to parallelize execution especially for GPU?
-%What obstacles have we met when implementing?
-%Why have we chosen to use that libraries
-\subsection{Common elements}
-All of the methods implemented in scope of this project base to a greater or lesser extent on singular value decomposition (SVD) which has significant impact on quality of results and computation times. Unfortunately, there is no solid library offering that functionallity both for CPU and GPU computations. For this reason we decided to choose three libraries allowing us to receive satisfying results no matter what method is used:
-\begin{itemize}
-\item Eigen - widely recommended, open source library for CPU matrix operations
-\item cuBLAS and cuSOLVER - library created and natively supported by Nvidia for GPU accelerated matrix operations
-\item glm - OpenGL Mathematics library used mainly for storing common parts like point clouds, vectors, transformation matrices and basic operations on them. This library is avaliable also for device managed code what allows to reuse some parts of code for CPU and GPU managed computations and at the same time simplifies visualising the results
-\end{itemize}
-It is worth clarifying that Eigen has implemented the partial support for CUDA kernels but this feature is still experimental and there are multiple known issues (for example with support for gcc, MS Visual Studio). Adding that to potential problems with performance, we decided not to use this library for GPU accelerated operations in order to maintain higher scalability and stability of the project.
-
-\subsection{Iterative Closest Point}
-
-\subsection{Noniterative closest point}
-The noniterative algorithm does not offer too many ways to take advantage from parallel CUDA operations. For that reason the most natural path for parallelizing the code is to parallely run SVDs for multiple permutations of source and target clouds. Unfortunately, natively supported solution from cuSOLVER library - batched SVD is not an option due to limitations for decomposed matrices size (it cannot be greater than 32 x 32 which corresponds point clouds of 32 points). For that reason another solution has been developed - each decomposition uses its own CUDA stream which are run parallely in batches of configured size.\\
-
-\subsection{Coherent point drift}
-
-
 \section{Description of the results}
 %Performance of the system for different input data/parameters.
 %How we understand the results and why are they correct?
@@ -187,7 +187,7 @@ Any remarks to the results and methods.
 We implemented a solid ground base for development of ICP algorithm. There are a lot of ways it can be improved but the most important would be enhancing performance of correspondences step as it is critical for the whole method execution time. 
 
 \subsection{Noniterative Closest Point}
-This method is for sure the poorest when it comes to documentation and papers dedicated to it. On the other hand, the idea does not leave much space for improvements. The biggest obstacle to using it on greater scale is undetermined convergence ratio. Although the tests conducted showed that running the alogrithm for 20 pseudo-random permutations gives convergence ratio of 100\% but the actual corellation between computation precision and cloud properties such as size or density remains unknown.\\
+This method is for sure the poorest when it comes to documentation and papers dedicated to it. On the other hand, the idea does not leave much space for improvements. The biggest obstacle to using it on greater scale is undetermined convergence ratio. Although the tests conducted showed that running the alogrithm for 20 pseudo-random permutations gives convergence ratio of 100\%, but the actual corellation between computation precision and cloud properties such as size or density remains unknown.\\
 Other place for improvements is related closely to implementation issue. Different libraries and methods of computing SVD offers different accuracy. This can be seen for example by comparing results of CPU computations using Eigen library (recommended as one of the top when it comes to finding matrix decomposition) and GPU's cuSOLVER, where for the second one, error is smaller in majority of test cases. There are also multiple other, both closed and open source implementations for both CPU and GPU which might offer better results when it comes to convergence or computation time, especially for some specific cases.
 
 \subsection{Common improvements}
