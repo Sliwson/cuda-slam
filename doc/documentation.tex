@@ -123,6 +123,7 @@ The project is constructed using several modules:
 \item \textit{GLFW} - for window system.
 \item \textit{Nlohmann/json} - for configuration parsing.
 \item \textit{cuBLAS}, \textit{cuSOLVER} - for gpu matrix operations.
+\item \textit{glm} - 
 \end{itemize}
 
 \section{Input data description}
@@ -140,6 +141,28 @@ As we wanted to keep the input simple we decided to use .obj files as the point 
 \section{Execution, configuration and user guide}
 How can one replicate the experiments?
 Any relevant information and runtime howtos.
+
+\section{Implementation details}
+%What do we thing is worth mentioning when it comes to implementation?
+%What path has been chosen to parallelize execution especially for GPU?
+%What obstacles have we met when implementing?
+%Why have we chosen to use that libraries
+\subsection{Common elements}
+All of the methods implemented in scope of this project base to a greater or lesser extent on singular value decomposition (SVD) which has significant impact on quality of results and computation times. Unfortunately, there is no solid library offering that functionallity both for CPU and GPU computations. For this reason we decided to choose three libraries allowing us to receive satisfying results no matter what method is used:
+\begin{itemize}
+\item Eigen - widely recommended, open source library for CPU matrix operations
+\item cuBLAS and cuSOLVER - library created and natively supported by Nvidia for GPU accelerated matrix operations
+\item glm - OpenGL Mathematics library used mainly for storing common parts like point clouds, vectors, transformation matrices and basic operations on them. This library is avaliable also for device managed code what allows to reuse some parts of code for CPU and GPU managed computations and at the same time simplifies visualising the results
+\end{itemize}
+It is worth clarifying that Eigen has implemented the partial support for CUDA kernels but this feature is still experimental and there are multiple known issues (for example with support for gcc, MS Visual Studio). Adding that to potential problems with performance, we decided not to use this library for GPU accelerated operations in order to maintain higher scalability and stability of the project.
+
+\subsection{Iterative Closest Point}
+
+\subsection{Noniterative closest point}
+The noniterative algorithm does not offer too many ways to take advantage from parallel CUDA operations. For that reason the most natural path for parallelizing the code is to parallely run SVDs for multiple permutations of source and target clouds. Unfortunately, natively supported solution from cuSOLVER library - batched SVD is not an option due to limitations for decomposed matrices size (it cannot be greater than 32 x 32 which corresponds point clouds of 32 points). For that reason another solution has been developed - each decomposition uses its own CUDA stream which are run parallely in batches of configured size.\\
+
+\subsection{Coherent point drift}
+
 
 \section{Description of the results}
 %Performance of the system for different input data/parameters.
