@@ -78,7 +78,7 @@ namespace CUDACommon
 		}
 	}
 
-	void PrintVector(thrust::host_vector<float> vector)
+	void PrintVector(const thrust::host_vector<float>& vector)
 	{
 		for (int i = 0; i < vector.size(); i++)
 		{
@@ -86,7 +86,7 @@ namespace CUDACommon
 		}
 	}
 
-	void PrintVector(thrust::host_vector<glm::vec3> vector)
+	void PrintVector(const thrust::host_vector<glm::vec3>& vector)
 	{
 		for (int i = 0; i < vector.size(); i++)
 		{
@@ -94,13 +94,13 @@ namespace CUDACommon
 		}
 	}
 
-	void PrintVector(thrust::device_vector<float> vector)
+	void PrintVector(const thrust::device_vector<float>& vector)
 	{
 		thrust::host_vector<float> vec = vector;
 		PrintVector(vec);
 	}
 
-	void PrintVector(thrust::device_vector<glm::vec3> vector)
+	void PrintVector(const thrust::device_vector<glm::vec3>& vector)
 	{
 		thrust::host_vector<glm::vec3> vec = vector;
 		PrintVector(vec);

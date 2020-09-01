@@ -42,10 +42,10 @@ namespace CUDACommon
 	__device__ float GetDistanceSquared(const glm::vec3& first, const glm::vec3& second);
 	__global__ void FindCorrespondences(int* result, const glm::vec3* before, const glm::vec3* after, int beforeSize, int afterSize);
 
-	void PrintVector(thrust::host_vector<float> vector);
-	void PrintVector(thrust::host_vector<glm::vec3> vector);
-	void PrintVector(thrust::device_vector<float> vector);
-	void PrintVector(thrust::device_vector<glm::vec3> vector);
+	void PrintVector(const thrust::host_vector<float>& vector);
+	void PrintVector(const thrust::host_vector<glm::vec3>& vector);
+	void PrintVector(const thrust::device_vector<float>& vector);
+	void PrintVector(const thrust::device_vector<glm::vec3>& vector);
 
 	thrust::host_vector<glm::vec3> CommonToThrustVector(const std::vector<Common::Point_f>& vec);
 	std::vector<Common::Point_f> ThrustToCommonVector(const GpuCloud& vec);
