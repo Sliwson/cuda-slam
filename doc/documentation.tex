@@ -88,9 +88,9 @@ The most widely described and most popular method for solving SLAM problem is It
 Various modifications have been proposed to this algorithm (such as sampling point sets, weighting the correspondences or rejecting outliers). However, in this project we focused on the base version of the method as it is good enough for comparison with the other algorithms.
 
 \subsection{Noniterative Closest Point}
-Interesting alternative to iterative point cloud matching algorithms is a noniterative SVD-based solution. The idea have been most commonly described by Shinji Oomori, Takeshi Nishida, and Shuichi Kurogi of Kyushu Institute of Technology. Method is described to match clouds "with less than 4\% of the computational
-time of the ICP (iterative closest point) algorithm with nearly identical accuracy".\\
-The idea of algorithm is based on preparing just two SVDs of large matrices built from source and target points and multiplication of results. Unfortunately, for permuted clouds of different sizes this does not necesarilly mean the results always converge. In original solution this effect is reduced by running the computations for a few different perspectives of observed item. Therefore it can be used with promising results in situations where the item is observed from different angles.\\
+Interesting alternative to an iterative point cloud matching algorithms is a noniterative SVD-based solution. The idea have been described by Shinji Oomori, Takeshi Nishida, and Shuichi Kurogi of Kyushu Institute of Technology. Method is announced to match clouds "with less than 4\% of the computational
+time of the ICP (iterative closest point) algorithm with nearly identical accuracy"\cite{nicp}.\\
+The idea of algorithm is based on computing just two SVDs of large matrices built from respectively source and target points and multiplication of results. Unfortunately, for permuted clouds of different sizes this does not necesarilly mean the results always converge. In original solution this effect is reduced by running the computations for a few different perspectives of observed item. Therefore it can be used with promising results in situations where the item is observed from multiple angles.\\
 Implementation described in this paper presents different approach - the clouds are randomly permuted and for the received result transformation, the mean squared error is computed for subcloud of given size.
 
 \subsection{Coherent Point Drift}
@@ -122,7 +122,7 @@ The project is constructed using several modules:
 \item \textit{Glad} - wrapper for OpenGL.
 \item \textit{GLFW} - for window system.
 \item \textit{Nlohmann/json} - for configuration parsing.
-\item \textit{CuBLAS} - for gpu matrix operations.
+\item \textit{cuBLAS}, \textit{cuSOLVER} - for gpu matrix operations.
 \end{itemize}
 
 \section{Input data description}
@@ -162,6 +162,10 @@ Any remarks to the results and methods.
 
 \subsection{Iterative Closest Point}
 We implemented a solid ground base for development of ICP algorithm. There are a lot of ways it can be improved but the most important would be enhancing performance of correspondences step as it is critical for the whole method execution time. 
+
+\subsection{Noniterative Closest Point}
+This method is for sure the poorest when it comes to documentation and papers dedicated to it. On the other hand, the idea does not leave much space for improvements. The biggest obstacle to using it on greater scale is undetermined convergence ratio. Although the tests conducted showed that running the alogrithm for 20 pseudo-random permutations gives convergence ratio of 100\% but the actual corellation between computation precision and cloud properties such as size or density remains unknown.\\
+Other place for improvements is related closely to implementation issue. Different libraries and methods of computing SVD offers different accuracy. This can be seen for example by comparing results of CPU computations using Eigen library (recommended as one of the top when it comes to finding matrix decomposition) and GPU's cuSOLVER, where for the second one, error is smaller in majority of test cases. There are also multiple other, both closed and open source implementations for both CPU and GPU which might offer better results when it comes to convergence or computation time, especially for some specific cases.
 
 \subsection{Common improvements}
 The key to performant SLAM for big clouds is sampling. We haven't covered it in our work as it is a broad topic and mostly dependent of the specific application of the algorithm. Although, there is no contraindication to use sampled clouds as the input of our program so everybody can make their own experiments in that field.
