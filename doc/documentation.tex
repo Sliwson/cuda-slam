@@ -89,10 +89,22 @@ The most widely described and most popular method for solving SLAM problem is It
 Various modifications have been proposed to this algorithm (such as sampling point sets, weighting the correspondences or rejecting outliers). However, in this project we focused on the base version of the method as it is good enough for comparison with the other algorithms.
 
 \subsection{Non-iterative Closest Point}
-Interesting alternative to an iterative point cloud matching algorithms is a non-iterative SVD-based solution. The idea have been described by Shinji Oomori, Takeshi Nishida, and Shuichi Kurogi of Kyushu Institute of Technology. Method is announced to match clouds "with less than 4\% of the computational
-time of the ICP (iterative closest point) algorithm with nearly identical accuracy"\cite{nicp}.\\
-The idea of this algorithm is based on computing just two SVDs of large matrices built from respectively source and target points and multiplication of results. Unfortunately, for permuted clouds of different sizes this does not necessarily mean the results always converge. In the original solution mentioned above, this effect is reduced by running the computations for a few different perspectives of observed item. Therefore it can be used with promising results in situations where the item is observed from multiple angles.\\
-Implementation described in this paper covers different approach - the copies of source and target clouds are created, each copy with differently permuted points. Transformation matrices received for various permutations can differ, so the result is chosen among them based on the minimal value of mean square error (see section \ref{sec:theory}).
+Compelling alternative to an iterative point cloud matching algorithms is a non-iterative SVD-based solution. The idea has been described by Shinji Oomori, Takeshi Nishida, and Shuichi Kurogi of Kyushu Institute of Technology. They even proclaim that this method is capable of matching clouds "with less than 4\% of the computational time of the ICP (iterative closest point) algorithm with nearly identical accuracy"\cite{nicp}.\\
+The idea of this algorithm can be described in following points:
+\begin{enumerate}
+\item Take point clouds before ($N_1$ points) and after ($N_2$ points) transformation and find mass center for both those clouds ($C_1$ and $C_2$).
+\item Align clouds to their mass centres and store result points in matrices: $A_1$ (size $N_1 \times 3$) and $A_2$ (size $N_2 \times 3$) respectively.
+\item Find matrices $U$ from SVD of both matrices, respectively $U_1$ and $U_2$.
+\item Rotation matrix is then defined as $R = U_1 \times U_2^T$.
+\item Find the translation vector as $t = C_2 - (R \times C_1)$.
+\end{enumerate}
+Unfortunately, for permuted clouds of different sizes this method does not always converge. That is why one more step is necessary for those conditions:
+\begin{enumerate}
+\setcounter{enumi}{5}
+\item To increase convergence ratio, repeat those steps for multiple shots of observed object and select the transformation minimizing the mean square error (see section \ref{sec:theory}).
+\end{enumerate}
+This step is indeed huge improvement but it can be used with promising results only when the item is observed from multiple angles.\\
+Implementation described in this paper covers different approach - the copies of source and target clouds are created, each copy with differently permuted points. Transformations received by using steps from 1. to 5. can differ for various permutations, so the result is chosen among them based on the minimal value of mean square error, similarly to what is proposed in the original idea.
 
 \subsection{Coherent Point Drift}
 
@@ -112,9 +124,9 @@ The solution consists of three projects:
 %What obstacles have we met when implementing?
 %Why have we chosen to use that libraries
 \subsection{Common elements}
-All of the methods implemented in scope of this project base to a greater or lesser extent on singular value decomposition (SVD), which has significant impact on computation times and quality of the results. Unfortunately, there is no solid library offering that functionality both for CPU and GPU computations at the same time. For this reason we decided to choose three libraries allowing to receive satisfying results no matter what method is used:
+All of the methods implemented in the scope of this project base to a greater or lesser extent on matrix operations, which have significant impact on computation times and quality of the results. The most important operation is a singular value decomposition (SVD). Apart from that, also large number of less complicated operations, for instance multiplication or addition, are needed. Unfortunately, there is no solid library offering all those functionalities both for CPU and GPU accelerated computations at the same time. For this reason we decided to choose three libraries allowing to receive satisfying results no matter what method is used:
 \begin{itemize}
-\item \textit{Eigen} - widely recommended, open source library for CPU matrix operations
+\item \textit{Eigen} - widely recommended, fast and open source library for CPU matrix operations
 \item \textit{cuBLAS} and \textit{cuSOLVER} - library created and natively supported by Nvidia for GPU accelerated matrix operations using CUDA technology
 \item \textit{glm} - OpenGL Mathematics library used mainly for storing common parts like point clouds, vectors, transformation matrices and basic operations on them. This library is available also for both host and device managed code what allows to reuse some parts of it for CPU and GPU computations and at the same time simplifies visualising the results
 \end{itemize}
@@ -123,7 +135,12 @@ It is worth clarifying that Eigen has implemented the partial support for CUDA k
 \subsection{Iterative Closest Point}
 
 \subsection{Non-iterative closest point}
-The non-iterative algorithm does not offer too many ways to benefit from parallel CUDA operations. For that reason the most natural path for parallelizing the code is to run SVDs for multiple permutations of source and target clouds on parallel. Unfortunately, natively supported solution from cuSOLVER library - so called "batched SVD" is not an option due to limitations for decomposed matrices size (it cannot be greater than 32 x 32 which corresponds point clouds of 32 points). For that reason another solution has been developed - each decomposition uses its own CUDA stream which are run in parallel batches of configured size.
+The non-iterative algorithm does not offer too many ways to benefit from parallel CUDA operations. For that reason the most natural path for parallelizing the code is to run SVDs for multiple permutations of source and target clouds on parallel. Unfortunately, natively supported solution from cuSOLVER library - so called "batched SVD" is not an option due to limitations for decomposed matrices size (it cannot be greater than 32 x 32 which corresponds point clouds of 32 points). For that reason another solution has been developed - matrices are decomposed by separate threads in batches of configured size. Implementing this solution also brought multiple issues and the following attempts to obtain expected results can be broken down into several stages:
+\begin{enumerate}
+\item Running SVD from separate CPU threads - although the SVD methods from cuSOLVER are marked "thread-safe", running them in parallel as CPU threads leaded to memory access violation and program randomly crashed every few times.
+\item Running SVD from one CPU thread with separate CUDA streams used for each decomposition - by using this method problems with memory access have been solved, but profiling the application showed that streams run sequentially which is not the result expected.
+\item Using separate CPU threads for running decompositions using separate CUDA streams - this method combined the advantages of both approaches, giving truly parallel execution of device managed code, at the same time providing higher parallelization level due to limiting the number of concurrent operations by number of GPU streams instead of CPU threads.
+\end{enumerate}
 
 \subsection{Coherent point drift}
 
@@ -186,7 +203,7 @@ Any remarks to the results and methods.
 We implemented a solid ground base for development of ICP algorithm. There are a lot of ways it can be improved but the most important would be enhancing performance of correspondences step as it is critical for the whole method execution time. 
 
 \subsection{Non-iterative Closest Point}
-This method is for sure the poorest when it comes to documentation and papers dedicated to it. On the other hand, the idea does not leave much space for improvements. The biggest obstacle to using it on greater scale is undetermined convergence ratio. Although the tests conducted showed that running the algorithm for 20 pseudo-random permutations gives convergence ratio of 100\%, but the actual correlation between computation precision and cloud properties such as size or density remains unknown.\\
+This method is for sure the most narrowly documented among all three described in this report. On the other hand, the idea does not leave much space for improvements. The biggest obstacle to using it on greater scale is undetermined convergence ratio. Although the tests conducted showed that running the algorithm for 20 pseudo-random permutations gives convergence ratio of 100\%, but the actual correlation between computation precision and cloud properties such as size or density remains unknown.\\
 Other place for improvements is related closely to implementation issue. Different libraries and methods of computing SVD offers different accuracy. This can be seen for example by comparing results of CPU computations using Eigen library (recommended as one of the top when it comes to finding matrix decomposition) and GPU's cuSOLVER, where for the second one, error is smaller in majority of test cases. There are also multiple other, both closed and open source implementations for both CPU and GPU which might offer better results when it comes to convergence or computation time, especially for some specific cases.
 
 \subsection{Common improvements}
