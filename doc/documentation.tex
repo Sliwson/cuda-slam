@@ -8,6 +8,7 @@
 \usepackage{geometry}
 \usepackage{hyperref} 
 \usepackage{float}
+\usepackage{enumitem}
 
 \graphicspath{{./images/}}
 
@@ -91,6 +92,35 @@ Various modifications have been proposed to this algorithm (such as sampling poi
 
 \subsection{Coherent Point Drift}
 
+In this method alignment of two point sets is considered as a probability density estimation problem. One point set represents the Gaussian mixture model (GMM) centroinds. The second one represents the data points. Two point sets become aligned when optimum is reached. Method uses Expectation Maximization (EM) algorithm to find scale, rotation matrix and translation vector.\\
+Main idea of coherent point drift can be presented in several steps:
+\begin{itemize}[label={}]
+\item E-step:
+\begin{enumerate}
+\item Compute probabilities matrix P. P describes probability of correspondence of points from both sets.
+\end{enumerate}
+\item M-step: 
+\begin{enumerate}
+\item Using P and point sets calculate matrix A.
+\item Calculate rotation matrix using Singular Value Decomposition of matrix A.
+\item Calculate scale and translation vector using point sets and SVD result.
+\end{enumerate}
+\item Repeat E-step and M-step until convergence.
+\end{itemize}
+Full algorithm was described by Andriy Myronenko and Xubo Song \cite{cpd}.\\
+Algorithm has wide area available for improvements.\\
+Firstly the size of P matrix is $N \times M$, where $N$ is size of first point set and $M$ is size of second point set. It requires a lot of memory to keep matrix of this size, so instead we can calculate vectors: $P1$, $P^T 1$ and matrix $PX$, where $1$ is vector of all ones and $X$ is first point set. Using these vectors and matrix we can achieve the same result even faster because in calculations we had to multiply P matrix with ones vector and we have already done it.\\
+Secondly the main bottleneck of algorithm is the calculation of matrix-vector products $P1$, $P^T1$ and $PX$. This is done with $O(MN)$ complexity. The fast Gauss transform, introduced by Greengard and Strain \cite{fgt}, reduces complexity to only $O(M+N)$.
+\section{Program architecture}
+%Short description on the modules of the system, requirements, dependencies, etc.
+\subsection{Project structure}
+The solution consists of three projects:
+\begin{itemize}
+\item \textit{common} - static library project, contains all elements that are shared between cpu and gpu implementations.
+\item \textit{cpu-slam} - executable project, contains implementation of slam methods for cpu and cpu main.
+\item \textit{gpu-slam} - executable project, contains implementaion of slam methods for gpu and gpu main.
+\end{itemize}
+
 \section{Program architecture}
 %Short description on the modules of the system, requirements, dependencies, etc.
 \subsection{Project structure}
@@ -157,10 +187,14 @@ Any remarks to the results and methods.
 %What do we want to do in future, improvements.
 
 \subsection{Iterative Closest Point}
-We implemented a solid ground base for development of ICP algorithm. There are a lot of ways it can be improved but the most important would be enhancing performance of correspondences step as it is critical for the whole method execution time. 
+We implemented a solid ground base for development of ICP algorithm. There are a lot of ways it can be improved but the most important would be enhancing performance of correspondences step as it is critical for the whole method execution time.
+
+\subsection{Coherent Point Drift}
+We implemented whole rigid part of the algorithm on cpu, including FGT. Unfortunately FGT was not implemented on GPU due to complexity of this solution and lack of reliable external implementation. This is main area of improvement for GPU solution. Coherent Point Drift also has affine and non-rigid versions that are worth mentioning. Future works can mainly focus on improving GPU solution and moving to non-rigid transformations.
+
 
 \subsection{Common improvements}
-The key to performant SLAM for big clouds is sampling. We haven't covered it in our work as it is a broad topic and mostly dependent of the specific application of the algorithm. Although, there is no contraindication to use sampled clouds as the input of our program so everybody can make their own experiments in that field.
+The key to performant SLAM for big clouds is sampling. We have not covered it in our work as it is a broad topic and mostly dependent of the specific application of the algorithm. Although, there is no contraindication to use sampled clouds as the input of our program so everybody can make their own experiments in that field.
 
 \newpage
 \printbibliography
