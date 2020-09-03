@@ -7,10 +7,15 @@
 using namespace Common;
 
 namespace {
-	std::pair<glm::mat3, glm::vec3> GetGpuSlamResult(const ::CpuCloud& before, const ::CpuCloud& after, Configuration configuration, int* iterations)
+	constexpr auto eps = 1e-5f;
+
+	std::pair<glm::mat3, glm::vec3> GetGpuSlamResult(const CpuCloud& before, const CpuCloud& after, Configuration configuration, int* iterations)
 	{
+		const int maxIterations = configuration.MaxIterations.has_value() ? configuration.MaxIterations.value() : -1;
+
 		switch (configuration.ComputationMethod) {
 			case ComputationMethod::Icp:
+				return GetCudaIcpTransformationMatrix(before, after, iterations, eps, maxIterations);
 			case ComputationMethod::NoniterativeIcp:
 			case ComputationMethod::Cpd:
 			default:
@@ -22,7 +27,7 @@ namespace {
 
 	int RunGpuTests()
 	{ 
-		const auto methods = { ComputationMethod::Icp, ComputationMethod::NoniterativeIcp, ComputationMethod::Cpd };
+		const auto methods = { ComputationMethod::Icp };
 		Tests::RunTestSet(::GetSizesTestSet, GetGpuSlamResult, "sizes", methods);
 		return 0;
 	}

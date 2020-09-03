@@ -65,6 +65,7 @@ namespace Common
 
 	/// Converts rotation and translation to single transformation matrix 
 	glm::mat4 ConvertToTransformationMatrix(const glm::mat3& rotationMatrix, const glm::vec3& translationVector);
+	std::pair<glm::mat3, glm::vec3> ConvertToRotationTranslationPair(const glm::mat4& transformationMatrix);
 
 	// Printing different types of matrices 
 	void PrintMatrix(Eigen::Matrix3f matrix);

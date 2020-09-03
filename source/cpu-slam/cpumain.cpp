@@ -7,7 +7,7 @@
 using namespace Common;
 
 namespace {
-	std::pair<glm::mat3, glm::vec3> GetCpuSlamResult(const ::CpuCloud& before, const ::CpuCloud& after, Configuration configuration, int* iterations)
+	std::pair<glm::mat3, glm::vec3> GetCpuSlamResult(const CpuCloud& before, const CpuCloud& after, Configuration configuration, int* iterations)
 	{
 		switch (configuration.ComputationMethod) {
 			case ComputationMethod::Icp:

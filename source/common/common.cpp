@@ -276,6 +276,13 @@ namespace Common
 		return matrix;
 	}
 
+	std::pair<glm::mat3, glm::vec3> ConvertToRotationTranslationPair(const glm::mat4& transformationMatrix)
+	{
+		auto matrix = glm::mat3(transformationMatrix);
+		auto vector = glm::vec3(transformationMatrix[3]);
+		return std::make_pair(matrix, vector);
+	}
+
 	void PrintMatrix(Eigen::Matrix3f matrix)
 	{
 		std::stringstream ss;
