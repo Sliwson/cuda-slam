@@ -289,4 +289,59 @@ namespace CUDACommon
 		thrust::transform(thrust::device, before.begin(), before.end(), indices.begin(), nearestFunctor);
 #endif
 	}
+
+	void CorrespondencesTest()
+	{
+		const int size = 100;
+		thrust::device_vector<glm::vec3> input(size);
+		thrust::device_vector<glm::vec3> output(size);
+		thrust::device_vector<int> result(size);
+
+		for (int i = 0; i < size; i++)
+		{
+			const auto vec = glm::vec3(i);
+			input[i] = vec;
+			output[size - i - 1] = vec;
+		}
+
+		GetCorrespondingPoints(result, input, output);
+		thrust::host_vector<int> copy = result;
+		bool ok = true;
+		int hostArray[size];
+		for (int i = 0; i < size; i++)
+		{
+			hostArray[i] = copy[i];
+			if (copy[i] != size - i - 1)
+				ok = false;
+		}
+
+		printf("Correspondence test [%s]\n", ok ? "OK" : "FAILED");
+	}
+
+	void MultiplicationTest()
+	{
+		const int size = 100;
+
+		float ones[3 * size];
+		for (int i = 0; i < 3 * size; i++)
+			ones[i] = 1.f;
+
+		CudaSvdParams params(size, size, 3, 3);
+		cudaMemcpy(params.workBefore, ones, 3 * size * sizeof(float), cudaMemcpyHostToDevice);
+		cudaMemcpy(params.workAfter, ones, 3 * size * sizeof(float), cudaMemcpyHostToDevice);
+
+		CuBlasMultiply(params.workBefore, params.workAfter, params.multiplyResult, size, params);
+
+		float result[9];
+		cudaMemcpy(result, params.multiplyResult, 9 * sizeof(float), cudaMemcpyDeviceToHost);
+
+		bool ok = true;
+		for (int i = 0; i < 9; i++)
+			if (abs(result[i] - size) > 1e-5)
+				ok = false;
+
+		printf("Multiplication test [%s]\n", ok ? "OK" : "FAILED");
+		params.Free();
+	}
+
 }

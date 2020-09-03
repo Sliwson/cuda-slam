@@ -16,6 +16,8 @@ namespace {
 			default:
 				assert(false); //unknown method
 		}
+
+		return { glm::mat3(0), glm::vec3(0) };
 	}
 
 	int RunGpuTests()
