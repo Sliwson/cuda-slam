@@ -1,12 +1,17 @@
 #pragma once
 
 #include "_common.h"
+#include "testrunner.h"
 
-using namespace Common;
+namespace Common {
+	struct Configuration;
+}
 
 namespace Tests
 {
 	constexpr int RANDOM_SEED = 666;
+	using Point_f = Common::Point_f;
+	using AcquireFunc = std::function<std::vector<Common::Configuration>(Common::ComputationMethod)>;
 
 	// Generate random data
 	//
@@ -21,4 +26,8 @@ namespace Tests
 	// Helpers
 	//
 	glm::mat3 GetRotationMatrix(const Point_f& rotationAxis, float rotationAngle);
+
+	// Run test batches, empty metdhos vector means running all methods
+	//
+	void RunTestSet(const AcquireFunc& acquireFunc, const Common::SlamFunc& slamFunc, const std::string& name, const std::vector<Common::ComputationMethod>& methods = {});
 }

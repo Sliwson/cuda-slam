@@ -61,4 +61,29 @@ namespace Tests
 		const auto rotation = glm::rotate(glm::mat4(1.0f), rotationAngleRadians, glm::normalize(glm::vec3(rotationAxis)));
 		return glm::mat3(rotation);
 	}
+
+	void RunTestSet(const AcquireFunc& acquireFunc, const Common::SlamFunc& slamFunc, const std::string& name, const std::vector<Common::ComputationMethod>& methodsToRun)
+	{
+		static_assert(static_cast<int>(Common::ComputationMethod::Icp) == 0);
+		static_assert(static_cast<int>(Common::ComputationMethod::NoniterativeIcp) == 1);
+		static_assert(static_cast<int>(Common::ComputationMethod::Cpd) == 2);
+
+		const std::vector<std::string> methods = { "icp", "nicp", "cpd" };
+
+		for (int i = 0; i < methods.size(); i++)
+		{
+			const auto hasMethod = std::find(methodsToRun.begin(), methodsToRun.end(), Common::ComputationMethod(i)) != methodsToRun.end();
+			if (!methodsToRun.size() > 0 && !hasMethod)
+				continue;
+
+			auto testSet = acquireFunc(Common::ComputationMethod(i));
+			const auto fileName = name + "-" + methods[i] + ".csv";
+			auto runner = Common::TestRunner(slamFunc, fileName);
+
+			for (const auto& test : testSet)
+				runner.AddTest(test);
+
+			runner.RunAll();
+		}
+	}
 }

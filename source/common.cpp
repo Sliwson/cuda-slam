@@ -24,7 +24,7 @@ namespace Common
 		if (subcloudSize >= cloud.size())
 			return cloud;
 
-		std::vector<int> subcloudIndices = GetRandomPermutationVector(cloud.size());
+		std::vector<int> subcloudIndices = GetRandomPermutationVector(static_cast<int>(cloud.size()));
 		subcloudIndices.resize(subcloudSize);
 
 		std::vector<Point_f> subcloud(subcloudIndices.size());
@@ -123,7 +123,7 @@ namespace Common
 		}
 		else
 		{
-			assert(false, "Wrong configuration!");
+			assert(false); // Wrong configuration!
 			return std::make_pair(before, after);
 		}
 	}
