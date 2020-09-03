@@ -1,27 +1,27 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <CudaCompile Include="source\cuda.cu" />
-    <CudaCompile Include="source\functors.cu" />
-    <CudaCompile Include="source\cpdcuda.cu" />
-    <CudaCompile Include="source\icpcuda.cu" />
-    <CudaCompile Include="source\nicpcuda.cu" />
-    <CudaCompile Include="source\svdparams.cu" />
-    <CudaCompile Include="source\parallelsvdhelper.cu" />
+    <CudaCompile Include="source\cuda-slam\cpdcuda.cu" />
+    <CudaCompile Include="source\cuda-slam\cuda.cu" />
+    <CudaCompile Include="source\cuda-slam\functors.cu" />
+    <CudaCompile Include="source\cuda-slam\icpcuda.cu" />
+    <CudaCompile Include="source\cuda-slam\nicpcuda.cu" />
+    <CudaCompile Include="source\cuda-slam\parallelsvdhelper.cu" />
+    <CudaCompile Include="source\cuda-slam\svdparams.cu" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="source\cuda.cuh" />
-    <ClInclude Include="source\functors.cuh" />
-    <ClInclude Include="source\svdparams.cuh" />
-    <ClInclude Include="source\cpdcuda.cuh" />
-    <ClInclude Include="source\icpcuda.cuh" />
-    <ClInclude Include="source\parallelsvdhelper.cuh" />
-    <ClInclude Include="source\nicpcuda.cuh" />
-    <ClInclude Include="source\nicpslamargs.cuh" />
-    <ClInclude Include="source\mstepparams.cuh" />
-    <ClInclude Include="source\cudaprobabilities.h" />
+    <ClInclude Include="source\cuda-slam\cpdcuda.cuh" />
+    <ClInclude Include="source\cuda-slam\cuda.cuh" />
+    <ClInclude Include="source\cuda-slam\cudaprobabilities.h" />
+    <ClInclude Include="source\cuda-slam\functors.cuh" />
+    <ClInclude Include="source\cuda-slam\icpcuda.cuh" />
+    <ClInclude Include="source\cuda-slam\mstepparams.cuh" />
+    <ClInclude Include="source\cuda-slam\nicpcuda.cuh" />
+    <ClInclude Include="source\cuda-slam\nicpslamargs.cuh" />
+    <ClInclude Include="source\cuda-slam\parallelsvdhelper.cuh" />
+    <ClInclude Include="source\cuda-slam\svdparams.cuh" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="source\gpumain.cpp" />
+    <ClCompile Include="source\cuda-slam\gpumain.cpp" />
   </ItemGroup>
 </Project>

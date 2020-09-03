@@ -10,6 +10,7 @@
 
 using namespace CUDACommon;
 using namespace MStepParams;
+using namespace Common;
 
 namespace
 {

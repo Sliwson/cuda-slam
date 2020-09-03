@@ -1,6 +1,7 @@
 #pragma once
 
-#include "coherentpointdrift.h"
+#include "_common.h"
+#include <Eigen/Dense>
 
 namespace CoherentPointDrift
 {

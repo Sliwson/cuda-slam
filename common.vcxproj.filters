@@ -1,109 +1,149 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="source\common.cpp" />
-    <ClCompile Include="source\loader.cpp" />
-    <ClCompile Include="source\camera.cpp">
-      <Filter>GUI\Camera</Filter>
-    </ClCompile>
-    <ClCompile Include="source\moveablecamera.cpp">
-      <Filter>GUI\Camera</Filter>
-    </ClCompile>
-    <ClCompile Include="source\shader.cpp">
-      <Filter>GUI\Shaders</Filter>
-    </ClCompile>
-    <ClCompile Include="source\renderer.cpp">
-      <Filter>GUI\Renderer</Filter>
-    </ClCompile>
-    <ClCompile Include="source\shaderfactory.cpp">
-      <Filter>GUI\Shaders</Filter>
-    </ClCompile>
-    <ClCompile Include="source\Icosphere.cpp">
-      <Filter>GUI\Sphere</Filter>
-    </ClCompile>
-    <ClCompile Include="source\glad.c">
-      <Filter>GUI</Filter>
-    </ClCompile>
-    <ClCompile Include="source\testutils.cpp" />
-    <ClCompile Include="source\timer.cpp" />
-    <ClCompile Include="source\configparser.cpp" />
-    <ClCompile Include="source\configuration.cpp" />
-    <ClCompile Include="source\testrunner.cpp" />
-    <ClCompile Include="source\testset.cpp" />
-    <ClCompile Include="source\nicputils.cpp" />
-    <ClCompile Include="source\fgt.cpp" />
-    <ClCompile Include="source\cpdutils.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="source\loader.h" />
-    <ClInclude Include="source\point.h" />
-    <ClInclude Include="source\common.h" />
-    <ClInclude Include="source\moveablecamera.h">
-      <Filter>GUI\Camera</Filter>
-    </ClInclude>
-    <ClInclude Include="source\shader.h">
-      <Filter>GUI\Shaders</Filter>
-    </ClInclude>
-    <ClInclude Include="source\renderer.h">
-      <Filter>GUI\Renderer</Filter>
-    </ClInclude>
-    <ClInclude Include="source\shaderfactory.h">
-      <Filter>GUI\Shaders</Filter>
-    </ClInclude>
-    <ClInclude Include="source\camera.h">
-      <Filter>GUI\Camera</Filter>
-    </ClInclude>
-    <ClInclude Include="source\shadertype.h">
-      <Filter>GUI\Shaders</Filter>
-    </ClInclude>
-    <ClInclude Include="source\Icosphere.h">
-      <Filter>GUI\Sphere</Filter>
-    </ClInclude>
-    <ClInclude Include="source\_common.h" />
-    <ClInclude Include="source\testutils.h" />
-    <ClInclude Include="source\timer.h" />
-    <ClInclude Include="source\configparser.h" />
-    <ClInclude Include="source\configuration.h" />
-    <ClInclude Include="source\enumerators.h" />
-    <ClInclude Include="source\testrunner.h" />
-    <ClInclude Include="source\testset.h" />
-    <ClInclude Include="source\nicputils.h" />
-    <ClInclude Include="source\cpdutils.h" />
-    <ClInclude Include="source\fgt.h" />
-    <ClInclude Include="source\fgt_model.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <Filter Include="GUI">
-      <UniqueIdentifier>{22d24f08-29f6-4608-9758-6e5c74f8a28a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="GUI\Shaders">
-      <UniqueIdentifier>{32b1b8ad-4fd1-4112-b2b5-1b14738dd091}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="GUI\Camera">
-      <UniqueIdentifier>{da0f6c4b-81ef-4761-bfbb-96d603d4de15}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="GUI\Renderer">
-      <UniqueIdentifier>{2b4e80d3-6822-49a5-86ab-b2daf48ab7e5}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="GUI\Sphere">
-      <UniqueIdentifier>{aed031b0-fc6c-44a1-b0a6-5f60b7354f9d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="configuration">
+    <Filter Include="Configuration">
       <UniqueIdentifier>{8323d1ef-dcbf-4096-82aa-5bcf28bce7d6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Renderer">
+      <UniqueIdentifier>{cc2cdb2f-5e34-4453-9d80-a2b8d1669dec}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tests">
+      <UniqueIdentifier>{e220799f-793f-42a0-8fdb-2f90515c1c43}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utils">
+      <UniqueIdentifier>{90ddf398-9f67-4e08-869c-c4dedfef48e9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="source\shaders\vertexshader.vert">
-      <Filter>GUI\Shaders</Filter>
-    </None>
-    <None Include="source\shaders\fragmentshader.frag">
-      <Filter>GUI\Shaders</Filter>
-    </None>
     <None Include="config\default.json">
-      <Filter>configuration</Filter>
+      <Filter>Configuration</Filter>
     </None>
     <None Include="config\schema.json">
-      <Filter>configuration</Filter>
+      <Filter>Configuration</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="source\common\camera.cpp">
+      <Filter>Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="source\common\glad.c">
+      <Filter>Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="source\common\Icosphere.cpp">
+      <Filter>Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="source\common\moveablecamera.cpp">
+      <Filter>Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="source\common\renderer.cpp">
+      <Filter>Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="source\common\shader.cpp">
+      <Filter>Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="source\common\shaderfactory.cpp">
+      <Filter>Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="source\common\testrunner.cpp">
+      <Filter>Tests</Filter>
+    </ClCompile>
+    <ClCompile Include="source\common\testset.cpp">
+      <Filter>Tests</Filter>
+    </ClCompile>
+    <ClCompile Include="source\common\testutils.cpp">
+      <Filter>Tests</Filter>
+    </ClCompile>
+    <ClCompile Include="source\common\timer.cpp">
+      <Filter>Tests</Filter>
+    </ClCompile>
+    <ClCompile Include="source\common\common.cpp" />
+    <ClCompile Include="source\common\cpdutils.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="source\common\fgt.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="source\common\loader.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="source\common\nicputils.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="source\common\configparser.cpp">
+      <Filter>Configuration</Filter>
+    </ClCompile>
+    <ClCompile Include="source\common\configuration.cpp">
+      <Filter>Configuration</Filter>
+    </ClCompile>
+    <ClCompile Include="source\common\mainwrapper.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="source\common\camera.h">
+      <Filter>Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="source\common\Icosphere.h">
+      <Filter>Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="source\common\moveablecamera.h">
+      <Filter>Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="source\common\renderer.h">
+      <Filter>Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="source\common\shader.h">
+      <Filter>Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="source\common\shaderfactory.h">
+      <Filter>Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="source\common\shadertype.h">
+      <Filter>Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="source\common\testrunner.h">
+      <Filter>Tests</Filter>
+    </ClInclude>
+    <ClInclude Include="source\common\testset.h">
+      <Filter>Tests</Filter>
+    </ClInclude>
+    <ClInclude Include="source\common\testutils.h">
+      <Filter>Tests</Filter>
+    </ClInclude>
+    <ClInclude Include="source\common\timer.h">
+      <Filter>Tests</Filter>
+    </ClInclude>
+    <ClInclude Include="source\common\_common.h" />
+    <ClInclude Include="source\common\common.h" />
+    <ClInclude Include="source\common\cpdutils.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="source\common\enumerators.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="source\common\fgt.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="source\common\fgt_model.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="source\common\loader.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="source\common\nicputils.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="source\common\point.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="source\common\configparser.h">
+      <Filter>Configuration</Filter>
+    </ClInclude>
+    <ClInclude Include="source\common\configuration.h">
+      <Filter>Configuration</Filter>
+    </ClInclude>
+    <ClInclude Include="source\common\mainwrapper.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

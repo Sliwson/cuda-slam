@@ -22,33 +22,33 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="source\cpdcuda.cu" />
-    <CudaCompile Include="source\cuda.cu" />
-    <CudaCompile Include="source\functors.cu" />
-    <CudaCompile Include="source\icpcuda.cu" />
-    <CudaCompile Include="source\nicpcuda.cu" />
-    <CudaCompile Include="source\parallelsvdhelper.cu" />
-    <CudaCompile Include="source\svdparams.cu" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="source\gpumain.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="source\cpdcuda.cuh" />
-    <ClInclude Include="source\cuda.cuh" />
-    <ClInclude Include="source\cudaprobabilities.h" />
-    <ClInclude Include="source\functors.cuh" />
-    <ClInclude Include="source\icpcuda.cuh" />
-    <ClInclude Include="source\nicpcuda.cuh" />
-    <ClInclude Include="source\nicpslamargs.cuh" />
-    <ClInclude Include="source\parallelsvdhelper.cuh" />
-    <ClInclude Include="source\mstepparams.cuh" />
-    <ClInclude Include="source\svdparams.cuh" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="common.vcxproj">
       <Project>{0aab92a4-6c20-46b0-ba76-656a393b5f4a}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="source\cuda-slam\cpdcuda.cu" />
+    <CudaCompile Include="source\cuda-slam\cuda.cu" />
+    <CudaCompile Include="source\cuda-slam\functors.cu" />
+    <CudaCompile Include="source\cuda-slam\icpcuda.cu" />
+    <CudaCompile Include="source\cuda-slam\nicpcuda.cu" />
+    <CudaCompile Include="source\cuda-slam\parallelsvdhelper.cu" />
+    <CudaCompile Include="source\cuda-slam\svdparams.cu" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="source\cuda-slam\cpdcuda.cuh" />
+    <ClInclude Include="source\cuda-slam\cuda.cuh" />
+    <ClInclude Include="source\cuda-slam\cudaprobabilities.h" />
+    <ClInclude Include="source\cuda-slam\functors.cuh" />
+    <ClInclude Include="source\cuda-slam\icpcuda.cuh" />
+    <ClInclude Include="source\cuda-slam\mstepparams.cuh" />
+    <ClInclude Include="source\cuda-slam\nicpcuda.cuh" />
+    <ClInclude Include="source\cuda-slam\nicpslamargs.cuh" />
+    <ClInclude Include="source\cuda-slam\parallelsvdhelper.cuh" />
+    <ClInclude Include="source\cuda-slam\svdparams.cuh" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="source\cuda-slam\gpumain.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{997E0757-EA74-4A4E-A0FC-47D8C8831A15}</ProjectGuid>
@@ -97,7 +97,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>WIN32;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>./;$(CudaToolkitDir)/include;$(ProjectDir)include;../../common/inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./;$(CudaToolkitDir)/include;$(ProjectDir)include;$(ProjectDir)source/common;../../common/inc</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
