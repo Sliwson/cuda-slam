@@ -26,7 +26,6 @@
     <ClCompile Include="source\shader.cpp" />
     <ClCompile Include="source\shaderfactory.cpp" />
     <ClCompile Include="source\testrunner.cpp" />
-    <ClCompile Include="source\tests.cpp" />
     <ClCompile Include="source\testset.cpp" />
     <ClCompile Include="source\testutils.cpp" />
     <ClCompile Include="source\timer.cpp" />
@@ -50,7 +49,6 @@
     <ClInclude Include="source\shaderfactory.h" />
     <ClInclude Include="source\shadertype.h" />
     <ClInclude Include="source\testrunner.h" />
-    <ClInclude Include="source\tests.h" />
     <ClInclude Include="source\testset.h" />
     <ClInclude Include="source\testutils.h" />
     <ClInclude Include="source\timer.h" />

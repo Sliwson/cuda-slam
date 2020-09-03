@@ -31,7 +31,7 @@
     <CudaCompile Include="source\svdparams.cu" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="source\main.cpp" />
+    <ClCompile Include="source\gpumain.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\cpdcuda.cuh" />

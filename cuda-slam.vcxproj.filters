@@ -10,9 +10,6 @@
     <CudaCompile Include="source\parallelsvdhelper.cu" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="source\main.cpp" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="source\cuda.cuh" />
     <ClInclude Include="source\functors.cuh" />
     <ClInclude Include="source\svdparams.cuh" />
@@ -23,5 +20,8 @@
     <ClInclude Include="source\nicpslamargs.cuh" />
     <ClInclude Include="source\mstepparams.cuh" />
     <ClInclude Include="source\cudaprobabilities.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="source\gpumain.cpp" />
   </ItemGroup>
 </Project>

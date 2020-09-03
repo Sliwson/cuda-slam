@@ -24,7 +24,6 @@
     <ClCompile Include="source\glad.c">
       <Filter>GUI</Filter>
     </ClCompile>
-    <ClCompile Include="source\tests.cpp" />
     <ClCompile Include="source\testutils.cpp" />
     <ClCompile Include="source\timer.cpp" />
     <ClCompile Include="source\configparser.cpp" />
@@ -61,7 +60,6 @@
       <Filter>GUI\Sphere</Filter>
     </ClInclude>
     <ClInclude Include="source\_common.h" />
-    <ClInclude Include="source\tests.h" />
     <ClInclude Include="source\testutils.h" />
     <ClInclude Include="source\timer.h" />
     <ClInclude Include="source\configparser.h" />
