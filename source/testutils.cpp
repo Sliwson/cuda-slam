@@ -73,7 +73,7 @@ namespace Tests
 		for (int i = 0; i < methods.size(); i++)
 		{
 			const auto hasMethod = std::find(methodsToRun.begin(), methodsToRun.end(), Common::ComputationMethod(i)) != methodsToRun.end();
-			if (!methodsToRun.size() > 0 && !hasMethod)
+			if (methodsToRun.size() > 0 && !hasMethod)
 				continue;
 
 			auto testSet = acquireFunc(Common::ComputationMethod(i));

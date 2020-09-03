@@ -9,7 +9,7 @@ using namespace Common;
 
 namespace BasicICP
 {
-	constexpr float ICP_EPS = 1e-5;
+	constexpr float ICP_EPS = 1e-5f;
 
 	std::pair<glm::mat3, glm::vec3> CalculateICPWithConfiguration(const std::vector<Common::Point_f>& cloudBefore, const std::vector<Common::Point_f>& cloudAfter, Common::Configuration config, int* iterations)
 	{
@@ -51,7 +51,7 @@ namespace BasicICP
 			// count error
 			*error = GetMeanSquaredError(transformedCloud, cloudAfter, std::get<2>(correspondingPoints), std::get<3>(correspondingPoints));
 
-			printf("loop_nr %d, error: %f, correspondencesSize: %d\n", *iterations, *error, std::get<2>(correspondingPoints).size());
+			printf("loop_nr %d, error: %f, correspondencesSize: %zd\n", *iterations, *error, std::get<2>(correspondingPoints).size());
 
 			if (*error < eps)
 			{

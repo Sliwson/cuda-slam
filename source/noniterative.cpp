@@ -11,7 +11,7 @@ using namespace Common;
 
 namespace NonIterative
 {
-	constexpr auto NICP_EPS = 1e-5;
+	constexpr auto NICP_EPS = 1e-5f;
 
 	std::pair<glm::mat3, glm::vec3> CalculateNonIterativeWithConfiguration(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, Common::Configuration config, int* repetitions)
 	{

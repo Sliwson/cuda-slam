@@ -24,6 +24,7 @@ namespace {
 				return CoherentPointDrift::CalculateCpdWithConfiguration(before, after, configuration, iterations);
 			default:
 				assert(false); //unknown method
+				return BasicICP::CalculateICPWithConfiguration(before, after, configuration, iterations);
 		}
 	}
 

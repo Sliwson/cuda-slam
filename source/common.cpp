@@ -381,12 +381,12 @@ namespace Common
 		};
 
 		const auto threadWorkLength = cloudBefore.size() / threadCount;
-		for (int i = 0; i < threadCount - 1; i++)
+		for (unsigned int i = 0; i < threadCount - 1; i++)
 			workerThreads.push_back(std::thread(calculate_correspondences, i * threadWorkLength, (i + 1) * threadWorkLength));
 
 		workerThreads.push_back(std::thread(calculate_correspondences, (threadCount - 1) * threadWorkLength, cloudBefore.size()));
 
-		for (int i = 0; i < threadCount; i++)
+		for (unsigned int i = 0; i < threadCount; i++)
 			workerThreads[i].join();
 
 		std::vector<Point_f> correspondingFromCloudBefore(cloudBefore.size());
