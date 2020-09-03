@@ -131,6 +131,12 @@ The solution consists of three projects:
 \item \textit{gpu-slam} - executable project, contains implementaion of slam methods for gpu and gpu main.
 \end{itemize}
 
+%\subsection{CPD}
+
+CPU solution of coherent point drift is based on algorithm description described in \cite{cpd}. It also uses Matlab code provided by authors. FGT algorithm implementation is based on Matlab implementation. %provide link
+%https://www.mathworks.com/matlabcentral/fileexchange/17438-fast-gaussian-transform-mex-implementation
+Parallelization of CPU solution on GPU mainly focuses on parallel matrices multiplication using cuBlas and using thrust whenever possible.
+
 \subsection{Modules}
 The project is constructed using several modules:
 \begin{itemize}
