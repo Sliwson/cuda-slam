@@ -11,10 +11,11 @@ using namespace Common;
 namespace {
 	constexpr auto eps = 1e-5f;
 
-	//todo move nicp config to configuration class
+	// TODO: move to configuration class
 	constexpr auto nicpIterDefault = 20;
 	constexpr auto nicpSubcloudDefault = 1000;
 	constexpr auto nicpBatchSize = 16;
+	constexpr auto cpdConstScale = true;
 
 	std::pair<glm::mat3, glm::vec3> GetGpuSlamResult(const CpuCloud& before, const CpuCloud& after, Configuration configuration, int* iterations)
 	{
@@ -30,16 +31,16 @@ namespace {
 			case ComputationMethod::NoniterativeIcp:
 				return GetCudaNicpTransformationMatrix(before, after, iterations, &error, eps, maxNicpRepetitions, nicpBatchSize, configuration.ApproximationType, nicpSubcloudSize);
 			case ComputationMethod::Cpd:
+				return GetCudaCpdTransformationMatrix(before, after, iterations, &error, eps, configuration.CpdWeight, cpdConstScale, maxIterations, eps, configuration.ApproximationType);
 			default:
 				assert(false); //unknown method
+				return GetCudaIcpTransformationMatrix(before, after, iterations, eps, maxIterations);
 		}
-
-		return { glm::mat3(0), glm::vec3(0) };
 	}
 
 	int RunGpuTests()
 	{ 
-		const auto methods = { ComputationMethod::NoniterativeIcp };
+		const auto methods = { ComputationMethod::Cpd };
 		Tests::RunTestSet(::GetSizesTestSet, GetGpuSlamResult, "sizes", methods);
 		return 0;
 	}

@@ -349,3 +349,27 @@ namespace
 		return ConvertToTransformationMatrix(scale * rotationMatrix, translationVector);
 	}
 }
+
+std::pair<glm::mat3, glm::vec3> GetCudaCpdTransformationMatrix(
+	const std::vector<Point_f>& cloudBefore,
+	const std::vector<Point_f>& cloudAfter,
+	int* iterations,
+	float* error,
+	float eps,
+	float weight,
+	bool const_scale,
+	int maxIterations,
+	float tolerance,
+	Common::ApproximationType fgt)
+{
+	
+	GpuCloud before(cloudBefore.size());
+	GpuCloud after(cloudAfter.size());
+
+	checkCudaErrors(cudaMemcpy(thrust::raw_pointer_cast(before.data()), cloudBefore.data(), cloudBefore.size() * sizeof(glm::vec3), cudaMemcpyHostToDevice));
+	checkCudaErrors(cudaMemcpy(thrust::raw_pointer_cast(after.data()), cloudAfter.data(), cloudAfter.size() * sizeof(glm::vec3), cudaMemcpyHostToDevice));
+
+	const auto result = CudaCPD(before, after, iterations, error, eps, weight, const_scale, maxIterations, tolerance, fgt, cloudBefore, cloudAfter);
+	return Common::ConvertToRotationTranslationPair(result);
+}
+
