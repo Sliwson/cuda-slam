@@ -118,6 +118,7 @@ Main idea of coherent point drift can be presented in several steps:
 \end{enumerate}
 \item M-step: 
 \begin{enumerate}
+\setcounter{enumi}{1}
 \item Using P and point sets calculate matrix A.
 \item Calculate rotation matrix using Singular Value Decomposition of matrix A.
 \item Calculate scale and translation vector using point sets and SVD result.
@@ -174,11 +175,9 @@ The non-iterative algorithm does not offer too many ways to benefit from paralle
 
 \subsection{Coherent point drift}
 
-%\subsection{CPD}
-
-CPU solution of coherent point drift is based on algorithm description described in \cite{cpd}. It also uses Matlab code provided by authors. FGT algorithm implementation is based on Matlab implementation. %provide link
+CPU solution of coherent point drift is based on algorithm description described in \cite{cpd}. It also uses Matlab code provided by authors as an example how some technical details were handled. FGT algorithm implementation is based on Matlab implementation available on this link [link]. %provide link
 %https://www.mathworks.com/matlabcentral/fileexchange/17438-fast-gaussian-transform-mex-implementation
-Parallelization of CPU solution on GPU mainly focuses on parallel matrices multiplication using cuBlas and using thrust whenever possible.
+Parallelization of CPU solution on GPU mainly focuses on parallel matrices multiplication using cuBLAS and using thrust whenever possible.
 
 \subsection{Modules}
 The project is constructed using several modules:
