@@ -24,6 +24,8 @@ namespace {
 
 	int RunCpuTests()
 	{ 
+		srand(Tests::RANDOM_SEED);
+
 		const auto methods = { ComputationMethod::Icp, ComputationMethod::NoniterativeIcp, ComputationMethod::Cpd };
 		Tests::RunTestSet(GetSizesTestSet, GetCpuSlamResult, "sizes", methods);
 		return 0;

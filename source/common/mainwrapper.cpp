@@ -4,6 +4,8 @@ namespace Common
 {
 	int Main(int argc, char** argv, const SlamFunc& func)
 	{
+		srand(time(nullptr));
+
 		auto configParser = ConfigParser(argc, argv);
 		if (!configParser.IsCorrect())
 		{

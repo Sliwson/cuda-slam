@@ -38,6 +38,8 @@ namespace {
 
 	int RunGpuTests()
 	{ 
+		srand(Tests::RANDOM_SEED);
+
 		const auto methods = { ComputationMethod::Cpd };
 		Tests::RunTestSet(GetSizesTestSet, GetGpuSlamResult, "sizes", methods);
 		return 0;
