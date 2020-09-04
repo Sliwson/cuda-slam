@@ -6,7 +6,7 @@
 
 using namespace Common;
 
-#define TEST
+//define TEST
 
 namespace {
 	constexpr auto eps = 1e-5f;
