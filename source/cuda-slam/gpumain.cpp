@@ -17,31 +17,29 @@ namespace {
 	constexpr auto nicpBatchSize = 16;
 	constexpr auto cpdConstScale = true;
 
-	std::pair<glm::mat3, glm::vec3> GetGpuSlamResult(const CpuCloud& before, const CpuCloud& after, Configuration configuration, int* iterations)
+	std::pair<glm::mat3, glm::vec3> GetGpuSlamResult(const CpuCloud& before, const CpuCloud& after, Configuration configuration, int* iterations, float* error)
 	{
 		const auto maxIterations = configuration.MaxIterations.has_value() ? configuration.MaxIterations.value() : -1;
 		const auto maxNicpRepetitions = maxIterations > 0 ? maxIterations : nicpIterDefault;
 		const auto nicpSubcloudSize = before.size() < nicpSubcloudDefault ? before.size() : nicpSubcloudDefault;
 
-		float error = 0.f;
-		
 		switch (configuration.ComputationMethod) {
 			case ComputationMethod::Icp:
-				return GetCudaIcpTransformationMatrix(before, after, iterations, eps, maxIterations);
+				return GetCudaIcpTransformationMatrix(before, after, eps, maxIterations, iterations, error);
 			case ComputationMethod::NoniterativeIcp:
-				return GetCudaNicpTransformationMatrix(before, after, iterations, &error, eps, maxNicpRepetitions, nicpBatchSize, configuration.ApproximationType, nicpSubcloudSize);
+				return GetCudaNicpTransformationMatrix(before, after, eps, maxNicpRepetitions, nicpBatchSize, configuration.ApproximationType, nicpSubcloudSize, iterations, error);
 			case ComputationMethod::Cpd:
-				return GetCudaCpdTransformationMatrix(before, after, iterations, &error, eps, configuration.CpdWeight, cpdConstScale, maxIterations, eps, configuration.ApproximationType);
+				return GetCudaCpdTransformationMatrix(before, after, eps, configuration.CpdWeight, cpdConstScale, maxIterations, eps, configuration.ApproximationType, iterations, error);
 			default:
 				assert(false); //unknown method
-				return GetCudaIcpTransformationMatrix(before, after, iterations, eps, maxIterations);
+				return GetCudaIcpTransformationMatrix(before, after, eps, maxIterations, iterations, error);
 		}
 	}
 
 	int RunGpuTests()
 	{ 
 		const auto methods = { ComputationMethod::Cpd };
-		Tests::RunTestSet(::GetSizesTestSet, GetGpuSlamResult, "sizes", methods);
+		Tests::RunTestSet(GetSizesTestSet, GetGpuSlamResult, "sizes", methods);
 		return 0;
 	}
 }

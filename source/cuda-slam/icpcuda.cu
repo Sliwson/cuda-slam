@@ -5,7 +5,7 @@
 using namespace Common;
 using namespace CUDACommon;
 
-glm::mat4 CudaICP(const GpuCloud& before, const GpuCloud& after, int* iterations, int maxIterations, float eps)
+glm::mat4 CudaICP(const GpuCloud& before, const GpuCloud& after, int maxIterations, float eps, int* iterations, float* error)
 {
 	float previousError = std::numeric_limits<float>::max();
 
@@ -35,20 +35,21 @@ glm::mat4 CudaICP(const GpuCloud& before, const GpuCloud& after, int* iterations
 		transformationMatrix = LeastSquaresSVD(indices, workingBefore, after, alignBefore, alignAfter, params) * transformationMatrix;
 
 		TransformCloud(before, workingBefore, transformationMatrix);
-		float error = GetMeanSquaredError(indices, workingBefore, after);
+		*error = GetMeanSquaredError(indices, workingBefore, after);
 		printf("Iteration: %d, error: %f\n", *iterations, error);
-		if (error < eps)
+		if (*error < eps)
 			break;
 
-		if (error > previousError)
+		if (*error > previousError)
 		{
 			printf("Error has increased, aborting\n");
 			transformationMatrix = previousTransformationMatrix;
+			*error = previousError;
 			break;
 		}
 
 		previousTransformationMatrix = transformationMatrix;
-		previousError = error;
+		previousError = *error;
 		(*iterations)++;
 	}
 
@@ -59,9 +60,10 @@ glm::mat4 CudaICP(const GpuCloud& before, const GpuCloud& after, int* iterations
 std::pair<glm::mat3, glm::vec3> GetCudaIcpTransformationMatrix(
 	const std::vector<Common::Point_f>& cloudBefore,
 	const std::vector<Common::Point_f>& cloudAfter,
-	int* iterations,
 	float eps,
-	int maxIterations)
+	int maxIterations,
+	int* iterations,
+	float* error)
 {
 	GpuCloud before(cloudBefore.size());
 	GpuCloud after(cloudAfter.size());
@@ -69,7 +71,7 @@ std::pair<glm::mat3, glm::vec3> GetCudaIcpTransformationMatrix(
 	checkCudaErrors(cudaMemcpy(thrust::raw_pointer_cast(before.data()), cloudBefore.data(), cloudBefore.size() * sizeof(glm::vec3), cudaMemcpyHostToDevice));
 	checkCudaErrors(cudaMemcpy(thrust::raw_pointer_cast(after.data()), cloudAfter.data(), cloudAfter.size() * sizeof(glm::vec3), cudaMemcpyHostToDevice));
 
-	auto matrix = CudaICP(before, after, iterations, maxIterations, eps);
+	auto matrix = CudaICP(before, after, maxIterations, eps, iterations, error);
 	return Common::ConvertToRotationTranslationPair(matrix);
 }
 
