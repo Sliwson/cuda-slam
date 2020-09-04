@@ -13,7 +13,8 @@ namespace CoherentPointDrift
 		const std::vector<Common::Point_f>& cloudBefore,
 		const std::vector<Common::Point_f>& cloudAfter,
 		Common::Configuration configuration,
-		int* iterations);
+		int* iterations,
+		float* error);
 
 	std::pair<glm::mat3, glm::vec3> GetRigidCPDTransformationMatrix(
 		const std::vector<Common::Point_f>& cloudBefore,

@@ -7,25 +7,25 @@
 using namespace Common;
 
 namespace {
-	std::pair<glm::mat3, glm::vec3> GetCpuSlamResult(const CpuCloud& before, const CpuCloud& after, Configuration configuration, int* iterations)
+	std::pair<glm::mat3, glm::vec3> GetCpuSlamResult(const CpuCloud& before, const CpuCloud& after, Configuration configuration, int* iterations, float* error)
 	{
 		switch (configuration.ComputationMethod) {
 			case ComputationMethod::Icp:
-				return BasicICP::CalculateICPWithConfiguration(before, after, configuration, iterations);
+				return BasicICP::CalculateICPWithConfiguration(before, after, configuration, iterations, error);
 			case ComputationMethod::NoniterativeIcp:
-				return NonIterative::CalculateNonIterativeWithConfiguration(before, after, configuration, iterations);
+				return NonIterative::CalculateNonIterativeWithConfiguration(before, after, configuration, iterations, error);
 			case ComputationMethod::Cpd:
-				return CoherentPointDrift::CalculateCpdWithConfiguration(before, after, configuration, iterations);
+				return CoherentPointDrift::CalculateCpdWithConfiguration(before, after, configuration, iterations, error);
 			default:
 				assert(false); //unknown method
-				return BasicICP::CalculateICPWithConfiguration(before, after, configuration, iterations);
+				return BasicICP::CalculateICPWithConfiguration(before, after, configuration, iterations, error);
 		}
 	}
 
 	int RunCpuTests()
 	{ 
 		const auto methods = { ComputationMethod::Icp, ComputationMethod::NoniterativeIcp, ComputationMethod::Cpd };
-		Tests::RunTestSet(::GetSizesTestSet, GetCpuSlamResult, "sizes", methods);
+		Tests::RunTestSet(GetSizesTestSet, GetCpuSlamResult, "sizes", methods);
 		return 0;
 	}
 }

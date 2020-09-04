@@ -44,13 +44,12 @@ namespace CoherentPointDrift
 		const std::vector<Common::Point_f>& cloudBefore,
 		const std::vector<Common::Point_f>& cloudAfter,
 		Common::Configuration config,
-		int* iterations)
+		int* iterations,
+		float* error)
 	{
 		auto maxIterations = config.MaxIterations.has_value() ? config.MaxIterations.value() : -1;
 
-		float error = 0;
-		auto result = GetRigidCPDTransformationMatrix(cloudBefore, cloudAfter, iterations, &error, CPD_EPS, config.CpdWeight, false, maxIterations, CPD_EPS, config.ApproximationType);
-		return result;
+		return GetRigidCPDTransformationMatrix(cloudBefore, cloudAfter, iterations, error, CPD_EPS, config.CpdWeight, false, maxIterations, CPD_EPS, config.ApproximationType);
 	}
 
 	//[0, 1, 2] if > 0, then use FGT. case 1: FGT with fixing sigma after it gets too small(faster, but the result can be rough)

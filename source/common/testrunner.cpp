@@ -47,16 +47,14 @@ namespace Common
 		const auto [before, after] = GetCloudsFromConfig(configuration);
 
 		auto timer = Common::Timer();
+
 		int iterations = 0;
+		float error = 0.f;
 
 		timer.StartStage("test");
-		const auto result = computeFunction(before, after, configuration, &iterations);
+		const auto result = computeFunction(before, after, configuration, &iterations, &error);
 		timer.StopStage("test");
 		timer.PrintResults();
-
-		const auto resultCloud = GetTransformedCloud(before, result.first, result.second);
-		const auto correspondingPoints = GetCorrespondingPoints(resultCloud, after, configuration.MaxDistanceSquared, true);
-		const auto error = GetMeanSquaredError(resultCloud, after, std::get<2>(correspondingPoints), std::get<3>(correspondingPoints));
 
 		printf("Error: %f\n", error);
 

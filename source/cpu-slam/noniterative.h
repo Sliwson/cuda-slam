@@ -17,7 +17,8 @@ namespace NonIterative
 		const std::vector<Point_f>& cloudBefore,
 		const std::vector<Point_f>& cloudAfter,
 		Common::Configuration config,
-		int* repetitions);
+		int* repetitions,
+		float* error);
 
 	NonIterativeSlamResult GetSingleNonIterativeSlamResult(
 		const std::vector<Point_f>& cloudBefore,

@@ -18,7 +18,17 @@ namespace Common
 
 		//calculate
 		int iterations = 0;
-		auto result = func(before, after, configuration, &iterations);
+		float error = 0.f;
+		auto result = func(before, after, configuration, &iterations, &error);
+
+		const auto vec = result.second;
+
+		printf("Results:\n");
+		printf("Rotation matrix:\n");
+		PrintMatrix(result.first);
+		printf("Translation vector:\n");
+		printf("x = %f, y = %f, z = %f\n", vec.x, vec.y, vec.z);
+		printf("Error: %f\n", error);
 
 		auto resultCloud = GetTransformedCloud(before, result.first, result.second);
 
