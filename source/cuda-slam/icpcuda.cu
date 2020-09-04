@@ -36,7 +36,7 @@ glm::mat4 CudaICP(const GpuCloud& before, const GpuCloud& after, int maxIteratio
 
 		TransformCloud(before, workingBefore, transformationMatrix);
 		*error = GetMeanSquaredError(indices, workingBefore, after);
-		printf("Iteration: %d, error: %f\n", *iterations, error);
+		printf("Iteration: %d, error: %f\n", *iterations, *error);
 		if (*error < eps)
 			break;
 
