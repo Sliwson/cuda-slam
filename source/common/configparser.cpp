@@ -222,7 +222,7 @@ namespace Common
 
 		config.NicpBatchSize = ParseOptional(parsed, "nicp-batch-size", 16);
 
-		config.NicpIterations = ParseOptional(parsed, "nicp-iterations", 4);
+		config.NicpIterations = ParseOptional(parsed, "nicp-iterations", 32);
 
 		config.NicpSubcloudSize = ParseOptional(parsed, "nicp-subcloud-size", 1000);
 		

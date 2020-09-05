@@ -24,7 +24,7 @@ namespace Common
 		float MaxDistanceSquared = 1000.f;
 		ApproximationType ApproximationType = ApproximationType::Hybrid;
 		int NicpBatchSize = 16;
-		int NicpIterations = 4;
+		int NicpIterations = 32;
 		int NicpSubcloudSize = 1000;
 		float CpdWeight = .3f;
 		bool CpdConstScale = true;
