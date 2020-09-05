@@ -194,23 +194,14 @@ namespace Common
 
 		config.CloudResize = ParseOptional<int>(parsed, "cloud-resize");
 
-		config.MaxDistanceSquared = [this, &parsed]() {
-			auto opt = ParseOptional<float>(parsed, "max-distance-squared");
-			return opt.has_value() ? opt.value() : 1.f;
-		}();
+		config.ShowVisualisation = ParseOptional(parsed, "show-visualisation", false);
 
-		config.ShowVisualisation = [this, &parsed]() {
-			auto opt = ParseOptional<bool>(parsed, "show-visualisation");
-			return opt.has_value() ? opt.value() : false;
-		}();
-		
-		config.CpdWeight = [this, &parsed]() {
-			auto opt = ParseOptional<float>(parsed, "cpd-weight");
-			return opt.has_value() ? opt.value() : .3f;
-		}();
+		config.MaxDistanceSquared = ParseOptional(parsed, "max-distance-squared", 1000.f);
+
+		config.CpdWeight = ParseOptional<float>(parsed, "cpd-weight", .3f);
 
 		config.ApproximationType = [this, &parsed]() {
-			auto nicpType = ParseOptional<std::string>(parsed, "nicp-type");
+			auto nicpType = ParseOptional<std::string>(parsed, "approximation-type");
 			if (!nicpType.has_value())
 				return ApproximationType::Hybrid;
 
@@ -226,6 +217,16 @@ namespace Common
 			else
 				return ApproximationType::Hybrid;
 		}();
+
+		config.NicpBatchSize = ParseOptional(parsed, "nicp-batch-size", 16);
+
+		config.NicpIterations = ParseOptional(parsed, "nicp-iterations", 4);
+
+		config.NicpSubcloudSize = ParseOptional(parsed, "nicp-subcloud-size", 1000);
+		
+		config.CpdWeight = ParseOptional(parsed, "cpd-weight", 0.3f);
+		
+		config.CpdConstScale = ParseOptional(parsed, "cpd-const-scale", false);
 	}
 
 	void ConfigParser::ValidateConfiguration()
