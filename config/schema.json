@@ -51,12 +51,24 @@
     "max-distance-squared": {
       "type": "number"
     },
-    "nicp-type": {
+    "approximation-type": {
       "type": "string",
       "enum": [ "none", "hybrid", "full" ]
-    }
+    },
+    "nicp-batch-size": {
+      "type": "number"
+    },
+    "nicp-iterations": {
+      "type": "number"
+    },
+    "nicp-subcloud-size": {
+      "type": "number"
+    },
     "cpd-weight": {
-      "type": "number" 
+      "type": "number"
+    },
+    "cpd-const-scale": {
+      "type":  "boolean"
     }
   }
 }
