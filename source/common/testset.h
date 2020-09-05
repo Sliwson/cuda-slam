@@ -3,6 +3,6 @@
 
 namespace Common
 {
-	std::vector<Configuration> GetBasicTestSet();
 	std::vector<Configuration> GetSizesTestSet(ComputationMethod method);
+	std::vector<Configuration> GetPerformanceTestSet(ComputationMethod method);
 }

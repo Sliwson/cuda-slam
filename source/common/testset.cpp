@@ -77,4 +77,9 @@ namespace Common
 
         return configurations;
 	}
+
+    std::vector<Configuration> GetPerformanceTestSet(ComputationMethod method)
+    {
+        return std::vector<Configuration>();
+    }
 }
