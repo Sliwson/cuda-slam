@@ -194,7 +194,7 @@ namespace Common
 
 		config.CloudResize = ParseOptional<int>(parsed, "cloud-resize");
 
-		config.CloudResize = ParseOptional<float>(parsed, "cloud-spread");
+		config.CloudSpread = ParseOptional<float>(parsed, "cloud-spread");
 
 		config.ShowVisualisation = ParseOptional(parsed, "show-visualisation", false);
 
