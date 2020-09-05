@@ -67,7 +67,7 @@ namespace Common
 		const std::array<float, 3> spans = { xMax->x - xMin->x, yMax->y - yMin->y, zMax->z - zMin->z };
 		const auto max = std::max_element(spans.begin(), spans.end());
 
-		if (*max == 0)
+		if (std::abs(*max) < 1e-15)
 			return cloud;
 
 		const auto scale = size / *max;
