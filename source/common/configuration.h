@@ -22,11 +22,12 @@ namespace Common
 		bool ShowVisualisation = false;
 		float MaxDistanceSquared = 1000.f;
 		ApproximationType ApproximationType = ApproximationType::Hybrid;
-		float CpdWeight = .3f;
 		int NicpBatchSize = 16;
 		int NicpIterations = 4;
 		int NicpSubcloudSize = 1000;
+		float CpdWeight = .3f;
 		bool CpdConstScale = true;
+		float CpdTolerance = 1e-3;
 		float ConvergenceEpsilon = 1e-3;
 
 		void Print();

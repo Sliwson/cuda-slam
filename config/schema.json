@@ -70,6 +70,9 @@
     "cpd-const-scale": {
       "type": "boolean"
     },
+    "cpd-tolerance": {
+      "type": "number"
+    },
     "convergence-epsilon": {
       "type": "number"
     }

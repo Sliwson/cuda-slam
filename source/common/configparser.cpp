@@ -227,6 +227,8 @@ namespace Common
 		config.CpdWeight = ParseOptional(parsed, "cpd-weight", 0.3f);
 		
 		config.CpdConstScale = ParseOptional(parsed, "cpd-const-scale", false);
+		
+		config.CpdTolerance = ParseOptional(parsed, "cpd-tolerance", 1e-3);
 
 		config.ConvergenceEpsilon = ParseOptional(parsed, "convergence-epsilon", 1e-3);
 	}

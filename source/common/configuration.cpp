@@ -84,6 +84,7 @@ void Common::Configuration::Print()
 	printf("Nicp subcloud size: %d\n", NicpSubcloudSize);
 	printf("Cpd weight: %f\n", CpdWeight);
 	printf("Cpd const scale: %s\n", std::to_string(CpdConstScale).c_str());
+	printf("Cpd tolerance: %f\n", CpdTolerance);
 	printf("Convergence epsilon: %f\n", ConvergenceEpsilon);
 
 	printf("===============================\n");
