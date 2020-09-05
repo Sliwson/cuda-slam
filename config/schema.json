@@ -68,7 +68,10 @@
       "type": "number"
     },
     "cpd-const-scale": {
-      "type":  "boolean"
+      "type": "boolean"
+    },
+    "convergence-epsilon": {
+      "type": "number"
     }
   }
 }

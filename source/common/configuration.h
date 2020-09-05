@@ -27,6 +27,7 @@ namespace Common
 		int NicpIterations = 4;
 		int NicpSubcloudSize = 1000;
 		bool CpdConstScale = true;
+		float ConvergenceEpsilon = 1e-3;
 
 		void Print();
 	};
