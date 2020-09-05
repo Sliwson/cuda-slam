@@ -1,6 +1,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <string>
 #include <algorithm>
+#include <filesystem>
 
 #include "renderer.h"
 #include "moveablecamera.h"
@@ -252,10 +253,14 @@ namespace Common
 
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-		GLFWimage image;
-		int nrChannels;
-		image.pixels = stbi_load("icon/icon.png", &image.width, &image.height, &nrChannels, 0);
-		glfwSetWindowIcon(window, 1, &image);
+
+		if (std::filesystem::exists(iconPath))
+		{
+			GLFWimage image;
+			int nrChannels;
+			image.pixels = stbi_load(iconPath, &image.width, &image.height, &nrChannels, 0);
+			glfwSetWindowIcon(window, 1, &image);
+		}
 
 		glfwSwapInterval(1);
 
