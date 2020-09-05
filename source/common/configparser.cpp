@@ -213,8 +213,8 @@ namespace Common
 				{ "none", ApproximationType::None }
 			};
 
-			const auto nicpStr = approximationType.value();
-			if (auto result = mapping.find(nicpStr); result != mapping.end())
+			const auto approximationString = approximationType.value();
+			if (auto result = mapping.find(approximationString); result != mapping.end())
 				return result->second;
 			else
 				return ApproximationType::Hybrid;
