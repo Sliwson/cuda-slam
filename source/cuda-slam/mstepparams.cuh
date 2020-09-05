@@ -1,6 +1,6 @@
 #pragma once
 
-#include "cuda.cuh"
+#include "cudacommon.cuh"
 #include "cudaprobabilities.h"
 
 namespace MStepParams

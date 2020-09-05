@@ -1,4 +1,4 @@
-#include "cuda.cuh"
+#include "cudacommon.cuh"
 #include "parallelsvdhelper.cuh"
 
 using namespace CUDACommon;

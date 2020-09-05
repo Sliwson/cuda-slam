@@ -1,6 +1,6 @@
 #pragma once
 
-#include "cuda.cuh"
+#include "cudacommon.cuh"
 
 std::pair<glm::mat3, glm::vec3> GetCudaNicpTransformationMatrix(
 	const std::vector<Common::Point_f>& before,

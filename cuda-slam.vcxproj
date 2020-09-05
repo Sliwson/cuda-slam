@@ -28,7 +28,7 @@
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="source\cuda-slam\cpdcuda.cu" />
-    <CudaCompile Include="source\cuda-slam\cuda.cu" />
+    <CudaCompile Include="source\cuda-slam\cudacommon.cu" />
     <CudaCompile Include="source\cuda-slam\functors.cu" />
     <CudaCompile Include="source\cuda-slam\icpcuda.cu" />
     <CudaCompile Include="source\cuda-slam\nicpcuda.cu" />
@@ -37,7 +37,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\cuda-slam\cpdcuda.cuh" />
-    <ClInclude Include="source\cuda-slam\cuda.cuh" />
+    <ClInclude Include="source\cuda-slam\cudacommon.cuh" />
     <ClInclude Include="source\cuda-slam\cudaprobabilities.h" />
     <ClInclude Include="source\cuda-slam\functors.cuh" />
     <ClInclude Include="source\cuda-slam\icpcuda.cuh" />

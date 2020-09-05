@@ -1,4 +1,4 @@
-#include "cuda.cuh"
+#include "cudacommon.cuh"
 #include "functors.cuh"
 #include "svdparams.cuh"
 #include "parallelsvdhelper.cuh"

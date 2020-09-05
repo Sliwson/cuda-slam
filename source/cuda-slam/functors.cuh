@@ -1,5 +1,5 @@
 #pragma once
-#include "cuda.cuh"
+#include "cudacommon.cuh"
 
 namespace Functors
 {
@@ -45,8 +45,8 @@ namespace Functors
 		__device__ __host__ int operator()(const glm::vec3& vector);
 
 	private:
-		const glm::vec3* elementsAfter;
-		int elementsSize;
+		const glm::vec3* elementsAfter = nullptr;
+		int elementsSize = 0;
 	};
 
 	struct GlmToCuBlas : thrust::unary_function<thrust::tuple<int, glm::vec3>, void>
@@ -68,8 +68,8 @@ namespace Functors
 		__device__ __host__ float operator()(const glm::vec3& vector);
 
 	private:
-		const glm::vec3* cloud;
-		int cloudSize;
+		const glm::vec3* cloud = nullptr;
+		int cloudSize = 0;
 	};
 
 	struct CalculateDenominator : thrust::unary_function<thrust::tuple<glm::vec3, int>, float>
@@ -85,7 +85,7 @@ namespace Functors
 
 	private:
 		glm::vec3 cloudBeforeItem = glm::vec3(0.f);
-		float* p;
+		float* p = nullptr;
 		float multiplier = 0.f;
 		bool doTruncate = false;
 		float truncate = 0.f;
@@ -104,9 +104,9 @@ namespace Functors
 
 	private:
 		glm::vec3 cloudBeforeItem = glm::vec3(0.f);
-		const float* p;
-		float* p1;
-		glm::vec3* px;
+		const float* p = nullptr;
+		float* p1 = nullptr;
+		glm::vec3* px = nullptr;
 		float denominator = 0.f;
 	};
 
@@ -117,6 +117,6 @@ namespace Functors
 		__device__ __host__ float operator()(const thrust::tuple<int, float>& pair);
 
 	private:
-		const float* pt1;
+		const float* pt1 = nullptr;
 	};
 }

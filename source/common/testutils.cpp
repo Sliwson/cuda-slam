@@ -53,7 +53,6 @@ namespace Tests
 		return normalized * translation;
 	}
 
-
 	// Helpers
 	//
 	glm::mat3 GetRotationMatrix(const Point_f& rotationAxis, float rotationAngleRadians)

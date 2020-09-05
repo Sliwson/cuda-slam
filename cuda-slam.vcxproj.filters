@@ -2,16 +2,15 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <CudaCompile Include="source\cuda-slam\cpdcuda.cu" />
-    <CudaCompile Include="source\cuda-slam\cuda.cu" />
     <CudaCompile Include="source\cuda-slam\functors.cu" />
     <CudaCompile Include="source\cuda-slam\icpcuda.cu" />
     <CudaCompile Include="source\cuda-slam\nicpcuda.cu" />
     <CudaCompile Include="source\cuda-slam\parallelsvdhelper.cu" />
     <CudaCompile Include="source\cuda-slam\svdparams.cu" />
+    <CudaCompile Include="source\cuda-slam\cudacommon.cu" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\cuda-slam\cpdcuda.cuh" />
-    <ClInclude Include="source\cuda-slam\cuda.cuh" />
     <ClInclude Include="source\cuda-slam\cudaprobabilities.h" />
     <ClInclude Include="source\cuda-slam\functors.cuh" />
     <ClInclude Include="source\cuda-slam\icpcuda.cuh" />
@@ -20,6 +19,7 @@
     <ClInclude Include="source\cuda-slam\nicpslamargs.cuh" />
     <ClInclude Include="source\cuda-slam\parallelsvdhelper.cuh" />
     <ClInclude Include="source\cuda-slam\svdparams.cuh" />
+    <ClInclude Include="source\cuda-slam\cudacommon.cuh" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\cuda-slam\gpumain.cpp" />
