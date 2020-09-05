@@ -11,56 +11,54 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="source\configparser.cpp" />
-    <ClCompile Include="source\camera.cpp" />
-    <ClCompile Include="source\common.cpp" />
-    <ClCompile Include="source\configuration.cpp" />
-    <ClCompile Include="source\cpdutils.cpp" />
-    <ClCompile Include="source\fgt.cpp" />
-    <ClCompile Include="source\glad.c" />
-    <ClCompile Include="source\Icosphere.cpp" />
-    <ClCompile Include="source\loader.cpp" />
-    <ClCompile Include="source\moveablecamera.cpp" />
-    <ClCompile Include="source\nicputils.cpp" />
-    <ClCompile Include="source\renderer.cpp" />
-    <ClCompile Include="source\shader.cpp" />
-    <ClCompile Include="source\shaderfactory.cpp" />
-    <ClCompile Include="source\testrunner.cpp" />
-    <ClCompile Include="source\tests.cpp" />
-    <ClCompile Include="source\testset.cpp" />
-    <ClCompile Include="source\testutils.cpp" />
-    <ClCompile Include="source\timer.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="source\configparser.h" />
-    <ClInclude Include="source\camera.h" />
-    <ClInclude Include="source\configuration.h" />
-    <ClInclude Include="source\cpdutils.h" />
-    <ClInclude Include="source\enumerators.h" />
-    <ClInclude Include="source\fgt.h" />
-    <ClInclude Include="source\fgt_model.h" />
-    <ClInclude Include="source\Icosphere.h" />
-    <ClInclude Include="source\loader.h" />
-    <ClInclude Include="source\moveablecamera.h" />
-    <ClInclude Include="source\nicputils.h" />
-    <ClInclude Include="source\point.h" />
-    <ClInclude Include="source\common.h" />
-    <ClInclude Include="source\renderer.h" />
-    <ClInclude Include="source\shader.h" />
-    <ClInclude Include="source\shaderfactory.h" />
-    <ClInclude Include="source\shadertype.h" />
-    <ClInclude Include="source\testrunner.h" />
-    <ClInclude Include="source\tests.h" />
-    <ClInclude Include="source\testset.h" />
-    <ClInclude Include="source\testutils.h" />
-    <ClInclude Include="source\timer.h" />
-    <ClInclude Include="source\_common.h" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="config\default.json" />
     <None Include="config\schema.json" />
-    <None Include="source\shaders\fragmentshader.frag" />
-    <None Include="source\shaders\vertexshader.vert" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="source\common\camera.cpp" />
+    <ClCompile Include="source\common\common.cpp" />
+    <ClCompile Include="source\common\configparser.cpp" />
+    <ClCompile Include="source\common\configuration.cpp" />
+    <ClCompile Include="source\common\cpdutils.cpp" />
+    <ClCompile Include="source\common\fgt.cpp" />
+    <ClCompile Include="source\common\glad.c" />
+    <ClCompile Include="source\common\Icosphere.cpp" />
+    <ClCompile Include="source\common\loader.cpp" />
+    <ClCompile Include="source\common\mainwrapper.cpp" />
+    <ClCompile Include="source\common\moveablecamera.cpp" />
+    <ClCompile Include="source\common\nicputils.cpp" />
+    <ClCompile Include="source\common\renderer.cpp" />
+    <ClCompile Include="source\common\shader.cpp" />
+    <ClCompile Include="source\common\shaderfactory.cpp" />
+    <ClCompile Include="source\common\testrunner.cpp" />
+    <ClCompile Include="source\common\testset.cpp" />
+    <ClCompile Include="source\common\testutils.cpp" />
+    <ClCompile Include="source\common\timer.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="source\common\camera.h" />
+    <ClInclude Include="source\common\common.h" />
+    <ClInclude Include="source\common\configparser.h" />
+    <ClInclude Include="source\common\configuration.h" />
+    <ClInclude Include="source\common\cpdutils.h" />
+    <ClInclude Include="source\common\enumerators.h" />
+    <ClInclude Include="source\common\fgt.h" />
+    <ClInclude Include="source\common\fgt_model.h" />
+    <ClInclude Include="source\common\Icosphere.h" />
+    <ClInclude Include="source\common\loader.h" />
+    <ClInclude Include="source\common\mainwrapper.h" />
+    <ClInclude Include="source\common\moveablecamera.h" />
+    <ClInclude Include="source\common\nicputils.h" />
+    <ClInclude Include="source\common\point.h" />
+    <ClInclude Include="source\common\renderer.h" />
+    <ClInclude Include="source\common\shader.h" />
+    <ClInclude Include="source\common\shaderfactory.h" />
+    <ClInclude Include="source\common\shadertype.h" />
+    <ClInclude Include="source\common\testrunner.h" />
+    <ClInclude Include="source\common\testset.h" />
+    <ClInclude Include="source\common\testutils.h" />
+    <ClInclude Include="source\common\timer.h" />
+    <ClInclude Include="source\common\_common.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

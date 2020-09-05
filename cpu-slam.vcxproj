@@ -58,7 +58,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)source/common;$(ProjectDir)include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -75,7 +75,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)source/common;$(ProjectDir)include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -87,20 +87,20 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="source\basicicp.cpp" />
-    <ClCompile Include="source\coherentpointdrift.cpp" />
-    <ClCompile Include="source\coherentpointdrift.h" />
-    <ClCompile Include="source\cpumain.cpp" />
-    <ClCompile Include="source\noniterative.cpp" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="common.vcxproj">
       <Project>{0aab92a4-6c20-46b0-ba76-656a393b5f4a}</Project>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="source\noniterative.h" />
-    <ClInclude Include="source\basicicp.h" />
+    <ClCompile Include="source\cpu-slam\basicicp.cpp" />
+    <ClCompile Include="source\cpu-slam\coherentpointdrift.cpp" />
+    <ClCompile Include="source\cpu-slam\cpumain.cpp" />
+    <ClCompile Include="source\cpu-slam\noniterative.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="source\cpu-slam\basicicp.h" />
+    <ClInclude Include="source\cpu-slam\coherentpointdrift.h" />
+    <ClInclude Include="source\cpu-slam\noniterative.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
