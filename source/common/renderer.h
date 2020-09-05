@@ -107,5 +107,12 @@ namespace Common
 		//vertices 3*float - position | 3*float - normals | 2*float - texture
 		std::vector<float> vertices;
 		std::vector<unsigned int> indices;
+
+		//windowName
+#ifdef __CUDACC__
+		const char* windowName = "CUDA Slam";
+#else
+		const char* windowName = "CPU Slam";
+#endif
 	};
 }

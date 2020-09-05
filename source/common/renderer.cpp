@@ -7,6 +7,7 @@
 #include "shaderfactory.h"
 #include "shadertype.h"
 #include "Icosphere.h"
+#include "stb_image.h"
 
 namespace Common
 {
@@ -47,10 +48,12 @@ namespace Common
 		vertices = sphere.getInterleavedVerticesVector();
 		indices = sphere.getIndicesVector();
 
-		for (size_t i = 0; i < verticesVectorsCount; i++)
+		for (size_t i = 0; i < verticesVectorsCount - 1; i++)
 		{
 			isVisible[i] = true;
 		}
+		//hide last cloud by default
+		isVisible[verticesVectorsCount - 1] = false;
 
 		SetModelMatrixToData();
 	}
@@ -229,7 +232,7 @@ namespace Common
 
 		// glfw window creation
 		// --------------------
-		window = glfwCreateWindow(width, height, "Window Name Placeholder", NULL, NULL);
+		window = glfwCreateWindow(width, height, windowName, NULL, NULL);
 		if (window == NULL)
 		{
 			std::cout << "Failed to create GLFW window" << std::endl;
@@ -248,6 +251,11 @@ namespace Common
 		glfwSetScrollCallback(window, scroll_callback);
 
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+		GLFWimage image;
+		int nrChannels;
+		image.pixels = stbi_load("icon/icon.png", &image.width, &image.height, &nrChannels, 0);
+		glfwSetWindowIcon(window, 1, &image);
 
 		glfwSwapInterval(1);
 
@@ -328,7 +336,8 @@ namespace Common
 			frameCount++;
 			if (currentFrame - previousTime >= 1.0)
 			{
-				s.append("Window Name Placeholder [FPS:");
+				s.append(windowName);
+				s.append(" [FPS:");
 				s.append(std::to_string((int)frameCount));
 				s.append("]");
 				glfwSetWindowTitle(window, s.c_str());
