@@ -194,6 +194,8 @@ namespace Common
 
 		config.CloudResize = ParseOptional<int>(parsed, "cloud-resize");
 
+		config.CloudResize = ParseOptional<float>(parsed, "cloud-spread");
+
 		config.ShowVisualisation = ParseOptional(parsed, "show-visualisation", false);
 
 		config.MaxDistanceSquared = ParseOptional(parsed, "max-distance-squared", 1000.f);

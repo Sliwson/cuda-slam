@@ -92,9 +92,12 @@ namespace Common
 		}
 
 		// normalize clouds to standart value
-		before = NormalizeCloud(before, CLOUD_BOUNDARY);
-		after = NormalizeCloud(after, CLOUD_BOUNDARY);
-
+		if (config.CloudSpread.has_value())
+		{
+			auto spread = config.CloudSpread.value();
+			before = NormalizeCloud(before, spread);
+			after = NormalizeCloud(after, spread);
+		}
 
 		// shuffle clouds
 		std::shuffle(before.begin(), before.end(), std::mt19937{ std::random_device{}() });

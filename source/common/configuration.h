@@ -17,6 +17,7 @@ namespace Common
 		std::optional<std::pair<float, float>> TransformationParameters = std::nullopt; // rotation range, translation range
 		std::optional<int> MaxIterations = std::nullopt;
 		std::optional<int> CloudResize = std::nullopt;
+		std::optional<float>CloudSpread = std::nullopt;
 
 		//optional parameters with default values
 		bool ShowVisualisation = false;

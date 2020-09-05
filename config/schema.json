@@ -45,6 +45,9 @@
     "cloud-resize": {
       "type": "integer"
     },
+    "cloud-spread": {
+      "type": "number"
+    },
     "show-visualisation": {
       "type": "boolean"
     },

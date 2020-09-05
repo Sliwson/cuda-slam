@@ -76,6 +76,9 @@ void Common::Configuration::Print()
 	if (CloudResize.has_value())
 		printf("Cloud resize: %d\n", CloudResize.value());
 
+	if (CloudSpread.has_value())
+		printf("Cloud spread: %f\n", CloudSpread.value());
+
 	printf("Show visualisation: %s\n", std::to_string(ShowVisualisation).c_str());
 	printf("Max distance squared: %f\n", MaxDistanceSquared);
 	printf("Approximation type: %s\n", approximationString);
