@@ -20,9 +20,13 @@ namespace Common
 
 		//optional parameters with default values
 		bool ShowVisualisation = false;
-		float MaxDistanceSquared = 1.f;
+		float MaxDistanceSquared = 1000.f;
 		ApproximationType ApproximationType = ApproximationType::Hybrid;
 		float CpdWeight = .3f;
+		int NicpBatchSize = 16;
+		int NicpIterations = 4;
+		int NicpSubcloudSize = 1000;
+		bool CpdConstScale = true;
 
 		void Print();
 	};
