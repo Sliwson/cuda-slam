@@ -51,6 +51,18 @@ namespace Common
 		return Point_f(result);
 	}
 
+	Point_f AddNoiseToPoint(const Point_f& point, const float& maxDistance)
+	{
+		Point_f result;
+		std::random_device rd;
+		std::mt19937 gen(rd());
+		std::uniform_real_distribution<float> dis(-maxDistance, maxDistance);
+		result.x = point.x + dis(gen);
+		result.y = point.y + dis(gen);
+		result.z = point.z + dis(gen);
+		return result;
+	}
+
 	std::vector<Point_f> NormalizeCloud(const std::vector<Point_f>& cloud, float size)
 	{
 		const auto massCenter = GetCenterOfMass(cloud);
@@ -74,6 +86,44 @@ namespace Common
 
 		std::transform(alignedCloud.begin(), alignedCloud.end(), alignedCloud.begin(), [scale](auto p) { return p * scale; });
 		return GetAlignedCloud(alignedCloud, massCenter * -1.f);
+	}
+
+	//spread - size of the field that cloud covers, intensity - how many percents of spread are points able to move in each direction.
+	std::vector<Point_f> AddNoiseToCloud(const std::vector<Point_f>& cloud, float spread, int affectedPointsCount, float intensity)
+	{
+		auto clone = cloud;
+		std::vector<bool> affectedPoints(cloud.size(), false);
+		std::transform(affectedPoints.begin(), affectedPoints.begin() + affectedPointsCount, affectedPoints.begin(), [] {return true; });
+		affectedPoints = ApplyPermutation(affectedPoints, GetRandomPermutationVector(affectedPoints.size()));
+
+		float maxMoveDistance = spread * intensity / 100.0f;
+		Point_f min(-maxMoveDistance, -maxMoveDistance, -maxMoveDistance);
+		Point_f max(maxMoveDistance, maxMoveDistance, maxMoveDistance);
+
+		std::transform(clone.begin(), clone.end(), clone.begin(), [&](const Point_f& point) {return point + Tests::GetRandomPoint(min, max); /*AddNoiseToPoint(point, maxMoveDistance);*/ });
+		return clone;
+	}
+
+	std::vector<Point_f> AddOutliersToCloud(const std::vector<Point_f>& cloud, int outliersCount)
+	{
+		auto clone = cloud;
+
+		const auto get_minmax = [&](auto selector) {
+			return std::minmax_element(cloud.rbegin(), cloud.rend(), [selector](const auto& p1, const auto& p2) { return selector(p1) < selector(p2); });
+		};
+
+		const auto [xMin, xMax] = get_minmax([](auto p) { return p.x; });
+		const auto [yMin, yMax] = get_minmax([](auto p) { return p.y; });
+		const auto [zMin, zMax] = get_minmax([](auto p) { return p.z; });
+
+		Point_f min(xMin->x, yMin->y, zMin->z);
+		Point_f max(xMax->x, yMax->y, zMax->z);
+
+		for (int i = 0; i < outliersCount; i++)
+		{
+			clone.push_back(Tests::GetRandomPoint(min, max));
+		}
+		return clone;
 	}
 
 	std::pair<std::vector<Point_f>, std::vector<Point_f>> GetCloudsFromConfig(Configuration config)
@@ -490,14 +540,5 @@ namespace Common
 			inversedPermutation[permutation[i]] = i;
 		}
 		return inversedPermutation;
-	}
-
-	std::vector<Point_f> ApplyPermutation(const std::vector<Point_f>& input, const std::vector<int>& permutation)
-	{
-		std::vector<Point_f> permutedCloud(input.size());
-		for (int i = 0; i < input.size(); i++)
-			permutedCloud[i] = i < permutation.size() ? input[permutation[i]] : input[i];
-
-		return permutedCloud;
 	}
 }
