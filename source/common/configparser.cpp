@@ -201,8 +201,8 @@ namespace Common
 		config.CpdWeight = ParseOptional<float>(parsed, "cpd-weight", .3f);
 
 		config.ApproximationType = [this, &parsed]() {
-			auto nicpType = ParseOptional<std::string>(parsed, "approximation-type");
-			if (!nicpType.has_value())
+			auto approximationType = ParseOptional<std::string>(parsed, "approximation-type");
+			if (!approximationType.has_value())
 				return ApproximationType::Hybrid;
 
 			const std::map<std::string, ApproximationType> mapping = {
@@ -211,7 +211,7 @@ namespace Common
 				{ "none", ApproximationType::None }
 			};
 
-			const auto nicpStr = nicpType.value();
+			const auto nicpStr = approximationType.value();
 			if (auto result = mapping.find(nicpStr); result != mapping.end())
 				return result->second;
 			else
