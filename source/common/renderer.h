@@ -14,7 +14,6 @@
 namespace Common
 {
 	constexpr unsigned int verticesVectorsCount = 4;
-	const char* iconPath = "icon/icon.png";
 
 	class Camera;
 	enum class ShaderType;

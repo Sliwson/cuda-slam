@@ -12,6 +12,7 @@
 
 namespace Common
 {
+	const char* windowIconPath = "icon/icon.png";
 	std::vector<Renderer*> Renderer::renderers;
 
 	namespace ShaderPath
@@ -254,11 +255,11 @@ namespace Common
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 
-		if (std::filesystem::exists(iconPath))
+		if (std::filesystem::exists(windowIconPath))
 		{
 			GLFWimage image;
 			int nrChannels;
-			image.pixels = stbi_load(iconPath, &image.width, &image.height, &nrChannels, 0);
+			image.pixels = stbi_load(windowIconPath, &image.width, &image.height, &nrChannels, 0);
 			glfwSetWindowIcon(window, 1, &image);
 		}
 
