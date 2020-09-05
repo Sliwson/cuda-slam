@@ -53,8 +53,11 @@ namespace Common
 
 	std::vector<Point_f> NormalizeCloud(const std::vector<Point_f>& cloud, float size)
 	{
+		const auto massCenter = GetCenterOfMass(cloud);
+		auto alignedCloud = GetAlignedCloud(cloud, massCenter);
+
 		const auto get_minmax = [&](auto selector) {
-			 return std::minmax_element(cloud.rbegin(), cloud.rend(), [selector](const auto& p1, const auto& p2) { return selector(p1) < selector(p2); });
+			 return std::minmax_element(alignedCloud.rbegin(), alignedCloud.rend(), [selector](const auto& p1, const auto& p2) { return selector(p1) < selector(p2); });
 		};
 
 		const auto [xMin, xMax] = get_minmax([](auto p) { return p.x; });
@@ -64,15 +67,13 @@ namespace Common
 		const std::array<float, 3> spans = { xMax->x - xMin->x, yMax->y - yMin->y, zMax->z - zMin->z };
 		const auto max = std::max_element(spans.begin(), spans.end());
 
-		if (*max == 0)
+		if (std::abs(*max) < 1e-15)
 			return cloud;
 
 		const auto scale = size / *max;
 
-		auto outputCloud = std::vector<Point_f>(cloud.size());
-		std::transform(cloud.begin(), cloud.end(), outputCloud.begin(), [scale](auto p) { return p * scale; });
-
-		return outputCloud;
+		std::transform(alignedCloud.begin(), alignedCloud.end(), alignedCloud.begin(), [scale](auto p) { return p * scale; });
+		return GetAlignedCloud(alignedCloud, massCenter * -1.f);
 	}
 
 	std::pair<std::vector<Point_f>, std::vector<Point_f>> GetCloudsFromConfig(Configuration config)
@@ -91,9 +92,12 @@ namespace Common
 		}
 
 		// normalize clouds to standart value
-		before = NormalizeCloud(before, CLOUD_BOUNDARY);
-		after = NormalizeCloud(after, CLOUD_BOUNDARY);
-
+		if (config.CloudSpread.has_value())
+		{
+			auto spread = config.CloudSpread.value();
+			before = NormalizeCloud(before, spread);
+			after = NormalizeCloud(after, spread);
+		}
 
 		// shuffle clouds
 		std::shuffle(before.begin(), before.end(), std::mt19937{ std::random_device{}() });

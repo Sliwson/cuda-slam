@@ -10,5 +10,7 @@
     -0.8, 0.6, 0,
     0.48, 0.64, 0.6
   ],
-  "show-visualisation":  true
+  "show-visualisation": true,
+  "cloud-spread": 10.0,
+  "max-iterations":  50
 }

@@ -194,24 +194,17 @@ namespace Common
 
 		config.CloudResize = ParseOptional<int>(parsed, "cloud-resize");
 
-		config.MaxDistanceSquared = [this, &parsed]() {
-			auto opt = ParseOptional<float>(parsed, "max-distance-squared");
-			return opt.has_value() ? opt.value() : 1.f;
-		}();
+		config.CloudSpread = ParseOptional<float>(parsed, "cloud-spread");
 
-		config.ShowVisualisation = [this, &parsed]() {
-			auto opt = ParseOptional<bool>(parsed, "show-visualisation");
-			return opt.has_value() ? opt.value() : false;
-		}();
-		
-		config.CpdWeight = [this, &parsed]() {
-			auto opt = ParseOptional<float>(parsed, "cpd-weight");
-			return opt.has_value() ? opt.value() : .3f;
-		}();
+		config.ShowVisualisation = ParseOptional(parsed, "show-visualisation", false);
+
+		config.MaxDistanceSquared = ParseOptional(parsed, "max-distance-squared", 1000.f);
+
+		config.CpdWeight = ParseOptional<float>(parsed, "cpd-weight", .3f);
 
 		config.ApproximationType = [this, &parsed]() {
-			auto nicpType = ParseOptional<std::string>(parsed, "nicp-type");
-			if (!nicpType.has_value())
+			auto approximationType = ParseOptional<std::string>(parsed, "approximation-type");
+			if (!approximationType.has_value())
 				return ApproximationType::Hybrid;
 
 			const std::map<std::string, ApproximationType> mapping = {
@@ -220,12 +213,26 @@ namespace Common
 				{ "none", ApproximationType::None }
 			};
 
-			const auto nicpStr = nicpType.value();
-			if (auto result = mapping.find(nicpStr); result != mapping.end())
+			const auto approximationString = approximationType.value();
+			if (auto result = mapping.find(approximationString); result != mapping.end())
 				return result->second;
 			else
 				return ApproximationType::Hybrid;
 		}();
+
+		config.NicpBatchSize = ParseOptional(parsed, "nicp-batch-size", 16);
+
+		config.NicpIterations = ParseOptional(parsed, "nicp-iterations", 32);
+
+		config.NicpSubcloudSize = ParseOptional(parsed, "nicp-subcloud-size", 1000);
+		
+		config.CpdWeight = ParseOptional(parsed, "cpd-weight", 0.3f);
+		
+		config.CpdConstScale = ParseOptional(parsed, "cpd-const-scale", false);
+		
+		config.CpdTolerance = ParseOptional(parsed, "cpd-tolerance", 1e-3);
+
+		config.ConvergenceEpsilon = ParseOptional(parsed, "convergence-epsilon", 1e-3);
 	}
 
 	void ConfigParser::ValidateConfiguration()

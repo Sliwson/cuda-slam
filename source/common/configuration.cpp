@@ -32,7 +32,7 @@ void Common::Configuration::Print()
 		}
 	}();
 
-	const auto nicpString = [t = this->ApproximationType]() {
+	const auto approximationString = [t = this->ApproximationType]() {
 		switch (t)
 		{
 		case ApproximationType::Full:
@@ -76,10 +76,19 @@ void Common::Configuration::Print()
 	if (CloudResize.has_value())
 		printf("Cloud resize: %d\n", CloudResize.value());
 
+	if (CloudSpread.has_value())
+		printf("Cloud spread: %f\n", CloudSpread.value());
+
 	printf("Show visualisation: %s\n", std::to_string(ShowVisualisation).c_str());
 	printf("Max distance squared: %f\n", MaxDistanceSquared);
-	printf("Non iterative approximation type: %s\n", nicpString);
-	printf("Cpd weight: %s\n", std::to_string(CpdWeight).c_str());
+	printf("Approximation type: %s\n", approximationString);
+	printf("Nicp batch size: %d\n", NicpBatchSize);
+	printf("Nicp iterations: %d\n", NicpIterations);
+	printf("Nicp subcloud size: %d\n", NicpSubcloudSize);
+	printf("Cpd weight: %f\n", CpdWeight);
+	printf("Cpd const scale: %s\n", std::to_string(CpdConstScale).c_str());
+	printf("Cpd tolerance: %f\n", CpdTolerance);
+	printf("Convergence epsilon: %f\n", ConvergenceEpsilon);
 
 	printf("===============================\n");
 }
