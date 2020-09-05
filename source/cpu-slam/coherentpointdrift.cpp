@@ -12,8 +12,6 @@ using namespace FastGaussTransform;
 
 namespace CoherentPointDrift
 {
-	constexpr auto CPD_EPS = 1e-5;
-
 	float CalculateSigmaSquared(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter);
 	Probabilities ComputePMatrixFast(
 		const std::vector<Point_f>& cloudTransformed,
@@ -49,7 +47,17 @@ namespace CoherentPointDrift
 	{
 		auto maxIterations = config.MaxIterations.has_value() ? config.MaxIterations.value() : -1;
 
-		return GetRigidCPDTransformationMatrix(cloudBefore, cloudAfter, iterations, error, CPD_EPS, config.CpdWeight, false, maxIterations, CPD_EPS, config.ApproximationType);
+		return GetRigidCPDTransformationMatrix(
+			cloudBefore,
+			cloudAfter,
+			iterations,
+			error, 
+			config.ConvergenceEpsilon,
+			config.CpdWeight,
+			config.CpdConstScale, 
+			maxIterations, 
+			config.CpdTolerance,
+			config.ApproximationType);
 	}
 
 	//[0, 1, 2] if > 0, then use FGT. case 1: FGT with fixing sigma after it gets too small(faster, but the result can be rough)

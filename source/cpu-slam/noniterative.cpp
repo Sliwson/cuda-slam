@@ -11,8 +11,6 @@ using namespace Common;
 
 namespace NonIterative
 {
-	constexpr auto NICP_EPS = 1e-5f;
-
 	std::pair<glm::mat3, glm::vec3> CalculateNonIterativeWithConfiguration(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, Common::Configuration config, int* repetitions, float* error)
 	{
 		auto maxIterations = config.MaxIterations.has_value() ? config.MaxIterations.value() : -1;
@@ -21,7 +19,7 @@ namespace NonIterative
 			config.ExecutionPolicy.value() == Common::ExecutionPolicy::Parallel :
 			true;
 
-		return GetNonIterativeTransformationMatrix(cloudBefore, cloudAfter, repetitions, error, NICP_EPS, maxIterations, config.ApproximationType, parallel);
+		return GetNonIterativeTransformationMatrix(cloudBefore, cloudAfter, repetitions, error, config.ConvergenceEpsilon, maxIterations, config.ApproximationType, parallel, config.NicpSubcloudSize);
 	}
 
 	NonIterativeSlamResult GetSingleNonIterativeSlamResult(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter)
