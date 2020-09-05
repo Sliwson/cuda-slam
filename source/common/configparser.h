@@ -54,7 +54,7 @@ namespace Common
 	inline T ConfigParser::ParseOptional(const nlohmann::json& parsed, std::string name, T defaultValue)
 	{
 		auto opt = ParseOptional(parsed, name);
-		if (opt != nullopt)
+		if (opt != std::nullopt)
 			return opt.value();
 
 		return defaultValue;
