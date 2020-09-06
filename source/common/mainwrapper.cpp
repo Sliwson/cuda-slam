@@ -14,14 +14,7 @@ namespace Common
 		Configuration configuration = configParser.GetConfiguration();
 		configuration.Print();
 
-		if (configuration.RandomSeed.has_value())
-		{
-			srand(configuration.RandomSeed.value());
-		}
-		else
-		{
-			srand(time(nullptr));
-		}
+		srand(configuration.RandomSeed.has_value() ? static_cast<unsigned int>(configuration.RandomSeed.value()) : time(nullptr));
 
 		auto [before, after] = GetCloudsFromConfig(configuration);
 

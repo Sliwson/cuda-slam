@@ -70,7 +70,7 @@ namespace Common
 
 	float CalculateCloudSpread(const std::vector<Point_f>& cloud)
 	{
-		const auto [max, min] = CalculateCloudBoundaries(cloud);
+		const auto [min, max] = CalculateCloudBoundaries(cloud);
 
 		const std::array<float, 3> spans = { max.x - min.x, max.y - min.y, max.z - min.z };
 		const auto result = std::max_element(spans.begin(), spans.end());
@@ -161,17 +161,9 @@ namespace Common
 		}
 
 		// shuffle clouds
-		if (randomSeed.has_value())
-		{
-			const auto seed = static_cast<unsigned int>(randomSeed.value());
-			std::shuffle(before.begin(), before.end(), std::mt19937{ seed });
-			std::shuffle(after.begin(), after.end(), std::mt19937{ seed });
-		}
-		else
-		{
-			std::shuffle(before.begin(), before.end(), std::mt19937{ std::random_device{}() });
-			std::shuffle(after.begin(), after.end(), std::mt19937{ std::random_device{}() });
-		}
+		std::shuffle(before.begin(), before.end(), std::mt19937{ randomSeed.has_value() ? static_cast<unsigned int>(randomSeed.value()) : std::random_device{}() });
+		std::shuffle(after.begin(), after.end(), std::mt19937{ randomSeed.has_value() ? static_cast<unsigned int>(randomSeed.value()) : std::random_device{}() });
+
 
 		if (config.NoiseAffectedPointsBefore.has_value())
 		{
@@ -561,14 +553,7 @@ namespace Common
 	{
 		std::vector<int> permutation(size);
 		std::iota(permutation.begin(), permutation.end(), 0);
-		if (randomSeed.has_value())
-		{
-			std::shuffle(permutation.begin(), permutation.end(), std::mt19937{ static_cast<unsigned int>(randomSeed.value()) });
-		}
-		else
-		{
-			std::shuffle(permutation.begin(), permutation.end(), std::mt19937{ std::random_device{}() });
-		}
+		std::shuffle(permutation.begin(), permutation.end(), std::mt19937{ randomSeed.has_value() ? static_cast<unsigned int>(randomSeed.value()) : std::random_device{}() });
 		return permutation;
 	}
 
