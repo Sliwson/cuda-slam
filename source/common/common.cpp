@@ -53,18 +53,6 @@ namespace Common
 		return Point_f(result);
 	}
 
-	//Point_f AddNoiseToPoint(const Point_f& point, const float& maxDistance)
-	//{
-	//	Point_f result;
-	//	std::random_device rd;
-	//	std::mt19937 gen(rd());
-	//	std::uniform_real_distribution<float> dis(-maxDistance, maxDistance);
-	//	result.x = point.x + dis(gen);
-	//	result.y = point.y + dis(gen);
-	//	result.z = point.z + dis(gen);
-	//	return result;
-	//}
-
 	std::pair<Point_f, Point_f> CalculateCloudBoundaries(const std::vector<Point_f>& cloud)
 	{
 		const auto get_minmax = [&](auto selector) {

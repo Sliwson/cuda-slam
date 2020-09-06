@@ -107,8 +107,8 @@ void Common::Configuration::Print()
 	printf("Cpd const scale: %s\n", std::to_string(CpdConstScale).c_str());
 	printf("Cpd tolerance: %f\n", CpdTolerance);
 	printf("Convergence epsilon: %f\n", ConvergenceEpsilon);
-	printf("Additional outliers before: %f\n", AdditionalOutliersBefore);
-	printf("Additional outliers after: %f\n", AdditionalOutliersAfter);
+	printf("Additional outliers before: %d\n", AdditionalOutliersBefore);
+	printf("Additional outliers after: %d\n", AdditionalOutliersAfter);
 
 	printf("===============================\n");
 }
