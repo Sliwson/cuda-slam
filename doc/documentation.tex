@@ -187,12 +187,27 @@ Any relevant information and runtime howtos.
 %Can we formulate any conclusions from the experiments?
 
 \subsection{Execution times}
-We did not expect CUDA implementations to bring better stability or noise tolerance but we did hope to achieve major execution time gains. We implemented set of tests with varying cloud sizes and run detailed benchmarks which results are stated below. All the performance test were run on the machine with the following configuration:
+\subsubsection{Introduction}
+We did not expect CUDA implementations to bring better stability or noise tolerance but we did hope to achieve major execution time gains. All the performance test were run on the machine with the following configuration:
 \begin{itemize}
 \item CPU - AMD Ryzen 7 2700X, 8 cores, 3.7 GHz
 \item GPU - NVIDIA GeForce RTX 2060 SUPER
 \item RAM - DDR4 16GB, 3333 MHz, CL16
 \end{itemize}
+
+Different point clouds were used depending on test size:
+\begin{itemize}
+\item $0 - 14904$ points - \textit{bunny.obj}
+\item $14905 - 35008$ points - \textit{bird.obj}
+\item $35009 - 333536$ points - \textit{rose.obj}
+\item $333537 - 376401$ points - \textit{mustang.obj}
+\item $376402 - 1375028$ points - \textit{airbus.obj}
+\end{itemize}
+
+To achieve a reasonable rate of convergence we decided to test the clouds without any noise and outliers. We used transformation with $0.2\: rad$ rotation and translation with magnitude of $10$ units for clouds of size bounded by cube with an edge which length equals $10$ units. It is worth noting that the times presented on the charts contains resource allocation and release.
+
+\subsubsection{Iterative Closest Point}
+For Iterative Closest Point method we run benchmarks using one-threaded CPU solution, multi-threaded CPU solution and CUDA-accelearated solution.
 
 \subsection{Stability}
 
