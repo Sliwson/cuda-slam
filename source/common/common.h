@@ -24,6 +24,12 @@ namespace Common
 	/// Normalizes the input cloud so it fits in cube with side of given size 
 	std::vector<Point_f> NormalizeCloud(const std::vector<Point_f>& cloud, float size);
 
+	/// Moves affectedPointsShare [0; 1] of cloud points by random vector that each element is smaller than cloudSpread * intensity
+	std::vector<Point_f> AddNoiseToCloud(const std::vector<Point_f>& cloud, float affectedPointsShare, float intensity);
+
+	/// Adds outliersCount outliers to the cloud that are within boundaries of the cloud
+	std::vector<Point_f> AddOutliersToCloud(const std::vector<Point_f>& cloud, int outliersCount);
+
 	/// Loads clouds and applies modifications according to configuration
 	std::pair<std::vector<Point_f>, std::vector<Point_f>> GetCloudsFromConfig(Configuration config);
 
@@ -89,5 +95,13 @@ namespace Common
 	std::vector<int> InversePermutation(const std::vector<int>& permutation);
 
 	/// Permutes input cloud with given permutation 
-	std::vector<Point_f> ApplyPermutation(const std::vector<Point_f>& input, const std::vector<int>& permutation);
+	template<typename T>
+	std::vector<T> ApplyPermutation(const std::vector<T>& input, const std::vector<int>& permutation)
+	{
+		std::vector<T> permutedCloud(input.size());
+		for (int i = 0; i < input.size(); i++)
+			permutedCloud[i] = i < permutation.size() ? input[permutation[i]] : input[i];
+
+		return permutedCloud;
+	}
 }

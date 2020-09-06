@@ -4,8 +4,6 @@ namespace Common
 {
 	int Main(int argc, char** argv, const char* windowName, const SlamFunc& func)
 	{
-		srand(time(nullptr));
-
 		auto configParser = ConfigParser(argc, argv);
 		if (!configParser.IsCorrect())
 		{
@@ -15,6 +13,9 @@ namespace Common
 
 		Configuration configuration = configParser.GetConfiguration();
 		configuration.Print();
+
+		const auto seed = configuration.RandomSeed.has_value() ? static_cast<unsigned int>(configuration.RandomSeed.value()) : time(nullptr);
+		srand(seed);
 
 		auto [before, after] = GetCloudsFromConfig(configuration);
 
