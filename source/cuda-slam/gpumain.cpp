@@ -52,6 +52,6 @@ int main(int argc, char** argv)
 #ifdef TEST
 	return RunGpuTests();
 #else
-	return Main(argc, argv, GetGpuSlamResult);
+	return Main(argc, argv, "Gpu Slam", GetGpuSlamResult);
 #endif
 }
