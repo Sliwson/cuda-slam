@@ -93,7 +93,7 @@ namespace Common
 	{
 		auto clone = cloud;
 		std::vector<bool> affectedPoints(cloud.size(), false);
-		std::transform(affectedPoints.begin(), affectedPoints.begin() + affectedPointsCount, affectedPoints.begin(), [] {return true; });
+		std::transform(affectedPoints.begin(), affectedPoints.begin() + affectedPointsCount, affectedPoints.begin(), [](const bool& val) {return true; });
 		affectedPoints = ApplyPermutation(affectedPoints, GetRandomPermutationVector(affectedPoints.size()));
 
 		float maxMoveDistance = spread * intensity / 100.0f;
