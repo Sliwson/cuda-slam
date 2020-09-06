@@ -10,6 +10,8 @@
 
 namespace Common
 {
+	std::optional<int> randomSeed = std::nullopt;
+
 	std::vector<Point_f> LoadCloud(const std::string& path)
 	{
 		AssimpCloudLoader loader(path);
@@ -51,63 +53,20 @@ namespace Common
 		return Point_f(result);
 	}
 
-	Point_f AddNoiseToPoint(const Point_f& point, const float& maxDistance)
+	//Point_f AddNoiseToPoint(const Point_f& point, const float& maxDistance)
+	//{
+	//	Point_f result;
+	//	std::random_device rd;
+	//	std::mt19937 gen(rd());
+	//	std::uniform_real_distribution<float> dis(-maxDistance, maxDistance);
+	//	result.x = point.x + dis(gen);
+	//	result.y = point.y + dis(gen);
+	//	result.z = point.z + dis(gen);
+	//	return result;
+	//}
+
+	std::pair<Point_f, Point_f> CalculateCloudBoundaries(const std::vector<Point_f>& cloud)
 	{
-		Point_f result;
-		std::random_device rd;
-		std::mt19937 gen(rd());
-		std::uniform_real_distribution<float> dis(-maxDistance, maxDistance);
-		result.x = point.x + dis(gen);
-		result.y = point.y + dis(gen);
-		result.z = point.z + dis(gen);
-		return result;
-	}
-
-	std::vector<Point_f> NormalizeCloud(const std::vector<Point_f>& cloud, float size)
-	{
-		const auto massCenter = GetCenterOfMass(cloud);
-		auto alignedCloud = GetAlignedCloud(cloud, massCenter);
-
-		const auto get_minmax = [&](auto selector) {
-			 return std::minmax_element(alignedCloud.rbegin(), alignedCloud.rend(), [selector](const auto& p1, const auto& p2) { return selector(p1) < selector(p2); });
-		};
-
-		const auto [xMin, xMax] = get_minmax([](auto p) { return p.x; });
-		const auto [yMin, yMax] = get_minmax([](auto p) { return p.y; });
-		const auto [zMin, zMax] = get_minmax([](auto p) { return p.z; });
-
-		const std::array<float, 3> spans = { xMax->x - xMin->x, yMax->y - yMin->y, zMax->z - zMin->z };
-		const auto max = std::max_element(spans.begin(), spans.end());
-
-		if (std::abs(*max) < 1e-15)
-			return cloud;
-
-		const auto scale = size / *max;
-
-		std::transform(alignedCloud.begin(), alignedCloud.end(), alignedCloud.begin(), [scale](auto p) { return p * scale; });
-		return GetAlignedCloud(alignedCloud, massCenter * -1.f);
-	}
-
-	//spread - size of the field that cloud covers, intensity - how many percents of spread are points able to move in each direction.
-	std::vector<Point_f> AddNoiseToCloud(const std::vector<Point_f>& cloud, float spread, int affectedPointsCount, float intensity)
-	{
-		auto clone = cloud;
-		std::vector<bool> affectedPoints(cloud.size(), false);
-		std::transform(affectedPoints.begin(), affectedPoints.begin() + affectedPointsCount, affectedPoints.begin(), [](const bool& val) {return true; });
-		affectedPoints = ApplyPermutation(affectedPoints, GetRandomPermutationVector(affectedPoints.size()));
-
-		float maxMoveDistance = spread * intensity / 100.0f;
-		Point_f min(-maxMoveDistance, -maxMoveDistance, -maxMoveDistance);
-		Point_f max(maxMoveDistance, maxMoveDistance, maxMoveDistance);
-
-		std::transform(clone.begin(), clone.end(), clone.begin(), [&](const Point_f& point) {return point + Tests::GetRandomPoint(min, max); /*AddNoiseToPoint(point, maxMoveDistance);*/ });
-		return clone;
-	}
-
-	std::vector<Point_f> AddOutliersToCloud(const std::vector<Point_f>& cloud, int outliersCount)
-	{
-		auto clone = cloud;
-
 		const auto get_minmax = [&](auto selector) {
 			return std::minmax_element(cloud.rbegin(), cloud.rend(), [selector](const auto& p1, const auto& p2) { return selector(p1) < selector(p2); });
 		};
@@ -118,6 +77,64 @@ namespace Common
 
 		Point_f min(xMin->x, yMin->y, zMin->z);
 		Point_f max(xMax->x, yMax->y, zMax->z);
+		return std::make_pair(min, max);
+	}
+
+	float CalculateCloudSpread(const std::vector<Point_f>& cloud)
+	{
+		const auto [max, min] = CalculateCloudBoundaries(cloud);
+
+		const std::array<float, 3> spans = { max.x - min.x, max.y - min.y, max.z - min.z };
+		const auto result = std::max_element(spans.begin(), spans.end());
+		return *result;
+	}
+
+	std::vector<Point_f> NormalizeCloud(const std::vector<Point_f>& cloud, float size)
+	{
+		const auto massCenter = GetCenterOfMass(cloud);
+		auto alignedCloud = GetAlignedCloud(cloud, massCenter);
+
+		const auto max = CalculateCloudSpread(alignedCloud);
+
+		if (std::abs(max) < 1e-15)
+			return cloud;
+
+		const auto scale = size / max;
+
+		std::transform(alignedCloud.begin(), alignedCloud.end(), alignedCloud.begin(), [scale](auto p) { return p * scale; });
+		return GetAlignedCloud(alignedCloud, massCenter * -1.f);
+	}
+
+	//spread - size of the field that cloud covers, intensity - how many percents of spread are points able to move in each direction.
+	std::vector<Point_f> AddNoiseToCloud(const std::vector<Point_f>& cloud, float affectedPointsShare, float intensity)
+	{
+		auto clone = cloud;
+		std::vector<bool> affectedPoints(cloud.size(), false);
+		const int affectedPointsCount = std::clamp(static_cast<int>(std::round(affectedPointsShare * cloud.size())), 0, static_cast<int>(cloud.size()));
+		std::transform(affectedPoints.begin(), affectedPoints.begin() + affectedPointsCount, affectedPoints.begin(), [](const bool& val) {return true; });
+		affectedPoints = ApplyPermutation(affectedPoints, GetRandomPermutationVector(affectedPoints.size()));
+
+		const float spread = CalculateCloudSpread(cloud);
+
+		float maxMoveDistance = spread * intensity / 100.0f;
+		Point_f min(-maxMoveDistance, -maxMoveDistance, -maxMoveDistance);
+		Point_f max(maxMoveDistance, maxMoveDistance, maxMoveDistance);
+
+		for (int i = 0; i < clone.size(); i++)
+		{
+			if (affectedPoints[i])
+			{
+				clone[i] += Tests::GetRandomPoint(min, max);
+			}
+		}
+		return clone;
+	}
+
+	std::vector<Point_f> AddOutliersToCloud(const std::vector<Point_f>& cloud, int outliersCount)
+	{
+		auto clone = cloud;
+
+		const auto [min, max] = CalculateCloudBoundaries(cloud);
 
 		for (int i = 0; i < outliersCount; i++)
 		{
@@ -128,17 +145,24 @@ namespace Common
 
 	std::pair<std::vector<Point_f>, std::vector<Point_f>> GetCloudsFromConfig(Configuration config)
 	{
+		randomSeed = config.RandomSeed;
+
 		const auto sameClouds = config.BeforePath == config.AfterPath;
 
 		auto before = LoadCloud(config.BeforePath);
 		auto after = sameClouds ? before : LoadCloud(config.AfterPath);
 
 		// scale clouds if necessary
-		if (config.CloudResize.has_value())
+		if (config.CloudBeforeResize.has_value())
 		{
-			const auto newSize = config.CloudResize.value();
+			const auto newSize = config.CloudBeforeResize.value();
 			before = GetSubcloud(before, newSize);
-			after = sameClouds ? before : GetSubcloud(after, newSize);
+		}
+
+		if (config.CloudAfterResize.has_value())
+		{
+			const auto newSize = config.CloudAfterResize.value();
+			after = sameClouds && (before.size() == newSize) ? before : GetSubcloud(after, newSize);
 		}
 
 		// normalize clouds to standart value
@@ -150,8 +174,30 @@ namespace Common
 		}
 
 		// shuffle clouds
-		std::shuffle(before.begin(), before.end(), std::mt19937{ std::random_device{}() });
-		std::shuffle(after.begin(), after.end(), std::mt19937{ std::random_device{}() });
+		if (randomSeed.has_value())
+		{
+			const auto seed = static_cast<unsigned int>(randomSeed.value());
+			std::shuffle(before.begin(), before.end(), std::mt19937{ seed });
+			std::shuffle(after.begin(), after.end(), std::mt19937{ seed });
+		}
+		else
+		{
+			std::shuffle(before.begin(), before.end(), std::mt19937{ std::random_device{}() });
+			std::shuffle(after.begin(), after.end(), std::mt19937{ std::random_device{}() });
+		}
+
+		if (config.NoiseAffectedPointsBefore.has_value())
+		{
+			before = AddNoiseToCloud(before, config.NoiseAffectedPointsBefore.value(), config.NoiseIntensityBefore);
+		}
+
+		if (config.NoiseAffectedPointsAfter.has_value())
+		{
+			after = AddNoiseToCloud(after, config.NoiseAffectedPointsAfter.value(), config.NoiseIntensityAfter);
+		}
+		
+		before = AddOutliersToCloud(before, config.AdditionalOutliersBefore);
+		after = AddOutliersToCloud(after, config.AdditionalOutliersAfter);
 
 		// apply transformation and return
 		if (config.Transformation.has_value())
@@ -528,7 +574,14 @@ namespace Common
 	{
 		std::vector<int> permutation(size);
 		std::iota(permutation.begin(), permutation.end(), 0);
-		std::shuffle(permutation.begin(), permutation.end(), std::mt19937{ std::random_device{}() });
+		if (randomSeed.has_value())
+		{
+			std::shuffle(permutation.begin(), permutation.end(), std::mt19937{ static_cast<unsigned int>(randomSeed.value()) });
+		}
+		else
+		{
+			std::shuffle(permutation.begin(), permutation.end(), std::mt19937{ std::random_device{}() });
+		}
 		return permutation;
 	}
 

@@ -24,8 +24,8 @@ namespace Common
 	/// Normalizes the input cloud so it fits in cube with side of given size 
 	std::vector<Point_f> NormalizeCloud(const std::vector<Point_f>& cloud, float size);
 
-	/// Moves affectedPointsCount of cloud points by random vector that each element is smaller than spread * intensity / 100
-	std::vector<Point_f> AddNoiseToCloud(const std::vector<Point_f>& cloud, float spread, int affectedPointsCount, float intensity);
+	/// Moves affectedPointsShare [0; 1] of cloud points by random vector that each element is smaller than cloudSpread * intensity / 100
+	std::vector<Point_f> AddNoiseToCloud(const std::vector<Point_f>& cloud, float affectedPointsShare, float intensity);
 
 	/// Adds outliersCount outliers to the cloud that are within boundaries of the cloud
 	std::vector<Point_f> AddOutliersToCloud(const std::vector<Point_f>& cloud, int outliersCount);

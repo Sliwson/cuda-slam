@@ -17,6 +17,9 @@
       "type": "string",
       "enum": [ "sequential", "parallel" ]
     },
+    "scale": {
+      "type": "number"
+    },
     "translation": {
       "type": "array",
       "minLength": 3,
@@ -42,11 +45,17 @@
     "max-iterations": {
       "type": "integer"
     },
-    "cloud-resize": {
+    "cloud-before-resize": {
+      "type": "integer"
+    },
+    "cloud-after-resize": {
       "type": "integer"
     },
     "cloud-spread": {
       "type": "number"
+    },
+    "random-seed": {
+      "type": "integer"
     },
     "show-visualisation": {
       "type": "boolean"
@@ -78,6 +87,24 @@
     },
     "convergence-epsilon": {
       "type": "number"
+    },
+    "noise-affected-points-before": {
+      "type": "number"
+    },
+    "noise-affected-points-after": {
+      "type": "number"
+    },
+    "noise-intensity-before": {
+      "type": "number"
+    },
+    "noise-intensity-after": {
+      "type": "number"
+    },
+    "additional-outliers-before": {
+      "type": "integer"
+    },
+    "additional-outliers-after": {
+      "type": "integer"
     }
   }
 }

@@ -12,13 +12,13 @@
 
 namespace Common
 {
-	const char* windowIconPath = "icon/icon.png";
+	constexpr const char* windowIconPath = "icon/icon.png";
 	std::vector<Renderer*> Renderer::renderers;
 
 	namespace ShaderPath
 	{
-		const char* vertexShaderPath = "source/shaders/vertexshader.vert";
-		const char* fragmentShaderPath = "source/shaders/fragmentshader.frag";
+		constexpr const char* vertexShaderPath = "source/shaders/vertexshader.vert";
+		constexpr const char* fragmentShaderPath = "source/shaders/fragmentshader.frag";
 	}
 
 	Renderer::Renderer(ShaderType shaderType, const char* windowName, std::vector<Point_f> origin_points, std::vector<Point_f> result_points, std::vector<Point_f> cpu_points, std::vector<Point_f> gpu_points) :
@@ -36,7 +36,7 @@ namespace Common
 
 		pointSize = 0.3f;
 		pointScale = 1.0f;
-		defaultScale = 10.0f;
+		defaultScale = 5.0f;
 
 		SetCamera(glm::vec3(1.5f * defaultScale, 0.0f, 0.0f));
 

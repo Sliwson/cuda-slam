@@ -129,6 +129,7 @@ namespace Common
 	{
 		auto translationIt = parsed.find("translation");
 		auto rotationIt = parsed.find("rotation");
+		auto scale = ParseOptional(parsed, "scale", 1.0f);
 
 		if (translationIt != parsed.end() && rotationIt != parsed.end())
 		{
@@ -153,7 +154,7 @@ namespace Common
 				for (int i = 0; i < 3; i++)
 					translationVector[i] = translation[i].get<float>();
 
-				config.Transformation = std::make_pair(rotationMatrix, translationVector);
+				config.Transformation = std::make_pair(scale * rotationMatrix, translationVector);
 			}
 			catch (...)
 			{
@@ -192,9 +193,17 @@ namespace Common
 	{
 		config.MaxIterations = ParseOptional<int>(parsed, "max-iterations");
 
-		config.CloudResize = ParseOptional<int>(parsed, "cloud-resize");
+		config.CloudBeforeResize = ParseOptional<int>(parsed, "cloud-before-resize");
+
+		config.CloudAfterResize = ParseOptional<int>(parsed, "cloud-after-resize");
 
 		config.CloudSpread = ParseOptional<float>(parsed, "cloud-spread");
+
+		config.RandomSeed = ParseOptional<int>(parsed, "random-seed");
+
+		config.NoiseAffectedPointsBefore = ParseOptional<float>(parsed, "noise-affected-points-before");
+
+		config.NoiseAffectedPointsAfter = ParseOptional<float>(parsed, "noise-affected-points-after");
 
 		config.ShowVisualisation = ParseOptional(parsed, "show-visualisation", false);
 
@@ -233,6 +242,14 @@ namespace Common
 		config.CpdTolerance = ParseOptional(parsed, "cpd-tolerance", 1e-3);
 
 		config.ConvergenceEpsilon = ParseOptional(parsed, "convergence-epsilon", 1e-3);
+
+		config.NoiseIntensityBefore = ParseOptional(parsed, "noise-intensity-before", 10.0f);
+
+		config.NoiseIntensityAfter = ParseOptional(parsed, "noise-intensity-after", 10.0f);
+
+		config.AdditionalOutliersBefore = ParseOptional(parsed, "additional-outliers-before", 0);
+
+		config.AdditionalOutliersAfter = ParseOptional(parsed, "additional-outliers-after", 0);
 	}
 
 	void ConfigParser::ValidateConfiguration()
