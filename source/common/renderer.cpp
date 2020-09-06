@@ -36,7 +36,7 @@ namespace Common
 
 		pointSize = 0.3f;
 		pointScale = 1.0f;
-		defaultScale = 5.0f;
+		defaultScale = 8.0f;
 
 		SetCamera(glm::vec3(1.5f * defaultScale, 0.0f, 0.0f));
 
