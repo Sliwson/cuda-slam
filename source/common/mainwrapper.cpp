@@ -2,7 +2,7 @@
 
 namespace Common
 {
-	int Main(int argc, char** argv, const SlamFunc& func)
+	int Main(int argc, char** argv, const char* windowName, const SlamFunc& func)
 	{
 		srand(time(nullptr));
 
@@ -39,6 +39,7 @@ namespace Common
 		{
 			auto renderer = Renderer(
 				ShaderType::SimpleModel,
+				windowName,
 				before,
 				after,
 				resultCloud,

@@ -9,5 +9,5 @@
 
 namespace Common
 {
-	int Main(int argc, char** argv, const SlamFunc& func);
+	int Main(int argc, char** argv, const char* windowName, const SlamFunc& func);
 }

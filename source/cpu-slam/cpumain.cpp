@@ -37,6 +37,6 @@ int main(int argc, char** argv)
 #ifdef TEST
 	return RunCpuTests();
 #else
-	return Main(argc, argv, GetCpuSlamResult);
+	return Main(argc, argv, "Cpu Slam", GetCpuSlamResult);
 #endif
 }

@@ -23,7 +23,7 @@ namespace Common
 	class Renderer
 	{
 	public:
-		Renderer(ShaderType shaderType, std::vector<Point_f> origin_points, std::vector<Point_f> result_points, std::vector<Point_f> cpu_points, std::vector<Point_f> gpu_points);
+		Renderer(ShaderType shaderType, const char* windowName, std::vector<Point_f> origin_points, std::vector<Point_f> result_points, std::vector<Point_f> cpu_points, std::vector<Point_f> gpu_points);
 
 		~Renderer();
 
@@ -109,10 +109,6 @@ namespace Common
 		std::vector<unsigned int> indices;
 
 		//windowName
-#ifdef __CUDACC__
-		const char* windowName = "CUDA Slam";
-#else
-		const char* windowName = "CPU Slam";
-#endif
+		const char* windowName;
 	};
 }

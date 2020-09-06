@@ -21,8 +21,8 @@ namespace Common
 		const char* fragmentShaderPath = "source/shaders/fragmentshader.frag";
 	}
 
-	Renderer::Renderer(ShaderType shaderType, std::vector<Point_f> origin_points, std::vector<Point_f> result_points, std::vector<Point_f> cpu_points, std::vector<Point_f> gpu_points) :
-		shaderType(shaderType), origin_points(origin_points), result_points(result_points), cpu_points(cpu_points), gpu_points(gpu_points)
+	Renderer::Renderer(ShaderType shaderType, const char* windowName, std::vector<Point_f> origin_points, std::vector<Point_f> result_points, std::vector<Point_f> cpu_points, std::vector<Point_f> gpu_points) :
+		shaderType(shaderType), origin_points(origin_points), result_points(result_points), cpu_points(cpu_points), gpu_points(gpu_points), windowName(windowName)
 	{
 		width = 1280;
 		height = 720;
