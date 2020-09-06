@@ -10,7 +10,7 @@
 
 namespace Common
 {
-	std::optional<int> randomSeed = std::nullopt;
+	unsigned int randomSeed = 0;
 
 	std::vector<Point_f> LoadCloud(const std::string& path)
 	{
@@ -132,7 +132,7 @@ namespace Common
 
 	std::pair<std::vector<Point_f>, std::vector<Point_f>> GetCloudsFromConfig(Configuration config)
 	{
-		randomSeed = config.RandomSeed;
+		randomSeed = config.RandomSeed.has_value() ? static_cast<unsigned int>(config.RandomSeed.value()) : std::random_device{}();
 
 		const auto sameClouds = config.BeforePath == config.AfterPath;
 
@@ -161,8 +161,8 @@ namespace Common
 		}
 
 		// shuffle clouds
-		std::shuffle(before.begin(), before.end(), std::mt19937{ randomSeed.has_value() ? static_cast<unsigned int>(randomSeed.value()) : std::random_device{}() });
-		std::shuffle(after.begin(), after.end(), std::mt19937{ randomSeed.has_value() ? static_cast<unsigned int>(randomSeed.value()) : std::random_device{}() });
+		std::shuffle(before.begin(), before.end(), std::mt19937{ randomSeed });
+		std::shuffle(after.begin(), after.end(), std::mt19937{ randomSeed });
 
 
 		if (config.NoiseAffectedPointsBefore.has_value())
@@ -553,7 +553,7 @@ namespace Common
 	{
 		std::vector<int> permutation(size);
 		std::iota(permutation.begin(), permutation.end(), 0);
-		std::shuffle(permutation.begin(), permutation.end(), std::mt19937{ randomSeed.has_value() ? static_cast<unsigned int>(randomSeed.value()) : std::random_device{}() });
+		std::shuffle(permutation.begin(), permutation.end(), std::mt19937{ randomSeed });
 		return permutation;
 	}
 
