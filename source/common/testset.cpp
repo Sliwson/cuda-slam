@@ -80,6 +80,38 @@ namespace Common
 
     std::vector<Configuration> GetPerformanceTestSet(ComputationMethod method)
     {
-        return std::vector<Configuration>();
+        if (method != ComputationMethod::Icp)
+            return { };
+
+        const std::map<ComputationMethod, MethodTestParams> map{ {
+            { ComputationMethod::Icp, { 1000, 1000, 100000 }},
+            { ComputationMethod::Cpd, { 100, 100, 1000 }},
+            { ComputationMethod::NoniterativeIcp, { 1000, 1000, 100000 }}
+        } };
+
+        std::vector<Configuration> configurations;
+
+        const auto params = map.find(method)->second;
+        for (int i = params.MinSize; i <= params.MaxSize; i += params.SizeSpan)
+        {
+            auto path = GetObjectWithMinSize(i);
+
+			Configuration config;
+            config.BeforePath = path;
+            config.AfterPath = path;
+            config.ComputationMethod = method;
+            config.MaxIterations = 50;
+            config.CloudSpread = 10.f;
+            config.MaxDistanceSquared = 10000.f;
+            config.TransformationParameters = std::make_pair(.2f, 10.f);
+            config.CloudResize = i;
+            config.ExecutionPolicy = ExecutionPolicy::Parallel;
+            config.ApproximationType = method == ComputationMethod::Cpd ? ApproximationType::Full : ApproximationType::Hybrid;
+            config.CpdWeight = 0.1f;
+
+            configurations.push_back(config);
+        }
+
+        return configurations;
     }
 }
