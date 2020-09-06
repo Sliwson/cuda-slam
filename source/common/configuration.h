@@ -34,8 +34,8 @@ namespace Common
 		bool CpdConstScale = true;
 		float CpdTolerance = 1e-3f;
 		float ConvergenceEpsilon = 1e-3f;
-		float NoiseIntensityBefore = 10.0f;
-		float NoiseIntensityAfter = 10.0f;
+		float NoiseIntensityBefore = 0.1f;
+		float NoiseIntensityAfter = 0.1f;
 		int AdditionalOutliersBefore = 0;
 		int AdditionalOutliersAfter = 0;
 

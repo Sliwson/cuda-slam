@@ -93,7 +93,6 @@ namespace Common
 		return GetAlignedCloud(alignedCloud, massCenter * -1.f);
 	}
 
-	//spread - size of the field that cloud covers, intensity - how many percents of spread are points able to move in each direction.
 	std::vector<Point_f> AddNoiseToCloud(const std::vector<Point_f>& cloud, float affectedPointsShare, float intensity)
 	{
 		auto clone = cloud;
@@ -104,7 +103,7 @@ namespace Common
 
 		const float spread = CalculateCloudSpread(cloud);
 
-		float maxMoveDistance = spread * intensity / 100.0f;
+		float maxMoveDistance = spread * intensity;
 		Point_f min(-maxMoveDistance, -maxMoveDistance, -maxMoveDistance);
 		Point_f max(maxMoveDistance, maxMoveDistance, maxMoveDistance);
 

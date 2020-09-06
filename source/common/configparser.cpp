@@ -243,9 +243,9 @@ namespace Common
 
 		config.ConvergenceEpsilon = ParseOptional(parsed, "convergence-epsilon", 1e-3);
 
-		config.NoiseIntensityBefore = ParseOptional(parsed, "noise-intensity-before", 10.0f);
+		config.NoiseIntensityBefore = ParseOptional(parsed, "noise-intensity-before", 0.1f);
 
-		config.NoiseIntensityAfter = ParseOptional(parsed, "noise-intensity-after", 10.0f);
+		config.NoiseIntensityAfter = ParseOptional(parsed, "noise-intensity-after", 0.1f);
 
 		config.AdditionalOutliersBefore = ParseOptional(parsed, "additional-outliers-before", 0);
 

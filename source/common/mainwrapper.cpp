@@ -28,7 +28,7 @@ namespace Common
 		//calculate
 		int iterations = 0;
 		float error = 0.f;
-		auto result = std::make_pair(glm::mat3(1.0f), glm::vec3(0.f, 10.0f, 0.0f));//func(before, after, configuration, &iterations, &error);
+		auto result = func(before, after, configuration, &iterations, &error);
 
 		const auto vec = result.second;
 
@@ -38,7 +38,6 @@ namespace Common
 		printf("Translation vector:\n");
 		printf("x = %f, y = %f, z = %f\n", vec.x, vec.y, vec.z);
 		printf("Error: %f\n", error);
-		printf("Before Size: %d After size %d\n", before.size(), after.size());
 
 		auto resultCloud = GetTransformedCloud(before, result.first, result.second);
 
