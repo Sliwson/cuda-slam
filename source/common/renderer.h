@@ -23,7 +23,7 @@ namespace Common
 	class Renderer
 	{
 	public:
-		Renderer(ShaderType shaderType, std::vector<Point_f> origin_points, std::vector<Point_f> result_points, std::vector<Point_f> cpu_points, std::vector<Point_f> gpu_points);
+		Renderer(ShaderType shaderType, const char* windowName, std::vector<Point_f> origin_points, std::vector<Point_f> result_points, std::vector<Point_f> cpu_points, std::vector<Point_f> gpu_points);
 
 		~Renderer();
 
@@ -107,5 +107,8 @@ namespace Common
 		//vertices 3*float - position | 3*float - normals | 2*float - texture
 		std::vector<float> vertices;
 		std::vector<unsigned int> indices;
+
+		//windowName
+		const char* windowName;
 	};
 }
