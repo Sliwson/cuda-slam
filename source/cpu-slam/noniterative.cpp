@@ -129,7 +129,7 @@ namespace NonIterative
 
 						if (minError <= eps)
 						{
-							*repetitions = i * batchSize + j;
+							*repetitions = i * batchSize + j + 1;
 							return bestTransformation;
 						}
 					}
@@ -233,7 +233,7 @@ namespace NonIterative
 
 					if (minError <= eps)
 					{
-						*repetitions = i;
+						*repetitions = i + 1;
 						return bestTransformation;
 					}
 				}
