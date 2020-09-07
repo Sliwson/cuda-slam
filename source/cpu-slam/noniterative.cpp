@@ -112,11 +112,12 @@ namespace NonIterative
 			{
 				threads[j] = std::thread(slam_thread_work, j);
 			}
-			
+
 			for (int j = 0; j < threadsToRun; j++)
-			{
 				threads[j].join();
 
+			for (int j = 0; j < threadsToRun; j++)
+			{
 				*error = errors[j];
 
 				// If not using approximation, calculate error for selected subcloud
@@ -175,8 +176,10 @@ namespace NonIterative
 			}
 			
 			for (int i = 0; i < bestResults.size(); i++)
-			{
 				errorThreads[i].join();
+
+			for (int i = 0; i < bestResults.size(); i++)
+			{
 				*error = exactErrors[i];
 
 				if (*error < minError)
