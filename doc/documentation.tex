@@ -224,7 +224,7 @@ As we can see, the benchmarks prove the expectations and parallelization of the 
 Even for clouds with size over $1000000$ points one iteration lasts less than 10s which is a reasonable amount. The benchmarks show that the CUDA-accelerated solution is a perfect choice when utilizing the ICP algorithm.
 
 \subsubsection{Non-iterative closest point}
-Non-iterative closest point method is performance-wisely a truly interesting one. We expect it to be the fastest because it requires only matrix multiplication and singular matrix multiplication. To avoid overwhelming amount of information on one chart we split some comparisons to different ones. Because only in \textit{None} approximation mode number of iterations differ in each run we present benchmarks for the whole runs, not single iterations as in ICP section. We set the maximum iterations parameter to $64$, batch size to $16$ and subcloud size to $1000$.
+Non-iterative closest point method is performance-wisely a truly interesting one. We expect it to be the fastest because it requires only matrix multiplication and singular matrix decomposition. To avoid an overwhelming amount of information on one chart we split some comparisons to different ones. Because only setting approximation mode to \textit{None} results in a different iteration count in each run we present benchmarks for the whole runs, not single iterations as in ICP section. The maximum iterations parameter is set to $64$, batch size to $16$ and subcloud size to $1000$.
 
 \begin{figure}[H]
 \includegraphics[width=\textwidth]{ms-nicp-1.png}
