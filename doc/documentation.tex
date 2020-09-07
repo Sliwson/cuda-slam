@@ -9,7 +9,7 @@
 \usepackage{hyperref} 
 \usepackage{float}
 
-\graphicspath{{./images/}}
+\graphicspath{{./images/}{./plots/}}
 
 \geometry{
  a4paper,
@@ -133,6 +133,7 @@ All of the methods implemented in the scope of this project base to a greater or
 It is worth clarifying that Eigen has implemented the partial support for CUDA kernels but this feature is still experimental and there are multiple known issues (for example with support for gcc or MS Visual Studio). Adding that to potential problems with performance, we decided not to use this library for GPU accelerated operations in order to maintain higher scalability and stability of the project.
 
 \subsection{Iterative Closest Point}
+Because of the fact that for our research we have chosen the simplest method of finding corresponding points across the point sets, the algorithm benefits greatly from using GPU accelerated computations. Each GPU thread is associated with one point from the first cloud and finds the nearest one from the second cloud. It results in almost $100\%$ GPU occupancy and major improvement over CPU computations. Furthermore we used cuSOLVER Singular Value Decomposition although it does not offer as big performance leap as correspondences step.  
 
 \subsection{Non-iterative closest point}
 The non-iterative algorithm does not offer too many ways to benefit from parallel CUDA operations. For that reason the most natural path for parallelizing the code is to run SVDs for multiple permutations of source and target clouds on parallel. Unfortunately, natively supported solution from cuSOLVER library - so called "batched SVD" is not an option due to limitations for decomposed matrices size (it cannot be greater than 32 x 32 which corresponds point clouds of 32 points). For that reason another solution has been developed - matrices are decomposed by separate threads in batches of configured size. Implementing this solution also brought multiple issues and the following attempts to obtain expected results can be broken down into several stages:
@@ -185,7 +186,50 @@ Any relevant information and runtime howtos.
 %How we understand the results and why are they correct?
 %Can we formulate any conclusions from the experiments?
 
-\subsection{Speed}
+\subsection{Execution times}
+\subsubsection{Introduction}
+We did not expect CUDA implementations to bring better stability or noise tolerance but we did hope to achieve major improvements in terms of the methods execution times. All the performance tests were run on the machine with the following configuration:
+\begin{itemize}
+\item CPU - AMD Ryzen 7 2700X, 8 cores, 16 threads, 3.7 GHz
+\item GPU - NVIDIA GeForce RTX 2060 SUPER
+\item RAM - DDR4 16GB, 3333 MHz, CL16
+\end{itemize}
+
+Different point clouds were used depending on test size:
+\begin{itemize}
+\item $0 - 14904$ points - \textit{bunny.obj}
+\item $14905 - 35008$ points - \textit{bird.obj}
+\item $35009 - 333536$ points - \textit{rose.obj}
+\item $333537 - 376401$ points - \textit{mustang.obj}
+\item $376402 - 1375028$ points - \textit{airbus.obj}
+\end{itemize}
+
+To achieve a reasonable rate of convergence we decided to test the clouds without any noise and outliers. We used transformation with $0.2\: rad$ rotation and translation with magnitude of $10$ units for clouds of size bounded by cube with an edge which length equals $10$ units. It is worth noting that the times presented on the charts contains resource allocation and release.
+
+\subsubsection{Iterative Closest Point}
+For Iterative Closest Point method we run benchmarks using one-threaded CPU solution, multi-threaded CPU solution and CUDA-accelearated solution. On the charts a single iteration time is presented because different runs result in different iterations count which makes the results hard to interpret.
+
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{ms-icp-1.png}
+\caption{Results of the benchmark for CPU Parallel, CPU Sequential and GPU implementations of the ICP method}
+\end{figure} 
+
+As we can see, the benchmarks prove the expectations and parallelization of the ICP algorithm results in big performance improvements. Having iteration time lower than 100ms for clouds with size of $100000$ points more tests could be run for the GPU implementation.
+
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{ms-icp-2.png}
+\caption{Results of the benchmark for GPU implementation of the ICP method}
+\end{figure}
+
+Even for clouds with size over $1000000$ points one iteration lasts less than 10s which is a reasonable amount. The benchmarks show that the CUDA-accelerated solution is a perfect choice when utilizing the ICP algorithm.
+
+\subsubsection{Non-iterative closest point}
+Non-iterative closest point method is performance-wisely a truly interesting one. We expect it to be the fastest because it requires only matrix multiplication and singular matrix decomposition. To avoid an overwhelming amount of information on one chart we split some comparisons to different ones. Because only setting approximation mode to \textit{None} results in a different iteration count in each run we present benchmarks for the whole runs, not single iterations as in ICP section. The maximum iterations parameter is set to $64$, batch size to $16$ and subcloud size to $1000$.
+
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{ms-nicp-1.png}
+\caption{Results of the benchmark for sequential CPU implementation of the Non-iterative Closest Point method}
+\end{figure}
 
 \subsection{Stability}
 

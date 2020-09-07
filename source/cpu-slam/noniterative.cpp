@@ -13,7 +13,7 @@ namespace NonIterative
 {
 	std::pair<glm::mat3, glm::vec3> CalculateNonIterativeWithConfiguration(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, Common::Configuration config, int* repetitions, float* error)
 	{
-		auto maxIterations = config.MaxIterations.has_value() ? config.MaxIterations.value() : -1;
+		auto maxIterations = config.NicpIterations;
 
 		auto parallel = config.ExecutionPolicy.has_value() ?
 			config.ExecutionPolicy.value() == Common::ExecutionPolicy::Parallel :
@@ -112,11 +112,12 @@ namespace NonIterative
 			{
 				threads[j] = std::thread(slam_thread_work, j);
 			}
-			
+
 			for (int j = 0; j < threadsToRun; j++)
-			{
 				threads[j].join();
 
+			for (int j = 0; j < threadsToRun; j++)
+			{
 				*error = errors[j];
 
 				// If not using approximation, calculate error for selected subcloud
@@ -129,7 +130,7 @@ namespace NonIterative
 
 						if (minError <= eps)
 						{
-							*repetitions = i;
+							*repetitions = i * batchSize + j + 1;
 							return bestTransformation;
 						}
 					}
@@ -154,6 +155,8 @@ namespace NonIterative
 			exactErrors[index] = GetMeanSquaredError(std::get<0>(correspondingPoints), std::get<1>(correspondingPoints));
 		};
 
+		*repetitions = maxRepetitions;
+
 		// If using hybrid approximation, select best result
 		if (calculationType == ApproximationType::Full)
 		{
@@ -173,8 +176,10 @@ namespace NonIterative
 			}
 			
 			for (int i = 0; i < bestResults.size(); i++)
-			{
 				errorThreads[i].join();
+
+			for (int i = 0; i < bestResults.size(); i++)
+			{
 				*error = exactErrors[i];
 
 				if (*error < minError)
@@ -231,7 +236,7 @@ namespace NonIterative
 
 					if (minError <= eps)
 					{
-						*repetitions = i;
+						*repetitions = i + 1;
 						return bestTransformation;
 					}
 				}
@@ -247,6 +252,8 @@ namespace NonIterative
 				StoreResultIfOptimal(bestResults, transformationResult, 1);
 			}
 		}
+
+		*repetitions = maxRepetitions;
 
 		// If using hybrid approximation, select best result
 		// If using full approximation, calculate exact error for the best result
