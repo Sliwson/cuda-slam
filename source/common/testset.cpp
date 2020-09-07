@@ -80,13 +80,10 @@ namespace Common
 
     std::vector<Configuration> GetPerformanceTestSet(ComputationMethod method)
     {
-        if (method != ComputationMethod::Icp)
-            return { };
-
         const std::map<ComputationMethod, MethodTestParams> map{ {
-            { ComputationMethod::Icp, { 1000, 1000, 100000 }},
+            { ComputationMethod::Icp, { 25000, 25000, 1300000 }},
             { ComputationMethod::Cpd, { 100, 100, 1000 }},
-            { ComputationMethod::NoniterativeIcp, { 1000, 1000, 100000 }}
+            { ComputationMethod::NoniterativeIcp, { 10000, 10000, 300000 }}
         } };
 
         std::vector<Configuration> configurations;
@@ -105,8 +102,10 @@ namespace Common
             config.MaxDistanceSquared = 10000.f;
             config.TransformationParameters = std::make_pair(.2f, 10.f);
             config.CloudResize = i;
-            config.ExecutionPolicy = ExecutionPolicy::Parallel;
-            config.ApproximationType = method == ComputationMethod::Cpd ? ApproximationType::Full : ApproximationType::Hybrid;
+            config.ExecutionPolicy = ExecutionPolicy::Sequential;
+            config.ApproximationType = ApproximationType::Hybrid;
+            config.NicpSubcloudSize = 1000;
+            config.NicpIterations = 64;
             config.CpdWeight = 0.1f;
 
             configurations.push_back(config);
