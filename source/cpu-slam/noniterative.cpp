@@ -13,7 +13,7 @@ namespace NonIterative
 {
 	std::pair<glm::mat3, glm::vec3> CalculateNonIterativeWithConfiguration(const std::vector<Point_f>& cloudBefore, const std::vector<Point_f>& cloudAfter, Common::Configuration config, int* repetitions, float* error)
 	{
-		auto maxIterations = config.MaxIterations.has_value() ? config.MaxIterations.value() : -1;
+		auto maxIterations = config.NicpIterations;
 
 		auto parallel = config.ExecutionPolicy.has_value() ?
 			config.ExecutionPolicy.value() == Common::ExecutionPolicy::Parallel :
@@ -129,7 +129,7 @@ namespace NonIterative
 
 						if (minError <= eps)
 						{
-							*repetitions = i;
+							*repetitions = i * batchSize + j;
 							return bestTransformation;
 						}
 					}
@@ -153,6 +153,8 @@ namespace NonIterative
 			CorrespondingPointsTuple correspondingPoints = GetCorrespondingPoints(transformedSubcloud, cloudAfter, maxDistanceForComparison, true);
 			exactErrors[index] = GetMeanSquaredError(std::get<0>(correspondingPoints), std::get<1>(correspondingPoints));
 		};
+
+		*repetitions = maxRepetitions;
 
 		// If using hybrid approximation, select best result
 		if (calculationType == ApproximationType::Full)
