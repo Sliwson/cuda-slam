@@ -250,6 +250,8 @@ namespace NonIterative
 			}
 		}
 
+		*repetitions = maxRepetitions;
+
 		// If using hybrid approximation, select best result
 		// If using full approximation, calculate exact error for the best result
 		if (calculationType != ApproximationType::None)
