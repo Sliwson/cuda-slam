@@ -119,9 +119,9 @@ namespace Common
     std::vector<Configuration> GetConvergenceTestSet(ComputationMethod method)
     {
         const std::map<ComputationMethod, MethodTestParams> map{ {
-           { ComputationMethod::Icp, { 10000, 10000, 300000 }},
-           { ComputationMethod::Cpd, { 1000, 1000, 30000 }},
-           { ComputationMethod::NoniterativeIcp, { 10000, 10000, 300000 }}
+           { ComputationMethod::Icp, { 10000, 25000, 110000 }},
+           { ComputationMethod::Cpd, { 500, 500, 20000 }},
+           { ComputationMethod::NoniterativeIcp, { 25000, 25000, 1300000 }}
        } };
 
         std::vector<Configuration> configurations;
@@ -150,7 +150,6 @@ namespace Common
                 config.NicpIterations = 64;
                 config.CpdWeight = 0.1f;
                 config.CpdTolerance = 1e-4;
-                config.ShowVisualisation = true;
 
                 configurations.push_back(config);
 

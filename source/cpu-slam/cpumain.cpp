@@ -30,8 +30,7 @@ namespace {
 		srand(Tests::RANDOM_SEED);
 		Common::SetRandom();
 
-		const auto methods = { ComputationMethod::Icp };
-		//const auto methods = { ComputationMethod::Icp, ComputationMethod::NoniterativeIcp, ComputationMethod::Cpd };
+		const auto methods = { ComputationMethod::Icp, ComputationMethod::NoniterativeIcp, ComputationMethod::Cpd };
 		Tests::RunTestSet(GetConvergenceTestSet, GetCpuSlamResult, "convergence", methods);
 		return 0;
 	}
