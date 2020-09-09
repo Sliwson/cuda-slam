@@ -119,7 +119,7 @@ namespace Common
     std::vector<Configuration> GetConvergenceTestSet(ComputationMethod method)
     {
         const std::map<ComputationMethod, MethodTestParams> map{ {
-           { ComputationMethod::Icp, { 10000, 25000, 110000 }},
+           { ComputationMethod::Icp, { 10000, 2500, 110000 }},
            { ComputationMethod::Cpd, { 500, 500, 20000 }},
            { ComputationMethod::NoniterativeIcp, { 25000, 25000, 1300000 }}
        } };
@@ -127,7 +127,7 @@ namespace Common
         std::vector<Configuration> configurations;
 
         const auto params = map.find(method)->second;
-        for (int j = 0; j < 10; j++)
+        for (int j = 0; j < 1; j++)
         {
             for (int i = params.MinSize; i <= params.MaxSize; i += params.SizeSpan)
             {
