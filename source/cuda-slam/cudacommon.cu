@@ -42,9 +42,7 @@ namespace CUDACommon
 	inline void __cusolveSafeCall(cusolverStatus_t err, const char* file, const int line)
 	{
 		if (CUSOLVER_STATUS_SUCCESS != err) {
-			fprintf(stderr, "CUSOLVE error in file '%s', line %d\n %s\nerror %d: %s\nterminating!\n", __FILE__, __LINE__, err, \
-				_cudaGetErrorEnum(err)); \
-				cudaDeviceReset(); assert(0); \
+			fprintf(stderr, "CUSOLVE error in file '%s', line %d\n error %d: %s\n\n", __FILE__, __LINE__, err, _cudaGetErrorEnum(err));
 		}
 	}
 

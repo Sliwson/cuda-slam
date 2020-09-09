@@ -207,7 +207,7 @@ Different point clouds were used depending on test size:
 To achieve a reasonable rate of convergence we decided to test the clouds without any noise and outliers. We used transformation with $0.2\: rad$ rotation and translation with magnitude of $10$ units for clouds of size bounded by cube with an edge which length equals $10$ units. It is worth noting that the times presented on the charts contains resource allocation and release.
 
 \subsubsection{Iterative Closest Point}
-For Iterative Closest Point method we run benchmarks using one-threaded CPU solution, multi-threaded CPU solution and CUDA-accelearated solution. On the charts a single iteration time is presented because different runs result in different iterations count which makes the results hard to interpret.
+For Iterative Closest Point method we run benchmarks using one-threaded CPU solution, multi-threaded CPU solution and CUDA-accelearated solution. On the charts a single iteration time is presented because different runs result in different iterations count which makes the results hard to interpret. The results are presented using logarithmic scale as the differences between variants of the algorithm are significant.
 
 \begin{figure}[H]
 \includegraphics[width=\textwidth]{ms-icp-1.png}
@@ -224,12 +224,64 @@ As we can see, the benchmarks prove the expectations and parallelization of the 
 Even for clouds with size over $1000000$ points one iteration lasts less than 10s which is a reasonable amount. The benchmarks show that the CUDA-accelerated solution is a perfect choice when utilizing the ICP algorithm.
 
 \subsubsection{Non-iterative closest point}
-Non-iterative closest point method is performance-wisely a truly interesting one. We expect it to be the fastest because it requires only matrix multiplication and singular matrix decomposition. To avoid an overwhelming amount of information on one chart we split some comparisons to different ones. Because only setting approximation mode to \textit{None} results in a different iteration count in each run we present benchmarks for the whole runs, not single iterations as in ICP section. The maximum iterations parameter is set to $64$, batch size to $16$ and subcloud size to $1000$.
+Non-iterative closest point method is performance-wisely a truly interesting one. We expect it to be the fastest because it requires only matrix multiplication and singular matrix decomposition. To avoid an overwhelming amount of information on one chart we split comparisons to separate ones. Because only setting approximation mode to \textit{None} results in a different iteration count in each run we present benchmarks for the whole runs, not single iterations as in ICP section. The maximum iterations parameter is set to $64$, batch size to $16$ and subcloud size to $1000$. We found normal scale on y axis the most suitable to present the results.
 
 \begin{figure}[H]
 \includegraphics[width=\textwidth]{ms-nicp-1.png}
 \caption{Results of the benchmark for sequential CPU implementation of the Non-iterative Closest Point method}
 \end{figure}
+
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{ms-nicp-2.png}
+\caption{Results of the benchmark for parallel CPU implementation of the Non-iterative Closest Point method}
+\end{figure}
+
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{ms-nicp-3.png}
+\caption{Results of the benchmark for GPU implementation of the Non-iterative Closest Point method}
+\end{figure}
+
+The benchmarks have clearly shown that in practical usages the version without any approximation yields the best results. We expected \textit{Hybrid} and \textit{Full} approximation to improve overall performance, although the tests have shown that calculating the error each step is a better choice than approximating it and choosing the result after all iterations are finished.
+
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{ms-nicp-4.png}
+\caption{Results of the benchmark for CPU and GPU implementation of the Non-iterative Closest Point method}
+\end{figure}
+
+To the benchmark comparing the GPU and CPU implementations we chose the most performant variants of the algorithms. The CUDA-accelerated implementation proved to be faster than the CPU parallel. It is worth noting that for cloud over $1000000$ points it achieves execution time below $500\: ms$. 
+
+\subsubsection{Coherent Point Drift}
+Coherent Point Drift algorithm was the hardest to implement and it is certainly the most complicated considering the scope of our research. Therefore we do not expect CUDA solution to bring significant improvement in this case.
+
+For the performance tests \textit{weight} parameter was set to $0.1$ and \textit{const-scale} to $false$. The other parameters were the same as in other benchmarks. We present the results using logarithmic scale on y axis. Similarly to Non-iterative Closest Point benchmarks we compare three approximation types, this time approximations relying on using Fast Gauss Transform.
+
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{ms-cpd-1.png}
+\caption{Results of the benchmark for CPU implementation of the Coherent Point Drift method}
+\end{figure}
+
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{ms-cpd-2.png}
+\caption{Results of the benchmark for GPU implementation of the Coherent Point Drift method}
+\end{figure}
+
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{ms-cpd-3.png}
+\caption{Results of the benchmark for CPU and GPU implementation of the Coherent Point Drift method}
+\end{figure}
+
+We can note that implementations utilising Fast Gauss Transform are considerably faster than the ones without approximation. GPU acceleration did not bring satisfying improvements, however the variant without approximation is an exception because it is fastest and gives more predictable execution times than CPU implementation.
+
+\subsubsection{Methods comparison}
+
+To sum up the section describing execution times, we gathered all the methods benchmarks on one chart. The parameters were the same as in all the other benchmarks, however this time an execution time is presented for all the methods. Because the differences between all the variants are substantial we used a logarithmic scale on y axis.
+
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{ms-all.png}
+\caption{Comparison of all methods execution times}
+\end{figure}
+
+As we can see the execution times differ vastly depending on method and execution policy. We are satisfied with the results especially for Iterative Closest Point and Non-iterative Closest Point methods because we managed to significantly improve the performance by utilizing CUDA library. Therefore, these two methods would be the best choice if time is the most important factor while utilizing SLAM. Coherent Point Drift was expected to be the slowest of the all methods due to its sophistication. However its CPU implementation using Fast Gauss Transform occurred to be faster than ICP CPU variant and it is usable even for clouds with considerable sizes.
 
 \subsection{Stability}
 
