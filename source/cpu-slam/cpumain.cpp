@@ -3,6 +3,7 @@
 #include "basicicp.h"
 
 #include "mainwrapper.h"
+#include "common.h"
 
 using namespace Common;
 
@@ -27,6 +28,7 @@ namespace {
 	int RunCpuTests()
 	{ 
 		srand(Tests::RANDOM_SEED);
+		Common::SetRandom();
 
 		const auto methods = { ComputationMethod::Icp };
 		//const auto methods = { ComputationMethod::Icp, ComputationMethod::NoniterativeIcp, ComputationMethod::Cpd };
