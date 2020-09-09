@@ -241,10 +241,14 @@ Non-iterative closest point method is performance-wisely a truly interesting one
 \caption{Results of the benchmark for GPU implementation of the Non-iterative Closest Point method}
 \end{figure}
 
+The benchmarks clearly show that in practical usages the version without any approximation yields the best results. We expected \textit{Hybrid} and \textit{Full} approximation to improve overall performance, although the tests shown that calculating the error each step is a better choice than approximating it and choosing the result after all iterations are finished.
+
 \begin{figure}[H]
 \includegraphics[width=\textwidth]{ms-nicp-4.png}
 \caption{Results of the benchmark for CPU and GPU implementation of the Non-iterative Closest Point method}
 \end{figure}
+
+To the benchmark comparing the GPU and CPU implementations we chose the most performant variants of the algorithms. The CUDA-accelerated implementation proved to be faster than tha CPU parallel one. It is worth noting that for cloud over $1000000$ points it achieves execution time below $500\: ms$. 
 
 \subsubsection{Coherent Point Drift}
 
@@ -262,6 +266,8 @@ Non-iterative closest point method is performance-wisely a truly interesting one
 \includegraphics[width=\textwidth]{ms-cpd-3.png}
 \caption{Results of the benchmark for CPU and GPU implementation of the Coherent Point Drift method}
 \end{figure}
+
+\subsubsection{Methods comparison}
 
 \subsection{Stability}
 
