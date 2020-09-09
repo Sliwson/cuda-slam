@@ -1,5 +1,5 @@
 {
-  "_comment": "Axis: 1x 1y 0z angle: 45 deg",
+  "_comment": "Axis: 3x 1y 0z angle: 35 deg",
   "before-path": "data/bunny.obj",
   "after-path": "data/bunny.obj",
   "method": "nicp",
@@ -8,17 +8,17 @@
   "max-iterations": 100,
 
   "scale": 1.0,
-  "translation": [ 13.0, 0.0, 5.0 ],
+  "translation": [ 10.0, 0.0, 5.0 ],
   "rotation": [
-    0.8535534,
-    0.1464466,
-    0.5000000,
-    0.1464466,
-    0.8535534,
-    -0.5000000,
-    -0.5000000,
-    0.5000000,
-    0.7071068
+    0.9819152,
+    0.0542544,
+    0.1813808,
+    0.0542544,
+    0.8372368,
+    -0.5441424,
+    -0.1813808,
+    0.5441424,
+    0.8191521
   ],
 
   "show-visualisation": true,

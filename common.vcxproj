@@ -13,6 +13,8 @@
   <ItemGroup>
     <None Include="config\default.json" />
     <None Include="config\noise_test1.json" />
+    <None Include="config\noise_test2.json" />
+    <None Include="config\noise_test3.json" />
     <None Include="config\schema.json" />
   </ItemGroup>
   <ItemGroup>
