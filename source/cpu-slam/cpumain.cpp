@@ -6,6 +6,8 @@
 
 using namespace Common;
 
+#define TEST
+
 namespace {
 	std::pair<glm::mat3, glm::vec3> GetCpuSlamResult(const CpuCloud& before, const CpuCloud& after, Configuration configuration, int* iterations, float* error)
 	{
@@ -26,8 +28,9 @@ namespace {
 	{ 
 		srand(Tests::RANDOM_SEED);
 
-		const auto methods = { ComputationMethod::Icp, ComputationMethod::NoniterativeIcp, ComputationMethod::Cpd };
-		Tests::RunTestSet(GetSizesTestSet, GetCpuSlamResult, "sizes", methods);
+		const auto methods = { ComputationMethod::Icp };
+		//const auto methods = { ComputationMethod::Icp, ComputationMethod::NoniterativeIcp, ComputationMethod::Cpd };
+		Tests::RunTestSet(GetConvergenceTestSet, GetCpuSlamResult, "convergence", methods);
 		return 0;
 	}
 }
