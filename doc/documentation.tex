@@ -207,7 +207,7 @@ Different point clouds were used depending on test size:
 To achieve a reasonable rate of convergence we decided to test the clouds without any noise and outliers. We used transformation with $0.2\: rad$ rotation and translation with magnitude of $10$ units for clouds of size bounded by cube with an edge which length equals $10$ units. It is worth noting that the times presented on the charts contains resource allocation and release.
 
 \subsubsection{Iterative Closest Point}
-For Iterative Closest Point method we run benchmarks using one-threaded CPU solution, multi-threaded CPU solution and CUDA-accelearated solution. On the charts a single iteration time is presented because different runs result in different iterations count which makes the results hard to interpret.
+For Iterative Closest Point method we run benchmarks using one-threaded CPU solution, multi-threaded CPU solution and CUDA-accelearated solution. On the charts a single iteration time is presented because different runs result in different iterations count which makes the results hard to interpret. The results are presented using logarithmic scale as the differences between variants of the algorithm are significant.
 
 \begin{figure}[H]
 \includegraphics[width=\textwidth]{ms-icp-1.png}
@@ -268,6 +268,15 @@ To the benchmark comparing the GPU and CPU implementations we chose the most per
 \end{figure}
 
 \subsubsection{Methods comparison}
+
+To sum up the section describing execution times we gathered all the methods benchmarks on one chart. The parameters were the same as in all the other benchmarks, however this time an execution time is presented for all the methods.
+
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{ms-all.png}
+\caption{Comparison of all methods execution times}
+\end{figure}
+
+As we can see the execution times differ vastly depending on method and execution policy. We are satisfied with the results especially for Iterative Closest Point and Non-iterative Closest Point methods because we managed to significantly improve the performance utilizing CUDA library. Therefore, these two methods would be the best choice if time is most significant factor for utilizing SLAM. Coherent Point Drift was expected to be the slowest of the all methods due to its sophistication. However its CPU implementation using Fast Gauss Transform occurred to be faster than ICP CPU variant and it is usable even for clouds with considerable sizes.
 
 \subsection{Stability}
 
