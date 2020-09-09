@@ -1,0 +1,42 @@
+{
+  "before-path": "data/bunny.obj",
+  "after-path": "data/bunny.obj",
+  "method": "icp",
+  "policy": "parallel",
+  "approximation-type": "none",
+  "max-iterations": 100,
+
+  "scale": 1.0,
+  "translation": [ 10.0, 0.0, 5.0 ],
+  "rotation": [
+    0.8535534,
+    0.1464466,
+    0.5000000,
+    0.1464466,
+    0.8535534,
+    -0.5000000,
+    -0.5000000,
+    0.5000000,
+    0.7071068
+  ],
+
+  "show-visualisation": true,
+  "cloud-spread": 10.0,
+  "random-seed": 12345,
+
+  "max-distance-squared": 400,
+
+  "nicp-batch-size": 1,
+  "nicp-iterations": 8,
+  "nicp-subcloud-size": 1000,
+
+  "cpd-weight": 0.1,
+  "cpd-const-scale": false,
+
+  "noise-affected-points-before": 0,
+  "noise-affected-points-after": 0,
+  "noise-intensity-before": 0,
+  "noise-intensity-after": 0,
+  "additional-outliers-before": 0,
+  "additional-outliers-after": 0
+}

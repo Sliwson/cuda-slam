@@ -102,7 +102,8 @@ namespace Common
             config.CloudSpread = 10.f;
             config.MaxDistanceSquared = 10000.f;
             config.TransformationParameters = std::make_pair(.2f, 10.f);
-            config.CloudResize = i;
+            config.CloudBeforeResize = i;
+            config.CloudAfterResize = i;
             config.ExecutionPolicy = ExecutionPolicy::Sequential;
             config.ApproximationType = ApproximationType::Hybrid;
             config.NicpSubcloudSize = 1000;

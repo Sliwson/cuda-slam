@@ -21,6 +21,9 @@
     <None Include="config\schema.json">
       <Filter>Configuration</Filter>
     </None>
+    <None Include="config\noise_test1.json">
+      <Filter>Configuration</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\common\camera.cpp">
