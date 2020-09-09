@@ -100,6 +100,8 @@ std::pair<glm::mat3, glm::vec3> CudaNonIterative(const GpuCloud& before, const G
 	auto centroidBefore = CalculateCentroid(before);
 	auto centroidAfter = CalculateCentroid(after);
 
+	*repetitions = 0;
+
 	// Run actual SLAM in batches
 	for (int i = 0; i <= batchesCount; i++)
 	{
@@ -136,7 +138,6 @@ std::pair<glm::mat3, glm::vec3> CudaNonIterative(const GpuCloud& before, const G
 					if (minError <= eps)
 					{
 						printf("Error: %f\n", minError);
-						*repetitions = i;
 						args.Free();
 						return currentTransformation;
 					}
