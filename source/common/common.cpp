@@ -566,4 +566,10 @@ namespace Common
 		}
 		return inversedPermutation;
 	}
+
+	void SetRandom()
+	{
+		randomSeed = time(nullptr);
+		mtRandom = std::mt19937{ std::random_device{}() };
+	}
 }

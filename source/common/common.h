@@ -94,6 +94,8 @@ namespace Common
 	/// Creates permutation inverse to input parameter
 	std::vector<int> InversePermutation(const std::vector<int>& permutation);
 
+	void SetRandom();
+
 	/// Permutes input cloud with given permutation 
 	template<typename T>
 	std::vector<T> ApplyPermutation(const std::vector<T>& input, const std::vector<int>& permutation)
