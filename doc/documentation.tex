@@ -274,14 +274,14 @@ We can note that implementations utilising Fast Gauss Transform are considerably
 
 \subsubsection{Methods comparison}
 
-To sum up the section describing execution times we gathered all the methods benchmarks on one chart. The parameters were the same as in all the other benchmarks, however this time an execution time is presented for all the methods.
+To sum up the section describing execution times, we gathered all the methods benchmarks on one chart. The parameters were the same as in all the other benchmarks, however this time an execution time is presented for all the methods. Because the differences between all the variants are substantial we used a logarithmic scale on y axis.
 
 \begin{figure}[H]
 \includegraphics[width=\textwidth]{ms-all.png}
 \caption{Comparison of all methods execution times}
 \end{figure}
 
-As we can see the execution times differ vastly depending on method and execution policy. We are satisfied with the results especially for Iterative Closest Point and Non-iterative Closest Point methods because we managed to significantly improve the performance utilizing CUDA library. Therefore, these two methods would be the best choice if time is most significant factor for utilizing SLAM. Coherent Point Drift was expected to be the slowest of the all methods due to its sophistication. However its CPU implementation using Fast Gauss Transform occurred to be faster than ICP CPU variant and it is usable even for clouds with considerable sizes.
+As we can see the execution times differ vastly depending on method and execution policy. We are satisfied with the results especially for Iterative Closest Point and Non-iterative Closest Point methods because we managed to significantly improve the performance by utilizing CUDA library. Therefore, these two methods would be the best choice if time is the most important factor while utilizing SLAM. Coherent Point Drift was expected to be the slowest of the all methods due to its sophistication. However its CPU implementation using Fast Gauss Transform occurred to be faster than ICP CPU variant and it is usable even for clouds with considerable sizes.
 
 \subsection{Stability}
 
