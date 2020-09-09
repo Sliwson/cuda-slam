@@ -224,7 +224,7 @@ As we can see, the benchmarks prove the expectations and parallelization of the 
 Even for clouds with size over $1000000$ points one iteration lasts less than 10s which is a reasonable amount. The benchmarks show that the CUDA-accelerated solution is a perfect choice when utilizing the ICP algorithm.
 
 \subsubsection{Non-iterative closest point}
-Non-iterative closest point method is performance-wisely a truly interesting one. We expect it to be the fastest because it requires only matrix multiplication and singular matrix decomposition. To avoid an overwhelming amount of information on one chart we split some comparisons to different ones. Because only setting approximation mode to \textit{None} results in a different iteration count in each run we present benchmarks for the whole runs, not single iterations as in ICP section. The maximum iterations parameter is set to $64$, batch size to $16$ and subcloud size to $1000$.
+Non-iterative closest point method is performance-wisely a truly interesting one. We expect it to be the fastest because it requires only matrix multiplication and singular matrix decomposition. To avoid an overwhelming amount of information on one chart we split comparisons to separate ones. Because only setting approximation mode to \textit{None} results in a different iteration count in each run we present benchmarks for the whole runs, not single iterations as in ICP section. The maximum iterations parameter is set to $64$, batch size to $16$ and subcloud size to $1000$. We found normal scale on y axis the most suitable to present the results.
 
 \begin{figure}[H]
 \includegraphics[width=\textwidth]{ms-nicp-1.png}
@@ -241,16 +241,19 @@ Non-iterative closest point method is performance-wisely a truly interesting one
 \caption{Results of the benchmark for GPU implementation of the Non-iterative Closest Point method}
 \end{figure}
 
-The benchmarks clearly show that in practical usages the version without any approximation yields the best results. We expected \textit{Hybrid} and \textit{Full} approximation to improve overall performance, although the tests shown that calculating the error each step is a better choice than approximating it and choosing the result after all iterations are finished.
+The benchmarks clearly show that in practical usages the version without any approximation yields the best results. We expected \textit{Hybrid} and \textit{Full} approximation to improve overall performance, although the tests has shown that calculating the error each step is a better choice than approximating it and choosing the result after all iterations are finished.
 
 \begin{figure}[H]
 \includegraphics[width=\textwidth]{ms-nicp-4.png}
 \caption{Results of the benchmark for CPU and GPU implementation of the Non-iterative Closest Point method}
 \end{figure}
 
-To the benchmark comparing the GPU and CPU implementations we chose the most performant variants of the algorithms. The CUDA-accelerated implementation proved to be faster than tha CPU parallel one. It is worth noting that for cloud over $1000000$ points it achieves execution time below $500\: ms$. 
+To the benchmark comparing the GPU and CPU implementations we chose the most performant variants of the algorithms. The CUDA-accelerated implementation proved to be faster than the CPU parallel. It is worth noting that for cloud over $1000000$ points it achieves execution time below $500\: ms$. 
 
 \subsubsection{Coherent Point Drift}
+Coherent Point Drift algorithm was the hardest to implement and it is certainly the most complicated considering the scope of our research. Therefore we do not expect CUDA solution to bring significant improvement in this case.
+
+For the performance tests \textit{weight} parameter was set to $0.1$ and \textit{const-scale} to $false$. The other parameters were the same as in other benchmarks. We present the results using logarithmic scale on y axis. Similarly to Non-iterative Closest Point benchmarks we compare three approximation types, this time approximations relying on using Fast Gauss Transform.
 
 \begin{figure}[H]
 \includegraphics[width=\textwidth]{ms-cpd-1.png}
@@ -266,6 +269,8 @@ To the benchmark comparing the GPU and CPU implementations we chose the most per
 \includegraphics[width=\textwidth]{ms-cpd-3.png}
 \caption{Results of the benchmark for CPU and GPU implementation of the Coherent Point Drift method}
 \end{figure}
+
+We can note that implementations utilising Fast Gauss Transform are considerably faster than the ones without approximation. GPU acceleration did not bring satisfying improvements, however the variant without approximation is and exception because it is fastest and gives more predictable execution times than CPU implementation.
 
 \subsubsection{Methods comparison}
 
