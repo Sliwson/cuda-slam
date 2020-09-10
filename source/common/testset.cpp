@@ -125,9 +125,9 @@ namespace Common
        } };
 
         const std::map<ComputationMethod, MethodTestParams> mapGpu{ {
-           { ComputationMethod::Icp, { 10000, 2500, 110000 }},
-           { ComputationMethod::Cpd, { 500, 500, 20000 }},
-           { ComputationMethod::NoniterativeIcp, { 10000, 10000, 350000 }}
+           { ComputationMethod::Icp, { 20000, 20000, 100000 }},
+           { ComputationMethod::Cpd, { 4000, 4000, 20000 }},
+           { ComputationMethod::NoniterativeIcp, { 250000, 250000, 1250000 }}
        } };
 
         std::vector<Configuration> configurations;
