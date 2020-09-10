@@ -118,15 +118,21 @@ namespace Common
 
     std::vector<Configuration> GetConvergenceTestSet(ComputationMethod method)
     {
-        const std::map<ComputationMethod, MethodTestParams> map{ {
+        const std::map<ComputationMethod, MethodTestParams> mapCpu{ {
            { ComputationMethod::Icp, { 10000, 2500, 110000 }},
            { ComputationMethod::Cpd, { 500, 500, 20000 }},
            { ComputationMethod::NoniterativeIcp, { 25000, 25000, 1300000 }}
        } };
 
+        const std::map<ComputationMethod, MethodTestParams> mapGpu{ {
+           { ComputationMethod::Icp, { 10000, 2500, 110000 }},
+           { ComputationMethod::Cpd, { 500, 500, 20000 }},
+           { ComputationMethod::NoniterativeIcp, { 10000, 10000, 350000 }}
+       } };
+
         std::vector<Configuration> configurations;
 
-        const auto params = map.find(method)->second;
+        const auto params = mapGpu.find(method)->second;
         for (int j = 0; j < 1; j++)
         {
             for (int i = params.MinSize; i <= params.MaxSize; i += params.SizeSpan)
@@ -147,7 +153,8 @@ namespace Common
                 config.ExecutionPolicy = ExecutionPolicy::Parallel;
                 config.ApproximationType = method == ComputationMethod::Cpd ? ApproximationType::Hybrid : ApproximationType::None;
                 config.NicpSubcloudSize = 5000;
-                config.NicpIterations = 64;
+                config.NicpBatchSize = 1;
+                config.NicpIterations = 16;
                 config.CpdWeight = 0.1f;
                 config.CpdTolerance = 1e-4;
 
