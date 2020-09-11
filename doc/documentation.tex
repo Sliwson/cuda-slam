@@ -8,6 +8,7 @@
 \usepackage{geometry}
 \usepackage{hyperref} 
 \usepackage{float}
+\usepackage{gensymb}
 
 \graphicspath{{./images/}{./plots/}}
 
@@ -286,9 +287,33 @@ As we can see the execution times differ vastly depending on method and executio
 \subsection{Noise and outliers tolerance}
 
 \subsection{Convergence ranges}
+
 \subsubsection{Introduction}
+Another topic for discussion when it comes to methods' usability is a quality of their results. This section covers convergance rates for all the algorithms, depending on cloud sizes, rotation and translation. For all the methods, both GPU and CPU implementations, tests have covered three different translation ranges: 10, 20 and 30 units and three different rotation ranges: 0.2, 0.4 and 0.6 radians, which are equal to 11.5\degree, 22.9\degree and 34.4\degree respectively.
+
+Based on the performance results from previous sections, cloud sizes have been chosen separately for each method and they differ significantly from each other, but remain the same between GPU and CPU implementation of a specific method. It is also worth noting that for methods with multiple approximation types, only one type is chosen for tests and the decision is described in the section focusing on specific method.
 
 \subsubsection{Iterative closest point}
+In case of an ICP, convergance rates are deeply correlated with a maximum number of iterations the algorithm runs. And this turns out to be the main drawback of this method. In order to compare methods most fairly, we had to limit the iterations in a way that keeps computation times close to the other methods. At the same time, we needed to keep similar parameters for both CPU and GPU implementation and for this reason iterations have been limited by a $100$. Cloud sizes have been chosen from range $[20000,100000]$ which position ICP in the middle of the road between CPD and Non-iterative Closest Point.
+
+Unfortunately, it is noticable from the chart below that for large clouds, convergence rate falls dramatically. It is caused mainly by limiting the iterations mentioned above. In most of the test cases, the error in consequtive iterations tended to fall down, but the dynamics of changes did not allow the algorithm to converge in acceptable time.
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{ss-icp-1.png}
+\caption{Convergance rates for ICP depending on cloud size}
+\end{figure}
+The situation is slightly different when it comes to comparing ICP efficiency based on translation between first and second point cloud. In this case, the differences are not so grand and only large translation cause the visible decrease of convergance rate. What is worth mentioning are the differences between GPU and CPU implementation. GPU turns out to be even more than 5 times better when it comes to matching clouds with large translation. This may indicate lower accuracy of math libraries used on CPU, especially for decomposition of matrices with larger values. 
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{ss-icp-2.png}
+\caption{Convergance rates for ICP depending on translation}
+\end{figure}
+The differences between GPU and CPU computations are not that evident if we compare the rotated clouds. In this situation, the CPU implementation tend to maintain similar convergance rate, despite the rotation value. The overall GPU dynamics in this case is the same as for the tests based on translation.
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{ss-icp-3.png}
+\caption{Convergance rates for ICP depending on rotation}
+\end{figure}
+Summarizing the convergance tests for an ICP algorithm, the method does not show great differences between convergance rate based on translation and rotation, but the rates are in all the cases rather low. The method's advantage is the possibility of significantly improving the results by increasing the number of allowed iterations. In most of the test cases, it was this limitation, not the maximum error what caused the computations to stop.
+
+Another issue shown by convergence tests of an ICP method are noticable differences between quality of GPU and CPU computations, which, however, are not to be covered in details in this report.
 
 \subsubsection{Non-iterative closest point}
 
