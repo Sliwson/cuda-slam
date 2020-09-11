@@ -78,6 +78,9 @@
     <ClCompile Include="source\common\mainwrapper.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
+    <ClCompile Include="source\common\stb_image.cpp">
+      <Filter>Renderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\common\camera.h">
@@ -144,6 +147,9 @@
     </ClInclude>
     <ClInclude Include="source\common\mainwrapper.h">
       <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="source\common\stb_image.h">
+      <Filter>Renderer</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

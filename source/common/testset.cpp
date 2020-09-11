@@ -67,7 +67,8 @@ namespace Common
             config.MaxIterations = 50;
             config.MaxDistanceSquared = 10000.f;
             config.TransformationParameters = std::make_pair(.2f, 10.f);
-            config.CloudResize = i;
+            config.CloudBeforeResize = i;
+            config.CloudAfterResize = i;
             config.ExecutionPolicy = method == ComputationMethod::Icp ? ExecutionPolicy::Parallel : ExecutionPolicy::Sequential;
             config.ApproximationType = ApproximationType::None;
             config.CpdWeight = 0.1f;
@@ -77,4 +78,41 @@ namespace Common
 
         return configurations;
 	}
+
+    std::vector<Configuration> GetPerformanceTestSet(ComputationMethod method)
+    {
+        const std::map<ComputationMethod, MethodTestParams> map{ {
+            { ComputationMethod::Icp, { 25000, 25000, 1300000 }},
+            { ComputationMethod::Cpd, { 100, 100, 1000 }},
+            { ComputationMethod::NoniterativeIcp, { 10000, 10000, 300000 }}
+        } };
+
+        std::vector<Configuration> configurations;
+
+        const auto params = map.find(method)->second;
+        for (int i = params.MinSize; i <= params.MaxSize; i += params.SizeSpan)
+        {
+            auto path = GetObjectWithMinSize(i);
+
+			Configuration config;
+            config.BeforePath = path;
+            config.AfterPath = path;
+            config.ComputationMethod = method;
+            config.MaxIterations = 50;
+            config.CloudSpread = 10.f;
+            config.MaxDistanceSquared = 10000.f;
+            config.TransformationParameters = std::make_pair(.2f, 10.f);
+            config.CloudBeforeResize = i;
+            config.CloudAfterResize = i;
+            config.ExecutionPolicy = ExecutionPolicy::Sequential;
+            config.ApproximationType = ApproximationType::Hybrid;
+            config.NicpSubcloudSize = 1000;
+            config.NicpIterations = 64;
+            config.CpdWeight = 0.1f;
+
+            configurations.push_back(config);
+        }
+
+        return configurations;
+    }
 }

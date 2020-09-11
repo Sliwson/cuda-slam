@@ -129,6 +129,7 @@ namespace Common
 	{
 		auto translationIt = parsed.find("translation");
 		auto rotationIt = parsed.find("rotation");
+		auto scale = ParseOptional(parsed, "scale", 1.0f);
 
 		if (translationIt != parsed.end() && rotationIt != parsed.end())
 		{
@@ -153,7 +154,7 @@ namespace Common
 				for (int i = 0; i < 3; i++)
 					translationVector[i] = translation[i].get<float>();
 
-				config.Transformation = std::make_pair(rotationMatrix, translationVector);
+				config.Transformation = std::make_pair(scale * rotationMatrix, translationVector);
 			}
 			catch (...)
 			{
@@ -192,26 +193,27 @@ namespace Common
 	{
 		config.MaxIterations = ParseOptional<int>(parsed, "max-iterations");
 
-		config.CloudResize = ParseOptional<int>(parsed, "cloud-resize");
+		config.CloudBeforeResize = ParseOptional<int>(parsed, "cloud-before-resize");
 
-		config.MaxDistanceSquared = [this, &parsed]() {
-			auto opt = ParseOptional<float>(parsed, "max-distance-squared");
-			return opt.has_value() ? opt.value() : 1.f;
-		}();
+		config.CloudAfterResize = ParseOptional<int>(parsed, "cloud-after-resize");
 
-		config.ShowVisualisation = [this, &parsed]() {
-			auto opt = ParseOptional<bool>(parsed, "show-visualisation");
-			return opt.has_value() ? opt.value() : false;
-		}();
-		
-		config.CpdWeight = [this, &parsed]() {
-			auto opt = ParseOptional<float>(parsed, "cpd-weight");
-			return opt.has_value() ? opt.value() : .3f;
-		}();
+		config.CloudSpread = ParseOptional<float>(parsed, "cloud-spread");
+
+		config.RandomSeed = ParseOptional<int>(parsed, "random-seed");
+
+		config.NoiseAffectedPointsBefore = ParseOptional<float>(parsed, "noise-affected-points-before");
+
+		config.NoiseAffectedPointsAfter = ParseOptional<float>(parsed, "noise-affected-points-after");
+
+		config.ShowVisualisation = ParseOptional(parsed, "show-visualisation", false);
+
+		config.MaxDistanceSquared = ParseOptional(parsed, "max-distance-squared", 1000.f);
+
+		config.CpdWeight = ParseOptional<float>(parsed, "cpd-weight", .3f);
 
 		config.ApproximationType = [this, &parsed]() {
-			auto nicpType = ParseOptional<std::string>(parsed, "nicp-type");
-			if (!nicpType.has_value())
+			auto approximationType = ParseOptional<std::string>(parsed, "approximation-type");
+			if (!approximationType.has_value())
 				return ApproximationType::Hybrid;
 
 			const std::map<std::string, ApproximationType> mapping = {
@@ -220,12 +222,34 @@ namespace Common
 				{ "none", ApproximationType::None }
 			};
 
-			const auto nicpStr = nicpType.value();
-			if (auto result = mapping.find(nicpStr); result != mapping.end())
+			const auto approximationString = approximationType.value();
+			if (auto result = mapping.find(approximationString); result != mapping.end())
 				return result->second;
 			else
 				return ApproximationType::Hybrid;
 		}();
+
+		config.NicpBatchSize = ParseOptional(parsed, "nicp-batch-size", 16);
+
+		config.NicpIterations = ParseOptional(parsed, "nicp-iterations", 32);
+
+		config.NicpSubcloudSize = ParseOptional(parsed, "nicp-subcloud-size", 1000);
+		
+		config.CpdWeight = ParseOptional(parsed, "cpd-weight", 0.3f);
+		
+		config.CpdConstScale = ParseOptional(parsed, "cpd-const-scale", false);
+		
+		config.CpdTolerance = ParseOptional(parsed, "cpd-tolerance", 1e-3);
+
+		config.ConvergenceEpsilon = ParseOptional(parsed, "convergence-epsilon", 1e-3);
+
+		config.NoiseIntensityBefore = ParseOptional(parsed, "noise-intensity-before", 0.1f);
+
+		config.NoiseIntensityAfter = ParseOptional(parsed, "noise-intensity-after", 0.1f);
+
+		config.AdditionalOutliersBefore = ParseOptional(parsed, "additional-outliers-before", 0);
+
+		config.AdditionalOutliersAfter = ParseOptional(parsed, "additional-outliers-after", 0);
 	}
 
 	void ConfigParser::ValidateConfiguration()

@@ -32,7 +32,7 @@ void Common::Configuration::Print()
 		}
 	}();
 
-	const auto nicpString = [t = this->ApproximationType]() {
+	const auto approximationString = [t = this->ApproximationType]() {
 		switch (t)
 		{
 		case ApproximationType::Full:
@@ -73,13 +73,42 @@ void Common::Configuration::Print()
 	if (MaxIterations.has_value())
 		printf("Max iterations: %d\n", MaxIterations.value());
 	
-	if (CloudResize.has_value())
-		printf("Cloud resize: %d\n", CloudResize.value());
+	if (CloudBeforeResize.has_value())
+		printf("Cloud before resize: %d\n", CloudBeforeResize.value());
+
+	if (CloudAfterResize.has_value())
+		printf("Cloud after resize: %d\n", CloudAfterResize.value());
+
+	if (CloudSpread.has_value())
+		printf("Cloud spread: %f\n", CloudSpread.value());
+
+	if (RandomSeed.has_value())
+		printf("Random seed: %f\n", RandomSeed.value());
+
+	if (NoiseAffectedPointsBefore.has_value())
+	{
+		printf("Noise affected points before: %f\n", NoiseAffectedPointsBefore.value());
+		printf("Noise intensity before: %f\n", NoiseIntensityBefore);
+	}
+
+	if (NoiseAffectedPointsAfter.has_value())
+	{
+		printf("Noise affected points after: %f\n", NoiseAffectedPointsAfter.value());
+		printf("Noise intensity after: %f\n", NoiseIntensityAfter);
+	}
 
 	printf("Show visualisation: %s\n", std::to_string(ShowVisualisation).c_str());
 	printf("Max distance squared: %f\n", MaxDistanceSquared);
-	printf("Non iterative approximation type: %s\n", nicpString);
-	printf("Cpd weight: %s\n", std::to_string(CpdWeight).c_str());
+	printf("Approximation type: %s\n", approximationString);
+	printf("Nicp batch size: %d\n", NicpBatchSize);
+	printf("Nicp iterations: %d\n", NicpIterations);
+	printf("Nicp subcloud size: %d\n", NicpSubcloudSize);
+	printf("Cpd weight: %f\n", CpdWeight);
+	printf("Cpd const scale: %s\n", std::to_string(CpdConstScale).c_str());
+	printf("Cpd tolerance: %f\n", CpdTolerance);
+	printf("Convergence epsilon: %f\n", ConvergenceEpsilon);
+	printf("Additional outliers before: %d\n", AdditionalOutliersBefore);
+	printf("Additional outliers after: %d\n", AdditionalOutliersAfter);
 
 	printf("===============================\n");
 }

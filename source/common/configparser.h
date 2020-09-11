@@ -29,6 +29,8 @@ namespace Common
 		std::optional<T> ParseRequired(const nlohmann::json& parsed, std::string name);
 		template<typename T>
 		std::optional<T> ParseOptional(const nlohmann::json& parsed, std::string name);
+		template<typename T>
+		T ParseOptional(const nlohmann::json& parsed, std::string name, T defaultValue);
 
 		bool correct = true;
 		Configuration config;
@@ -46,6 +48,16 @@ namespace Common
 		{
 			return std::nullopt;
 		}
+	}
+
+	template<typename T>
+	inline T ConfigParser::ParseOptional(const nlohmann::json& parsed, std::string name, T defaultValue)
+	{
+		auto opt = ParseOptional<T>(parsed, name);
+		if (opt != std::nullopt)
+			return opt.value();
+
+		return defaultValue;
 	}
 
 	template<typename T>

@@ -30,6 +30,7 @@
     <ClCompile Include="source\common\renderer.cpp" />
     <ClCompile Include="source\common\shader.cpp" />
     <ClCompile Include="source\common\shaderfactory.cpp" />
+    <ClCompile Include="source\common\stb_image.cpp" />
     <ClCompile Include="source\common\testrunner.cpp" />
     <ClCompile Include="source\common\testset.cpp" />
     <ClCompile Include="source\common\testutils.cpp" />
@@ -54,6 +55,7 @@
     <ClInclude Include="source\common\shader.h" />
     <ClInclude Include="source\common\shaderfactory.h" />
     <ClInclude Include="source\common\shadertype.h" />
+    <ClInclude Include="source\common\stb_image.h" />
     <ClInclude Include="source\common\testrunner.h" />
     <ClInclude Include="source\common\testset.h" />
     <ClInclude Include="source\common\testutils.h" />
