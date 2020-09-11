@@ -12,17 +12,24 @@ using namespace Common;
 namespace {
 	std::pair<glm::mat3, glm::vec3> GetCpuSlamResult(const CpuCloud& before, const CpuCloud& after, Configuration configuration, int* iterations, float* error)
 	{
+		std::pair<glm::mat3, glm::vec3> result;
 		switch (configuration.ComputationMethod) {
 			case ComputationMethod::Icp:
-				return BasicICP::CalculateICPWithConfiguration(before, after, configuration, iterations, error);
+				result = BasicICP::CalculateICPWithConfiguration(before, after, configuration, iterations, error);
 			case ComputationMethod::NoniterativeIcp:
-				return NonIterative::CalculateNonIterativeWithConfiguration(before, after, configuration, iterations, error);
+				result = NonIterative::CalculateNonIterativeWithConfiguration(before, after, configuration, iterations, error);
 			case ComputationMethod::Cpd:
-				return CoherentPointDrift::CalculateCpdWithConfiguration(before, after, configuration, iterations, error);
+				result = CoherentPointDrift::CalculateCpdWithConfiguration(before, after, configuration, iterations, error);
 			default:
 				assert(false); //unknown method
 				return BasicICP::CalculateICPWithConfiguration(before, after, configuration, iterations, error);
 		}
+
+		const auto transformedCloud = GetTransformedCloud(before, result.first, result.second);
+		const auto correspondences = GetCorrespondingPoints(transformedCloud, after, configuration.MaxDistanceSquared, true);
+		*error = GetMeanSquaredError(std::get<0>(correspondences), std::get<1>(correspondences));
+
+		return result;
 	}
 
 	int RunCpuTests()
@@ -30,7 +37,7 @@ namespace {
 		srand(Tests::RANDOM_SEED);
 		Common::SetRandom();
 
-		const auto methods = { ComputationMethod::Icp, ComputationMethod::NoniterativeIcp, ComputationMethod::Cpd };
+		const auto methods = { ComputationMethod::Cpd };
 		Tests::RunTestSet(GetConvergenceTestSet, GetCpuSlamResult, "convergence", methods);
 		return 0;
 	}
