@@ -16,12 +16,16 @@ namespace {
 		switch (configuration.ComputationMethod) {
 			case ComputationMethod::Icp:
 				result = BasicICP::CalculateICPWithConfiguration(before, after, configuration, iterations, error);
+				break;
 			case ComputationMethod::NoniterativeIcp:
 				result = NonIterative::CalculateNonIterativeWithConfiguration(before, after, configuration, iterations, error);
+				break;
 			case ComputationMethod::Cpd:
 				result = CoherentPointDrift::CalculateCpdWithConfiguration(before, after, configuration, iterations, error);
+				break;
 			default:
 				assert(false); //unknown method
+				printf("Invalid method\n");
 				return BasicICP::CalculateICPWithConfiguration(before, after, configuration, iterations, error);
 		}
 
