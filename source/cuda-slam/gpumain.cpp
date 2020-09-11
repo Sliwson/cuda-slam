@@ -41,7 +41,7 @@ namespace {
 	{ 
 		srand(Tests::RANDOM_SEED);
 
-		const auto methods = { ComputationMethod::Icp, ComputationMethod::NoniterativeIcp, ComputationMethod::Cpd };
+		const auto methods = { ComputationMethod::Cpd };
 		Tests::RunTestSet(GetConvergenceTestSet, GetGpuSlamResult, "convergence-gpu", methods);
 		return 0;
 	}

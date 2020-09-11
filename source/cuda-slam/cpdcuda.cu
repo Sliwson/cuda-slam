@@ -369,6 +369,14 @@ std::pair<glm::mat3, glm::vec3> GetCudaCpdTransformationMatrix(
 	checkCudaErrors(cudaMemcpy(thrust::raw_pointer_cast(before.data()), cloudBefore.data(), cloudBefore.size() * sizeof(glm::vec3), cudaMemcpyHostToDevice));
 	checkCudaErrors(cudaMemcpy(thrust::raw_pointer_cast(after.data()), cloudAfter.data(), cloudAfter.size() * sizeof(glm::vec3), cudaMemcpyHostToDevice));
 
-	return CudaCPD(before, after, iterations, error, eps, weight, const_scale, maxIterations, tolerance, fgt, cloudBefore, cloudAfter);
+	const auto result = CudaCPD(before, after, iterations, error, eps, weight, const_scale, maxIterations, tolerance, fgt, cloudBefore, cloudAfter);
+
+	GpuCloud transformedCloud(before.size());
+	TransformCloud(before, transformedCloud, ConvertToTransformationMatrix(result.first, result.second));
+	thrust::device_vector<int> indices(before.size());
+	GetCorrespondingPoints(indices, transformedCloud, after);
+	*error = GetMeanSquaredError(indices, transformedCloud, after);
+
+	return result;
 }
 
