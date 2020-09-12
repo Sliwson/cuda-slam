@@ -12,4 +12,6 @@ std::pair<glm::mat3, glm::vec3> GetCudaCpdTransformationMatrix(
 	float tolerance,
 	Common::ApproximationType fgt,
 	int* iterations,
-	float* error);
+	float* error,
+	const float& ratioOfFarField,
+	const float& orderOfTruncation);

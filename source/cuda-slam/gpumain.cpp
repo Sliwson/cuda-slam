@@ -27,7 +27,7 @@ namespace {
 			case ComputationMethod::Cpd:
 				return GetCudaCpdTransformationMatrix(before, after,
 					configuration.ConvergenceEpsilon, configuration.CpdWeight, configuration.CpdConstScale, maxIterations, configuration.CpdTolerance, configuration.ApproximationType,
-					iterations, error);
+					iterations, error, configuration.RatioOfFarField, configuration.OrderOfTruncation);
 			default:
 				assert(false); //unknown method
 				return GetCudaIcpTransformationMatrix(

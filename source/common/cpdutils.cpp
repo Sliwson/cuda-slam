@@ -21,7 +21,9 @@ namespace CoherentPointDrift
 		const std::vector<Point_f>& cloudAfter,		
 		const float& weight,
 		const float& sigmaSquared,
-		const float& sigmaSquaredInit)
+		const float& sigmaSquaredInit,
+		const float& ratioOfFarField,
+		const float& orderOfTruncation)
 	{
 		const int N = cloudAfter.size();
 		const int M = cloudTransformed.size();
@@ -29,9 +31,9 @@ namespace CoherentPointDrift
 		const float hsigma = std::sqrt(2.0f * sigmaSquared);
 
 		//FGT parameters
-		float e_param = 9.0f; //Ratio of far field (default e = 10)
+		float e_param = ratioOfFarField; //Ratio of far field (default e = 10)
 		int K_param = std::round(std::min({ (float)N, (float)M, 50.0f + sigmaSquaredInit / sigmaSquared }));
-		int p_param = 6; //Order of truncation (default p = 8)
+		int p_param = orderOfTruncation; //Order of truncation (default p = 8)
 
 		FGT_Model fgt_model;
 

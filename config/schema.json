@@ -105,6 +105,12 @@
     },
     "additional-outliers-after": {
       "type": "integer"
+    },
+    "fgt-ratio-of-far-field": {
+      "type": "number"
+    },
+    "fgt-order-of-truncation": {
+      "type": "integer"
     }
   }
 }

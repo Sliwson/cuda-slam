@@ -8,7 +8,13 @@
 \usepackage{geometry}
 \usepackage{hyperref} 
 \usepackage{float}
+\usepackage{enumitem}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{longtable}
 \usepackage{gensymb}
+
+\newcommand{\tabitem}{~~\llap{\textbullet}~~}
 
 \graphicspath{{./images/}{./plots/}}
 
@@ -109,6 +115,27 @@ Implementation described in this paper covers different approach - the copies of
 
 \subsection{Coherent Point Drift}
 
+In this method alignment of two point sets is considered as a probability density estimation problem. One point set represents the Gaussian mixture model (GMM) centroids. The second one represents the data points. At the optimum, two point sets become aligned. Method uses Expectation Maximization (EM) algorithm to find scale, rotation matrix and translation vector.\\
+Main idea of a coherent point drift algorithm can be presented in several steps:
+\begin{itemize}[label={}]
+\item E-step:
+\begin{enumerate}
+\item Compute probabilities matrix P. P describes probability of correspondence of points from both sets.
+\end{enumerate}
+\item M-step: 
+\begin{enumerate}
+\setcounter{enumi}{1}
+\item Using P and point sets calculate matrix A.
+\item Calculate rotation matrix using Singular Value Decomposition of matrix A in a similar way as in the ICP algorithm.
+\item Calculate scale and translation vector using point sets and SVD result.
+\end{enumerate}
+\item Repeat E-step and M-step until convergence.
+\end{itemize}
+In order not to impair readability we decided to skip mathematical formulas in this schema. Fully detailed description and more information about coherent point drift can be found in article written by Andriy Myronenko and Xubo Song \cite{cpd}.\\
+The base version of the algorithm has multiple vulnerabilities, especially when it comes to computation time.
+For this reason many improvements are known and some of them have been implemented in our solution. Firstly the size of P matrix is $N \times M$, where $N$ is size of first point set and $M$ is size of second point set. It requires a lot of memory to keep matrix of this size, so instead we can calculate vectors: $P1$, $P^T 1$ and matrix $PX$, where $1$ is vector of all ones and $X$ is first point set. Using these vectors and matrix we can achieve the same result even faster because in calculations we had to multiply P matrix with ones vector and we have already done it.\\
+Secondly the main bottleneck of algorithm is the calculation of matrix-vector products $P1$, $P^T1$ and $PX$. This is done with $O(MN)$ complexity. The fast Gauss transform, introduced by Greengard and Strain \cite{fgt}, reduces complexity to only $O(M+N)$.
+
 \section{Program architecture}
 %Short description on the modules of the system, requirements, dependencies, etc.
 \subsection{Project structure}
@@ -119,7 +146,28 @@ The solution consists of three projects:
 \item \textit{gpu-slam} - executable project, contains implementation of slam methods for gpu and gpu main.
 \end{itemize}
 
+\subsection{Modules}
+The project is constructed using several modules:
+\begin{itemize}
+\item \textit{Renderer} - implemented in \textit{common} project. Capable of rendering point clouds in different colors. Can be used multiple times in one executable launch. Widely using for results visualisation.
+\item \textit{CloudLoader} - implemented in \textit{common} project. Module responsible for loading .obj point clouds.
+\item \textit{Configuration} - implemented in \textit{common} project. Module representing configuration, tightly coupled with \textit{ConfigParser} which allows loading configuration from .json files.
+\item \textit{TestRunner} - implemented in \textit{common} project. Module used to define and run benchmarks.
+\item \textit{Algorithms} - implemented in \textit{cuda-slam} as well as \textit{cpu-slam}. Each algorithm is implemented in separate file as a global function in appropriate namespace. Some operations that are common for cpu as well as gpu are implemented in \textit{common} project.
+\end{itemize}
+
+\subsection{Dependencies}
+\begin{itemize}
+\item \textit{Assimp} - for cloud loading.
+\item \textit{Eigen} - for cpu matrix operations.
+\item \textit{Glad} - wrapper for OpenGL.
+\item \textit{GLFW} - for window system.
+\item \textit{Nlohmann/json} - for configuration parsing.
+\item \textit{cuBLAS}, \textit{cuSOLVER} - for gpu matrix operations.
+\end{itemize}
+
 \section{Implementation details}
+\label{sec:ImplementationDetails}
 %What do we thing is worth mentioning when it comes to implementation?
 %What path has been chosen to parallelize execution especially for GPU?
 %What obstacles have we met when implementing?
@@ -146,25 +194,8 @@ The non-iterative algorithm does not offer too many ways to benefit from paralle
 
 \subsection{Coherent point drift}
 
-\subsection{Modules}
-The project is constructed using several modules:
-\begin{itemize}
-\item \textit{Renderer} - implemented in \textit{common} project. Capable of rendering point clouds in different colors. Can be used multiple times in one executable launch. Widely using for results visualisation.
-\item \textit{CloudLoader} - implemented in \textit{common} project. Module responsible for loading .obj point clouds.
-\item \textit{Configuration} - implemented in \textit{common} project. Module representing configuration, tightly coupled with \textit{ConfigParser} which allows loading configuration from .json files.
-\item \textit{TestRunner} - implemented in \textit{common} project. Module used to define and run benchmarks.
-\item \textit{Algorithms} - implemented in \textit{cuda-slam} as well as \textit{cpu-slam}. Each algorithm is implemented in separate file as a global function in appropriate namespace. Some operations that are common for cpu as well as gpu are implemented in \textit{common} project.
-\end{itemize}
-
-\subsection{Dependencies}
-\begin{itemize}
-\item \textit{Assimp} - for cloud loading.
-\item \textit{Eigen} - for cpu matrix operations.
-\item \textit{Glad} - wrapper for OpenGL.
-\item \textit{GLFW} - for window system.
-\item \textit{Nlohmann/json} - for configuration parsing.
-\item \textit{cuBLAS}, \textit{cuSOLVER} - for gpu matrix operations.
-\end{itemize}
+CPU solution of coherent point drift is based on algorithm description described in \cite{cpd}. It also uses Matlab code provided by authors as an example how some technical details were handled. FGT algorithm implementation is based on Matlab implementation available here \cite{fgtmatlab}.
+Parallelized solution using GPU acceleration mainly focuses on matrices multiplication using cuBLAS and using thrust whenever possible. FGT algorithm was not implemented on GPU due to complexity of this solution and lack of reliable external implementation.
 
 \section{Input data description}
 %File formats, api used to read, dependencies, data sources, etc.
@@ -179,8 +210,95 @@ As we wanted to keep the input simple we decided to use .obj files as the point 
 \end{figure}
 
 \section{Execution, configuration and user guide}
-How can one replicate the experiments?
-Any relevant information and runtime howtos.
+%How can one replicate the experiments?
+%Any relevant information and runtime howtos.
+\subsection{Execution}
+\subsection{Configuration}
+Configuration of our project is provided by \textit{JSON} files. A path to configuration can be passed by command argument. If path is not provided the default configuration is used. Possible fields and values are defined by \textit{JSON Schema} and they are described in the table below.
+
+\begin{center}
+\def\arraystretch{1.5}
+\begin{longtable}{ | m{13em} | m{5em} | m{3em}| m{19em}| } 
+ \hline
+ Field name & Type & Default Value & Description \\
+ \hline
+ \hline
+ *before-path & String & -- & Path to cloud before transformation. In documentation the terminology first point set is used. \\
+ \hline
+ *after-path & String & -- & Path to cloud that will be transformed by given parameters. In documentation the terminology second point set is used. Algorithms will try to match first to second point set. \\
+ \hline
+  & & & Selected algorithm. Possible values are: \\
+  *method & Enum & -- & \tabitem icp - Iterative Closest Point \\
+  & & & \tabitem nicp - Noniterative Closest Point \\
+  & & & \tabitem cpd - Coherent Point Drift \\
+ \hline
+  & & & Use sequential or parallel computations on cpu. Possible values are:\\
+ policy & Enum & parallel & \tabitem sequential \\
+  & & & \tabitem parallel \\
+  & & & Option works only with ICP and NICP. \\ 
+ \hline
+ scale & Number & $1.0$ & Scale of transformation. \\ 
+ \hline
+ translation & Array: Length $3$ & -- & Translation vector. \\ 
+ \hline
+ rotation & Array: Length $9$ & -- & Rotation Matrix in row-major order. \\ 
+ \hline
+ translation-range & Number & -- & \\ 
+ \hline
+ angle-range & Number & -- & \\ 
+ \hline
+ max-iterations & Integer & -- &  \\ 
+ \hline
+ cloud-before-resize & Integer & -- & If value is given the before cloud will be resized to this size omiting randomly selected points. If field is not present whole cloud will be used. \\ 
+ \hline
+ cloud-after-resize & Integer & -- & \\ 
+ \hline
+ cloud-spread & Number & -- & \\ 
+ \hline
+ random-seed & Integer & -- & \\ 
+ \hline
+ show-visualisation & Boolean & False & \\ 
+ \hline
+ max-distance-squared & Number & $1000.0$ & \\ 
+ \hline
+ approximation-type & Enum & hybrid & \\ 
+ \hline
+ nicp-batch-size & Number & $16$ & \\ 
+ \hline
+ nicp-iterations & Number & $32$ & \\ 
+ \hline
+ nicp-subcloud-size & Number & $1000$ & \\ 
+ \hline 
+ cpd-weight & Number & $0.3$ & \\ 
+ \hline
+ cpd-const-scale & Boolean & False & \\ 
+ \hline
+ cpd-tolerance & Number & $1e-3$ & \\ 
+ \hline
+ convergence-epsilon & Number & $1e-3$ & \\ 
+ \hline
+ noise-affected-points-before & Number & $0.0$ & \\ 
+ \hline
+ noise-affected-points-after & Number & $0.0$ & \\ 
+ \hline
+ noise-intensity-before & Number & $0.1$ & \\ 
+ \hline
+ noise-intensity-after & Number & $0.1$ & \\ 
+ \hline
+ additional-outliers-before & Integer & $0$ & \\ 
+ \hline
+ additional-outliers-after & Integer & $0$ & \\ 
+ \hline
+ \caption{Configuration}
+\end{longtable}
+\label{tab:configuration}
+\end{center}
+\textit{* - field is required}
+
+
+
+
+\subsection{GUI}
 
 \section{Description of the results}
 %Performance of the system for different input data/parameters.
@@ -208,7 +326,7 @@ Different point clouds were used depending on test size:
 To achieve a reasonable rate of convergence we decided to test the clouds without any noise and outliers. We used transformation with $0.2\: rad$ rotation and translation with magnitude of $10$ units for clouds of size bounded by cube with an edge which length equals $10$ units. It is worth noting that the times presented on the charts contains resource allocation and release.
 
 \subsubsection{Iterative Closest Point}
-For Iterative Closest Point method we run benchmarks using one-threaded CPU solution, multi-threaded CPU solution and CUDA-accelearated solution. On the charts a single iteration time is presented because different runs result in different iterations count which makes the results hard to interpret. The results are presented using logarithmic scale as the differences between variants of the algorithm are significant.
+For Iterative Closest Point method we run benchmarks using one-threaded CPU solution, multi-threaded CPU solution and CUDA-accelerated solution. On the charts a single iteration time is presented because different runs result in different iterations count which makes the results hard to interpret. The results are presented using logarithmic scale as the differences between variants of the algorithm are significant.
 
 \begin{figure}[H]
 \includegraphics[width=\textwidth]{ms-icp-1.png}
@@ -370,14 +488,17 @@ Another conclusion is that CPU implementation of complicated matrix operations i
 %What do we want to do in future, improvements.
 
 \subsection{Iterative Closest Point}
-We implemented a solid ground base for development of ICP algorithm. There are a lot of ways it can be improved but the most important would be enhancing performance of correspondences step as it is critical for the whole method execution time. 
+We implemented a solid ground base for development of ICP algorithm. There are a lot of ways it can be improved but the most important would be enhancing performance of correspondences step as it is critical for the whole method execution time.
+
+\subsection{Coherent Point Drift}
+We implemented whole rigid part of the algorithm on cpu, including FGT. Unfortunately FGT was not implemented on GPU as mentioned in \textit{\ref{sec:ImplementationDetails}. \nameref{sec:ImplementationDetails}}. This is main area of future improvement for GPU solution. Coherent Point Drift also has affine and non-rigid versions that are worth mentioning. There were not implemented because it reaches beyond the scope of our project. Future works can mainly focus on improving GPU solution and moving to non-rigid transformations.
 
 \subsection{Non-iterative Closest Point}
 This method is for sure the most narrowly documented among all three described in this report. On the other hand, the idea does not leave much space for improvements. The biggest obstacle to using it on greater scale is undetermined convergence ratio. Although the tests conducted showed that running the algorithm for 20 pseudo-random permutations gives convergence ratio of 100\%, but the actual correlation between computation precision and cloud properties such as size or density remains unknown.\\
 Other place for improvements is related closely to implementation issue. Different libraries and methods of computing SVD offers different accuracy. This can be seen for example by comparing results of CPU computations using Eigen library (recommended as one of the top when it comes to finding matrix decomposition) and GPU's cuSOLVER, where for the second one, error is smaller in majority of test cases. There are also multiple other, both closed and open source implementations for both CPU and GPU which might offer better results when it comes to convergence or computation time, especially for some specific cases.
 
 \subsection{Common improvements}
-The key to performant SLAM for big clouds is sampling. We haven't covered it in our work as it is a broad topic and mostly dependent of the specific application of the algorithm. Although, there is no contraindication to use sampled clouds as the input of our program so everybody can make their own experiments in that field.
+The key to performant SLAM for big clouds is sampling. We have not covered it in our work as it is a broad topic and mostly dependent of the specific application of the algorithm. Although, there is no contraindication to use sampled clouds as the input of our program so everybody can make their own experiments in that field.
 
 \newpage
 \printbibliography
