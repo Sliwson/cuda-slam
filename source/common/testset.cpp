@@ -115,4 +115,74 @@ namespace Common
 
         return configurations;
     }
+
+    std::vector<Configuration> GetConvergenceTestSet(ComputationMethod method)
+    {
+        const std::map<ComputationMethod, MethodTestParams> map{ {
+           { ComputationMethod::Icp, { 20000, 20000, 100000 }},
+           { ComputationMethod::Cpd, { 4000, 4000, 20000 }},
+           { ComputationMethod::NoniterativeIcp, { 250000, 250000, 1250000 }}
+       } };
+
+        std::vector<Configuration> configurations;
+
+        const auto params = map.find(method)->second;
+        for (int j = 0; j < 5; j++)
+        {
+            for (int i = params.MinSize; i <= params.MaxSize; i += params.SizeSpan)
+            {
+                auto path = GetObjectWithMinSize(i);
+
+                // Default config
+                Configuration config;
+                config.BeforePath = path;
+                config.AfterPath = path;
+                config.ComputationMethod = method;
+                config.MaxIterations = 100;
+                config.CloudSpread = 10.f;
+                config.MaxDistanceSquared = 10000.f;
+                config.TransformationParameters = std::make_pair(.2f, 10.f);
+                config.CloudBeforeResize = i;
+                config.CloudAfterResize = i;
+                config.ExecutionPolicy = ExecutionPolicy::Parallel;
+                config.ApproximationType = method == ComputationMethod::Cpd ? ApproximationType::Hybrid : ApproximationType::None;
+                config.NicpSubcloudSize = 5000;
+                config.NicpBatchSize = 1;
+                config.NicpIterations = 16;
+                config.CpdWeight = 0.1f;
+                config.CpdTolerance = 1e-4;
+
+                configurations.push_back(config);
+
+                // Same translation
+                config.TransformationParameters = std::make_pair(.4f, 10.f);
+                configurations.push_back(config);
+
+                config.TransformationParameters = std::make_pair(.6f, 10.f);
+                configurations.push_back(config);
+
+                // Larger translation
+                config.TransformationParameters = std::make_pair(.2f, 20.f);
+                configurations.push_back(config);
+
+                config.TransformationParameters = std::make_pair(.4f, 20.f);
+                configurations.push_back(config);
+
+                config.TransformationParameters = std::make_pair(.6f, 20.f);
+                configurations.push_back(config);
+
+                // Huge translation
+                config.TransformationParameters = std::make_pair(.2f, 30.f);
+                configurations.push_back(config);
+
+                config.TransformationParameters = std::make_pair(.4f, 30.f);
+                configurations.push_back(config);
+
+                config.TransformationParameters = std::make_pair(.6f, 30.f);
+                configurations.push_back(config);
+            }
+        }
+
+        return configurations;
+    }
 }
