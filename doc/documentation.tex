@@ -231,7 +231,7 @@ Configuration of our project is provided by \textit{JSON} files. A path to confi
   & & & \tabitem nicp - Noniterative Closest Point \\
   & & & \tabitem cpd - Coherent Point Drift \\
  \hline
-  & & & Use sequential or parallel computations on cpu. Possible values are:\\
+  & & & Use sequential or parallel computations on CPU. Possible values are:\\
  policy & Enum & parallel & \tabitem sequential \\
   & & & \tabitem parallel \\
   & & & Option works only with ICP and NICP. \\ 
@@ -287,6 +287,10 @@ Configuration of our project is provided by \textit{JSON} files. A path to confi
  additional-outliers-before & Integer & $0$ & \\ 
  \hline
  additional-outliers-after & Integer & $0$ & \\ 
+ \hline
+ fgt-ratio-of-far-field & Number & $10.0$ & \\ 
+ \hline
+ fgt-order-of-truncation & Integer & $8$ & \\ 
  \hline
  \caption{Configuration}
 \end{longtable}
@@ -404,6 +408,7 @@ As we can see the execution times differ vastly depending on method and executio
 \subsection{Stability}
 
 \subsection{Noise and outliers tolerance}
+We tested our methods how they cope with clouds that are missing points or even entire parts. Also we have corrupted clouds by noise and outliers. For this purpose we have used CPU versions of algorithms. For ICP and NICP \textit{policy} was set to \textit{parallel} and \textit{approximation-type} to \textit{none}. For CPD \textit{approximation-type} was set to \textit{hybrid}, mainly to achieve faster computation times. Many tests were conducted and it turned out that results are highly dependent on configuration. Therefore we will show the most interesting results and series of tests that were the most consistent.
 
 \subsection{Convergence ranges}
 
