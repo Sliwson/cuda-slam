@@ -316,12 +316,35 @@ Summarizing the convergance tests for an ICP algorithm, the method does not show
 Another issue shown by convergence tests of an ICP method are noticable differences between quality of GPU and CPU computations, which, however, are not to be covered in details in this report.
 
 \subsubsection{Non-iterative closest point}
+Non-iterative closest point method is the first one for which different appoximation types have been implemented. However, the execution times proved that only one type is worth using in general cases. For this reason, the "None" type is used in all convergence tests, as it not only gives the most accurate results, but it also offers execution time unsurpassed by other methods.
+
+Performance tests for proposed implementation showed as well, that great cloud sizes are not an obstacle for a non-iterative closest point algorithm and because of that, the sizes used in the convergance tests are for this method the most imposing. They vary between 250000 and 1250000 still keeping execution times lower than for the other alogrithms.
+
+Not only the cloud sizes and execution times are surpassing other methods, but convergance rates show similar tendency. The overall convergance rate for non-iterative method was equal to 1.0 for GPU implementation and 0.99 for CPU. The impact of specific parameters on the results is displayed on charts below.
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{ss-nicp-1.png}
+\caption{Convergance rates for a non-iterative closest point matching depending on cloud size}
+\end{figure}
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{ss-nicp-2.png}
+\caption{Convergance rates for a non-iterative closest point matching depending on translation}
+\end{figure}
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{ss-nicp-3.png}
+\caption{Convergance rates for a non-iterative closest point matching depending on rotation}
+\end{figure}
+The slim disparity between the two variants of implemented method are most likely caused by precision of CPU and GPU matrix operations which strengthens the hypotesis put forward while analyzing the ICP algorithm. However, in this case the differences are not so grand which can be caused by reduced number of matrix operation and therefore less error propagation.
+
+
 
 \subsubsection{Coherent point drift}
+\subsubsection{Methods comparison}
 
 
 \section{Remarks}
-Any remarks to the results and methods.
+Any remarks to the results and methods.\\
+
+CPU is not only a lot slower but a lot less accurate as well. It can be easily seen when it comes to convergance tests where differences between GPU and CPU rate were up to 5 times.
 
 \section{Future works}
 %What do we want to do in future, improvements.
