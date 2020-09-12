@@ -311,10 +311,50 @@ Configuration of our project is provided by \textit{JSON} files. A path to confi
 \end{center}
 \textit{* - field is required}
 
-
-
-
 \subsection{GUI}
+Both GPU and CPU programs implement the possibility to display visualisation of point clouds using OpenGL. By default, the window display three cloud sizes of different color:
+\begin{itemize}
+\item Red - the first point set (also called "cloud before")
+\item Green - the second point set (also called "cloud after")
+\item Yellow - first point cloud transformed with result transformation
+\end{itemize}
+
+The visualisation window also supports some basic user control. All the possible actions are described in the table below.
+\begin{center}
+\def\arraystretch{1.5}
+\begin{longtable}{ | m{13em} | m{27em}| } 
+ \hline
+ Action & Result \\
+ \hline
+ \hline
+ Escape & Close the visualisation. \\
+ \hline
+ Mouse movement & Rotate the camera. \\
+ \hline
+ WSAD & Move the camera (front, back, left, right). \\
+ \hline
+ Spacebar & Move the camera up. \\
+ \hline
+ Left Shift & Move the camera down. \\
+ \hline
+ Scroll & Zoom. \\
+ \hline
+ 1 & Toggle visibility of the first point set. \\
+ \hline
+ 2 & Toggle visibility of the second point set. \\
+ \hline
+ 3 & Toggle visibility of the transformed point set. \\
+ \hline
+ 4 & Toggle visibility of the (0,0) point. \\
+ \hline
+ [ & Reduce the point size. \\
+ \hline
+ ] & Increase the point size. \\
+ \hline
+ \caption{Renderer controls}
+\end{longtable}
+\label{tab:controls}
+\end{center}
 
 \section{Description of the results}
 %Performance of the system for different input data/parameters.
