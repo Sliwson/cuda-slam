@@ -125,13 +125,13 @@ Main idea of a coherent point drift algorithm can be presented in several steps:
 \begin{enumerate}
 \setcounter{enumi}{1}
 \item Using P and point sets calculate matrix A.
-\item Calculate rotation matrix using Singular Value Decomposition of matrix A in similar way as in ICP algorithm.
+\item Calculate rotation matrix using Singular Value Decomposition of matrix A in a similar way as in the ICP algorithm.
 \item Calculate scale and translation vector using point sets and SVD result.
 \end{enumerate}
 \item Repeat E-step and M-step until convergence.
 \end{itemize}
 In order not to impair readability we decided to skip mathematical formulas in this schema. Fully detailed description and more information about coherent point drift can be found in article written by Andriy Myronenko and Xubo Song \cite{cpd}.\\
-The base version of algorithm has multiple vulnerabilities, especially when it comes to computation time.
+The base version of the algorithm has multiple vulnerabilities, especially when it comes to computation time.
 For this reason many improvements are known and some of them have been implemented in our solution. Firstly the size of P matrix is $N \times M$, where $N$ is size of first point set and $M$ is size of second point set. It requires a lot of memory to keep matrix of this size, so instead we can calculate vectors: $P1$, $P^T 1$ and matrix $PX$, where $1$ is vector of all ones and $X$ is first point set. Using these vectors and matrix we can achieve the same result even faster because in calculations we had to multiply P matrix with ones vector and we have already done it.\\
 Secondly the main bottleneck of algorithm is the calculation of matrix-vector products $P1$, $P^T1$ and $PX$. This is done with $O(MN)$ complexity. The fast Gauss transform, introduced by Greengard and Strain \cite{fgt}, reduces complexity to only $O(M+N)$.
 
@@ -417,7 +417,7 @@ Any remarks to the results and methods.
 We implemented a solid ground base for development of ICP algorithm. There are a lot of ways it can be improved but the most important would be enhancing performance of correspondences step as it is critical for the whole method execution time.
 
 \subsection{Coherent Point Drift}
-We implemented whole rigid part of the algorithm on cpu, including FGT. Unfortunately FGT was not implemented on GPU as mentioned in \ref{sec:ImplementationDetails}. \nameref{sec:ImplementationDetails}. This is main area of future improvement for GPU solution. Coherent Point Drift also has affine and non-rigid versions that are worth mentioning. There were not implemented because it reaches beyond the scope of our project. Future works can mainly focus on improving GPU solution and moving to non-rigid transformations.
+We implemented whole rigid part of the algorithm on cpu, including FGT. Unfortunately FGT was not implemented on GPU as mentioned in \textit{\ref{sec:ImplementationDetails}. \nameref{sec:ImplementationDetails}}. This is main area of future improvement for GPU solution. Coherent Point Drift also has affine and non-rigid versions that are worth mentioning. There were not implemented because it reaches beyond the scope of our project. Future works can mainly focus on improving GPU solution and moving to non-rigid transformations.
 
 \subsection{Non-iterative Closest Point}
 This method is for sure the most narrowly documented among all three described in this report. On the other hand, the idea does not leave much space for improvements. The biggest obstacle to using it on greater scale is undetermined convergence ratio. Although the tests conducted showed that running the algorithm for 20 pseudo-random permutations gives convergence ratio of 100\%, but the actual correlation between computation precision and cloud properties such as size or density remains unknown.\\
