@@ -109,8 +109,8 @@ Implementation described in this paper covers different approach - the copies of
 
 \subsection{Coherent Point Drift}
 
-In this method alignment of two point sets is considered as a probability density estimation problem. One point set represents the Gaussian mixture model (GMM) centroinds. The second one represents the data points. Two point sets become aligned when optimum is reached. Method uses Expectation Maximization (EM) algorithm to find scale, rotation matrix and translation vector.\\
-Main idea of coherent point drift can be presented in several steps:
+In this method alignment of two point sets is considered as a probability density estimation problem. One point set represents the Gaussian mixture model (GMM) centroids. The second one represents the data points. At the optimum, two point sets become aligned. Method uses Expectation Maximization (EM) algorithm to find scale, rotation matrix and translation vector.\\
+Main idea of a coherent point drift algorithm can be presented in several steps:
 \begin{itemize}[label={}]
 \item E-step:
 \begin{enumerate}
@@ -120,14 +120,14 @@ Main idea of coherent point drift can be presented in several steps:
 \begin{enumerate}
 \setcounter{enumi}{1}
 \item Using P and point sets calculate matrix A.
-\item Calculate rotation matrix using Singular Value Decomposition of matrix A.
+\item Calculate rotation matrix using Singular Value Decomposition of matrix A in similar way as in ICP algorithm.
 \item Calculate scale and translation vector using point sets and SVD result.
 \end{enumerate}
 \item Repeat E-step and M-step until convergence.
 \end{itemize}
-Full algorithm was described by Andriy Myronenko and Xubo Song \cite{cpd}.\\
-Algorithm has wide area available for improvements.\\
-Firstly the size of P matrix is $N \times M$, where $N$ is size of first point set and $M$ is size of second point set. It requires a lot of memory to keep matrix of this size, so instead we can calculate vectors: $P1$, $P^T 1$ and matrix $PX$, where $1$ is vector of all ones and $X$ is first point set. Using these vectors and matrix we can achieve the same result even faster because in calculations we had to multiply P matrix with ones vector and we have already done it.\\
+In order not to impair readability we decided to skip mathematical formulas in this schema. Fully detailed description and more information about coherent point drift can be found in article written by Andriy Myronenko and Xubo Song \cite{cpd}.\\
+The base version of algorithm has multiple vulnerabilities, especially when it comes to computation time.
+For this reason many improvements are known and some of them have been implemented in our solution. Firstly the size of P matrix is $N \times M$, where $N$ is size of first point set and $M$ is size of second point set. It requires a lot of memory to keep matrix of this size, so instead we can calculate vectors: $P1$, $P^T 1$ and matrix $PX$, where $1$ is vector of all ones and $X$ is first point set. Using these vectors and matrix we can achieve the same result even faster because in calculations we had to multiply P matrix with ones vector and we have already done it.\\
 Secondly the main bottleneck of algorithm is the calculation of matrix-vector products $P1$, $P^T1$ and $PX$. This is done with $O(MN)$ complexity. The fast Gauss transform, introduced by Greengard and Strain \cite{fgt}, reduces complexity to only $O(M+N)$.
 
 \section{Program architecture}
@@ -161,6 +161,7 @@ The project is constructed using several modules:
 \end{itemize}
 
 \section{Implementation details}
+\label{sec:ImplementationDetails}
 %What do we thing is worth mentioning when it comes to implementation?
 %What path has been chosen to parallelize execution especially for GPU?
 %What obstacles have we met when implementing?
@@ -187,9 +188,8 @@ The non-iterative algorithm does not offer too many ways to benefit from paralle
 
 \subsection{Coherent point drift}
 
-CPU solution of coherent point drift is based on algorithm description described in \cite{cpd}. It also uses Matlab code provided by authors as an example how some technical details were handled. FGT algorithm implementation is based on Matlab implementation available on this link [link]. %provide link
-%https://www.mathworks.com/matlabcentral/fileexchange/17438-fast-gaussian-transform-mex-implementation
-Parallelization of CPU solution on GPU mainly focuses on parallel matrices multiplication using cuBLAS and using thrust whenever possible.
+CPU solution of coherent point drift is based on algorithm description described in \cite{cpd}. It also uses Matlab code provided by authors as an example how some technical details were handled. FGT algorithm implementation is based on Matlab implementation available here \cite{fgtmatlab}.
+Parallelized solution using GPU acceleration mainly focuses on matrices multiplication using cuBLAS and using thrust whenever possible. FGT algorithm was not implemented on GPU due to complexity of this solution and lack of reliable external implementation.
 
 \section{Input data description}
 %File formats, api used to read, dependencies, data sources, etc.
@@ -233,7 +233,7 @@ Different point clouds were used depending on test size:
 To achieve a reasonable rate of convergence we decided to test the clouds without any noise and outliers. We used transformation with $0.2\: rad$ rotation and translation with magnitude of $10$ units for clouds of size bounded by cube with an edge which length equals $10$ units. It is worth noting that the times presented on the charts contains resource allocation and release.
 
 \subsubsection{Iterative Closest Point}
-For Iterative Closest Point method we run benchmarks using one-threaded CPU solution, multi-threaded CPU solution and CUDA-accelearated solution. On the charts a single iteration time is presented because different runs result in different iterations count which makes the results hard to interpret. The results are presented using logarithmic scale as the differences between variants of the algorithm are significant.
+For Iterative Closest Point method we run benchmarks using one-threaded CPU solution, multi-threaded CPU solution and CUDA-accelerated solution. On the charts a single iteration time is presented because different runs result in different iterations count which makes the results hard to interpret. The results are presented using logarithmic scale as the differences between variants of the algorithm are significant.
 
 \begin{figure}[H]
 \includegraphics[width=\textwidth]{ms-icp-1.png}
@@ -325,8 +325,7 @@ Any remarks to the results and methods.
 We implemented a solid ground base for development of ICP algorithm. There are a lot of ways it can be improved but the most important would be enhancing performance of correspondences step as it is critical for the whole method execution time.
 
 \subsection{Coherent Point Drift}
-We implemented whole rigid part of the algorithm on cpu, including FGT. Unfortunately FGT was not implemented on GPU due to complexity of this solution and lack of reliable external implementation. This is main area of improvement for GPU solution. Coherent Point Drift also has affine and non-rigid versions that are worth mentioning. Future works can mainly focus on improving GPU solution and moving to non-rigid transformations.
-
+We implemented whole rigid part of the algorithm on cpu, including FGT. Unfortunately FGT was not implemented on GPU as mentioned in \ref{sec:ImplementationDetails}. \nameref{sec:ImplementationDetails}. This is main area of future improvement for GPU solution. Coherent Point Drift also has affine and non-rigid versions that are worth mentioning. There were not implemented because it reaches beyond the scope of our project. Future works can mainly focus on improving GPU solution and moving to non-rigid transformations.
 
 \subsection{Non-iterative Closest Point}
 This method is for sure the most narrowly documented among all three described in this report. On the other hand, the idea does not leave much space for improvements. The biggest obstacle to using it on greater scale is undetermined convergence ratio. Although the tests conducted showed that running the algorithm for 20 pseudo-random permutations gives convergence ratio of 100\%, but the actual correlation between computation precision and cloud properties such as size or density remains unknown.\\
