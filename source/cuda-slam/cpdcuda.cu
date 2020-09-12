@@ -36,7 +36,9 @@ namespace
 		const std::vector<Point_f>& cloudAfterCPU,
 		const glm::mat3& rotationMatrix,
 		const glm::vec3& translationVector,
-		const float& scale);
+		const float& scale,
+		const float& ratioOfFarField,
+		const float& orderOfTruncation);
 	void ComputePMatrixWithFGTOnCPU(
 		const std::vector<Point_f>& cloudBeforeCPU,
 		const std::vector<Point_f>& cloudAfterCPU,
@@ -46,7 +48,9 @@ namespace
 		const float& sigmaSquaredInit,
 		const glm::mat3& rotationMatrix,
 		const glm::vec3& translationVector,
-		const float& scale);
+		const float& scale,
+		const float& ratioOfFarField,
+		const float& orderOfTruncation);
 	void MStep(
 		const GpuCloud& cloudBefore,
 		const GpuCloud& cloudAfter,
@@ -124,18 +128,20 @@ namespace
 		const std::vector<Point_f>& cloudAfterCPU,
 		const glm::mat3& rotationMatrix,
 		const glm::vec3& translationVector,
-		const float& scale)
+		const float& scale,
+		const float& ratioOfFarField,
+		const float& orderOfTruncation)
 	{
 		if (fgt == ApproximationType::Full)
 		{
 			if (*sigmaSquared < 0.05)
 				*sigmaSquared = 0.05;
-			ComputePMatrixWithFGTOnCPU(cloudBeforeCPU, cloudAfterCPU, probabilities, weight, *sigmaSquared, sigmaSquaredInit, rotationMatrix, translationVector, scale);
+			ComputePMatrixWithFGTOnCPU(cloudBeforeCPU, cloudAfterCPU, probabilities, weight, *sigmaSquared, sigmaSquaredInit, rotationMatrix, translationVector, scale, ratioOfFarField, orderOfTruncation);
 		}
 		else if (fgt == ApproximationType::Hybrid)
 		{
 			if (*sigmaSquared > 0.015 * sigmaSquaredInit)
-				ComputePMatrixWithFGTOnCPU(cloudBeforeCPU, cloudAfterCPU, probabilities, weight, *sigmaSquared, sigmaSquaredInit, rotationMatrix, translationVector, scale);
+				ComputePMatrixWithFGTOnCPU(cloudBeforeCPU, cloudAfterCPU, probabilities, weight, *sigmaSquared, sigmaSquaredInit, rotationMatrix, translationVector, scale, ratioOfFarField, orderOfTruncation);
 			else
 				ComputePMatrix(cloudTransformed, cloudAfter, probabilities, constant, *sigmaSquared, true, 1e-3f);
 		}
@@ -150,10 +156,12 @@ namespace
 		const float& sigmaSquaredInit,
 		const glm::mat3& rotationMatrix,
 		const glm::vec3& translationVector,
-		const float& scale)
+		const float& scale,
+		const float& ratioOfFarField,
+		const float& orderOfTruncation)
 	{
 		auto cloudTransformedCPU = Common::GetTransformedCloud(cloudBeforeCPU, rotationMatrix, translationVector, scale);
-		auto prob = CoherentPointDrift::ComputePMatrixWithFGT(cloudTransformedCPU, cloudAfterCPU, weight, sigmaSquared, sigmaSquaredInit);
+		auto prob = CoherentPointDrift::ComputePMatrixWithFGT(cloudTransformedCPU, cloudAfterCPU, weight, sigmaSquared, sigmaSquaredInit, ratioOfFarField, orderOfTruncation);
 		Eigen::Matrix<float, -1, 3, Eigen::RowMajor> px = prob.px;
 		cudaMemcpy(thrust::raw_pointer_cast(probabilities.p1.data()), prob.p1.data(), cloudBeforeCPU.size() * sizeof(float), cudaMemcpyHostToDevice);
 		cudaMemcpy(thrust::raw_pointer_cast(probabilities.pt1.data()), prob.pt1.data(), cloudAfterCPU.size() * sizeof(float), cudaMemcpyHostToDevice);
@@ -302,6 +310,8 @@ namespace
 		int maxIterations,
 		float tolerance,
 		Common::ApproximationType fgt,
+		const float& ratioOfFarField,
+		const float& orderOfTruncation,
 		const std::vector<Point_f>& cloudBeforeCPU,
 		const std::vector<Point_f>& cloudAfterCPU)
 	{
@@ -333,7 +343,7 @@ namespace
 			if (fgt == Common::ApproximationType::None)
 				ComputePMatrix(transformedCloud, cloudAfter, probabilities, constant, sigmaSquared, false, -1.0f);
 			else
-				ComputePMatrixFast(transformedCloud, cloudAfter, probabilities, constant, weight, &sigmaSquared, sigmaSquared_init, fgt, cloudBeforeCPU, cloudAfterCPU, rotationMatrix, translationVector, scale);
+				ComputePMatrixFast(transformedCloud, cloudAfter, probabilities, constant, weight, &sigmaSquared, sigmaSquared_init, fgt, cloudBeforeCPU, cloudAfterCPU, rotationMatrix, translationVector, scale, ratioOfFarField, orderOfTruncation);
 
 			ntol = std::abs((probabilities.error - l) / probabilities.error);
 			l = probabilities.error;
@@ -344,6 +354,7 @@ namespace
 			TransformCloud(cloudBefore, transformedCloud, ConvertToTransformationMatrix(scale * rotationMatrix, translationVector));
 			(*error) = sigmaSquared;
 			(*iterations)++;
+			printf("loop_nr %d, error: %f\n", *iterations, *error);
 		}
 		mStepParams.Free();
 		return std::make_pair(scale * rotationMatrix, translationVector);
@@ -360,7 +371,9 @@ std::pair<glm::mat3, glm::vec3> GetCudaCpdTransformationMatrix(
 	float tolerance,
 	Common::ApproximationType fgt,
 	int* iterations,
-	float* error)
+	float* error,
+	const float& ratioOfFarField,
+	const float& orderOfTruncation)
 {
 	
 	GpuCloud before(cloudBefore.size());
@@ -369,6 +382,5 @@ std::pair<glm::mat3, glm::vec3> GetCudaCpdTransformationMatrix(
 	checkCudaErrors(cudaMemcpy(thrust::raw_pointer_cast(before.data()), cloudBefore.data(), cloudBefore.size() * sizeof(glm::vec3), cudaMemcpyHostToDevice));
 	checkCudaErrors(cudaMemcpy(thrust::raw_pointer_cast(after.data()), cloudAfter.data(), cloudAfter.size() * sizeof(glm::vec3), cudaMemcpyHostToDevice));
 
-	return CudaCPD(before, after, iterations, error, eps, weight, const_scale, maxIterations, tolerance, fgt, cloudBefore, cloudAfter);
+	return CudaCPD(before, after, iterations, error, eps, weight, const_scale, maxIterations, tolerance, fgt, ratioOfFarField, orderOfTruncation, cloudBefore, cloudAfter);
 }
-

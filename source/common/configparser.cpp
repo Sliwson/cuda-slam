@@ -250,6 +250,10 @@ namespace Common
 		config.AdditionalOutliersBefore = ParseOptional(parsed, "additional-outliers-before", 0);
 
 		config.AdditionalOutliersAfter = ParseOptional(parsed, "additional-outliers-after", 0);
+
+		config.RatioOfFarField = ParseOptional(parsed, "fgt-ratio-of-far-field", 10.0f);
+
+		config.OrderOfTruncation = ParseOptional(parsed, "fgt-order-of-truncation", 8);
 	}
 
 	void ConfigParser::ValidateConfiguration()

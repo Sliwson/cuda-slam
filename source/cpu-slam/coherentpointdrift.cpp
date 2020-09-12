@@ -20,7 +20,9 @@ namespace CoherentPointDrift
 		const float& weight,
 		float* sigmaSquared,
 		const float& sigmaSquaredInit,
-		const ApproximationType& fgt);
+		const ApproximationType& fgt,
+		const float& ratioOfFarField,
+		const float& orderOfTruncation);
 	Probabilities ComputePMatrix(
 		const std::vector<Point_f>& cloudTransformed,
 		const std::vector<Point_f>& cloudAfter,
@@ -57,7 +59,9 @@ namespace CoherentPointDrift
 			config.CpdConstScale, 
 			maxIterations, 
 			config.CpdTolerance,
-			config.ApproximationType);
+			config.ApproximationType,
+			config.RatioOfFarField,
+			config.OrderOfTruncation);
 	}
 
 	//[0, 1, 2] if > 0, then use FGT. case 1: FGT with fixing sigma after it gets too small(faster, but the result can be rough)
@@ -72,7 +76,9 @@ namespace CoherentPointDrift
 		bool const_scale,
 		int maxIterations,
 		float tolerance,
-		ApproximationType fgt)
+		ApproximationType fgt,
+		const float& ratioOfFarField,
+		const float& orderOfTruncation)
 	{
 		*iterations = 0;
 		*error = 1e5;
@@ -101,7 +107,7 @@ namespace CoherentPointDrift
 			if (fgt == ApproximationType::None)
 				probabilities = ComputePMatrix(transformedCloud, cloudAfter, constant, sigmaSquared);
 			else
-				probabilities = ComputePMatrixFast(transformedCloud, cloudAfter, constant, weight, &sigmaSquared, sigmaSquared_init, fgt);
+				probabilities = ComputePMatrixFast(transformedCloud, cloudAfter, constant, weight, &sigmaSquared, sigmaSquared_init, fgt, ratioOfFarField, orderOfTruncation);
 
 			ntol = std::abs((probabilities.error - l) / probabilities.error);
 			l = probabilities.error;
@@ -112,6 +118,7 @@ namespace CoherentPointDrift
 			transformedCloud = GetTransformedCloud(cloudBefore, rotationMatrix, translationVector, scale);
 			(*error) = sigmaSquared;
 			(*iterations)++;
+			printf("loop_nr %d, error: %f\n", *iterations, *error);
 		}
 		return std::make_pair(scale * rotationMatrix, translationVector);
 	}
@@ -138,18 +145,20 @@ namespace CoherentPointDrift
 		const float& weight,
 		float* sigmaSquared,
 		const float& sigmaSquaredInit,
-		const ApproximationType& fgt)
+		const ApproximationType& fgt,
+		const float& ratioOfFarField,
+		const float& orderOfTruncation)
 	{
 		if (fgt == ApproximationType::Full)
 		{
 			if (*sigmaSquared < 0.05)
 				*sigmaSquared = 0.05;
-			return ComputePMatrixWithFGT(cloudTransformed, cloudAfter, weight, *sigmaSquared, sigmaSquaredInit);
+			return ComputePMatrixWithFGT(cloudTransformed, cloudAfter, weight, *sigmaSquared, sigmaSquaredInit, ratioOfFarField, orderOfTruncation);
 		}
 		if (fgt == ApproximationType::Hybrid)
 		{
 			if (*sigmaSquared > 0.015 * sigmaSquaredInit)
-				return ComputePMatrixWithFGT(cloudTransformed, cloudAfter, weight, *sigmaSquared, sigmaSquaredInit);
+				return ComputePMatrixWithFGT(cloudTransformed, cloudAfter, weight, *sigmaSquared, sigmaSquaredInit, ratioOfFarField, orderOfTruncation);
 			else
 				return ComputePMatrix(cloudTransformed, cloudAfter, constant, *sigmaSquared, true, 1e-3f);
 		}

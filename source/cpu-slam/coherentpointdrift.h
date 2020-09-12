@@ -26,5 +26,7 @@ namespace CoherentPointDrift
 		bool const_scale,
 		int maxIterations,
 		float tolerance,
-		Common::ApproximationType fgt);
+		Common::ApproximationType fgt,
+		const float& ratioOfFarField,
+		const float& orderOfTruncation);
 }

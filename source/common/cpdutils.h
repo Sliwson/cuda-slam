@@ -22,5 +22,7 @@ namespace CoherentPointDrift
 		const std::vector<Common::Point_f>& cloudAfter,
 		const float& weight,
 		const float& sigmaSquared,
-		const float& sigmaSquaredInit);
+		const float& sigmaSquaredInit,
+		const float& ratioOfFarField,
+		const float& orderOfTruncation);
 }

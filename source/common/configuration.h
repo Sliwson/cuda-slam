@@ -38,6 +38,8 @@ namespace Common
 		float NoiseIntensityAfter = 0.1f;
 		int AdditionalOutliersBefore = 0;
 		int AdditionalOutliersAfter = 0;
+		float RatioOfFarField = 10.0f;
+		int OrderOfTruncation = 8;
 
 		void Print();
 	};
