@@ -19,6 +19,9 @@ For detailed project description compile [LaTeX documentation](doc/documentation
 ## Performance
 ![Performance](doc/plots/ms-all.png)
 
+## Convergence
+![Convergence](doc/plots/ss-all.png)
+
 ## Team
 | Mateusz Śliwakowski | Michał Rogala | Szymon Stasiak  |
 | :---: |:---:| :---:|
