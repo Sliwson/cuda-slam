@@ -200,14 +200,6 @@ std::pair<glm::mat3, glm::vec3> GetCudaNicpTransformationMatrix(
 	checkCudaErrors(cudaMemcpy(thrust::raw_pointer_cast(gpuBefore.data()), before.data(), before.size() * sizeof(glm::vec3), cudaMemcpyHostToDevice));
 	checkCudaErrors(cudaMemcpy(thrust::raw_pointer_cast(gpuAfter.data()), after.data(), after.size() * sizeof(glm::vec3), cudaMemcpyHostToDevice));
 
-	const auto result = CudaNonIterative(gpuBefore, gpuAfter, repetitions, error, eps, maxRepetitions, batchSize, approximationType, subcloudSize);
-
-	GpuCloud transformedCloud(gpuBefore.size());
-	TransformCloud(gpuBefore, transformedCloud, ConvertToTransformationMatrix(result.first, result.second));
-	thrust::device_vector<int> indices(gpuBefore.size());
-	GetCorrespondingPoints(indices, transformedCloud, gpuAfter);
-	*error = GetMeanSquaredError(indices, transformedCloud, gpuAfter);
-
-	return result;
+	return CudaNonIterative(gpuBefore, gpuAfter, repetitions, error, eps, maxRepetitions, batchSize, approximationType, subcloudSize);
 }
 
