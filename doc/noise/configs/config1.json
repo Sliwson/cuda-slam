@@ -1,0 +1,43 @@
+ {
+ "_comment": "Axis: 5x -8y 30z angle: 195 deg",
+  "before-path": "data/bunny.obj",
+  "after-path": "data/bunny.obj",
+  "method": "cpd",
+  "policy": "parallel",
+  "approximation-type": "hybrid",
+  "max-iterations": 100,
+
+  "scale": 1.0,
+  "translation": [ 10.0, 0.0, 5.0 ],
+  "rotation": [
+    -0.9162310,
+    0.1673873,
+    0.3640085,
+    -0.3264107,
+    -0.8387071,
+    -0.4359201,
+    0.2323290,
+    -0.5182198,
+    0.8230866
+  ],
+
+  "show-visualisation": true,
+  "cloud-spread": 10.0,
+  "random-seed": 12345,
+
+  "max-distance-squared": 400,
+
+  "nicp-batch-size": 1,
+  "nicp-iterations": 8,
+  "nicp-subcloud-size": 5000,
+
+  "cpd-weight": 0.0,
+  "cpd-const-scale": false,
+
+  "noise-affected-points-before": 0,
+  "noise-affected-points-after": 0,
+  "noise-intensity-before": 0,
+  "noise-intensity-after": 0,
+  "additional-outliers-before": 0,
+  "additional-outliers-after": 0
+}
