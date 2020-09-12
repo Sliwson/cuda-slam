@@ -195,8 +195,8 @@ The non-iterative algorithm does not offer too many ways to benefit from paralle
 Apart from parallel and sequential variants of Non-iterative Closes Point algorithm, also three different approximation types have been implemented for this method:
 \begin{enumerate}
 \item \textbf{Full} - to avoid finding corresponding points in each algorithm run, this approximation type bases the error calculation on distance between two points with the same indexes in both clouds. It offers promising results with fast calculations for insufficiently permuted clouds but otherwise the error approximation might differ from actual one and for this reason returned result might not be the best.
-\item \textbf{None} - after each repetition, error is calculated by finding correspondences between subclouds of given sizes taken from both clouds. This method offers higher reliability but instead increases the execution time of one iteration noticeably, especially using CPU.
-\item \textbf{Hybrid} - error for each run is calculated the same way as using when using full approximation but 5 best results are stored and for those, the one with the smallest error is returned as an actual result.
+\item \textbf{None} - after each repetition, error is calculated by finding correspondences between subcloud of given size taken from first cloud and the entire second cloud. This method offers higher reliability but instead increases the execution time of one iteration noticeably, especially using CPU.
+\item \textbf{Hybrid} - error for each run is calculated the same way as using when using full approximation but 5 best results are stored and the error is recalculated for those in the same as when using none as approximation type (with finding correspondences). Then, the one with the smallest error is returned as an actual result.
 \end{enumerate}
 
 \subsection{Coherent point drift}
