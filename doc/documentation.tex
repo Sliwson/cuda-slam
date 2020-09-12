@@ -213,6 +213,18 @@ As we wanted to keep the input simple we decided to use .obj files as the point 
 %How can one replicate the experiments?
 %Any relevant information and runtime howtos.
 \subsection{Execution}
+Currently the only supported operation system is Windows and the Visual Studio environment as a development tool. All the requested libraries are included in the solution folder and the application should be able to run out of the box on supported environments with the newest Cuda Toolkit and common C++ libraries. Necessary configuration files and schemas for config files are attached as well. Each executable (for both CPU and GPU implementations) are supposed to handle 0 or 1 command line parameters with following results:
+\begin{itemize}
+\item No parameters - load config from default.json
+\item One parameter (config file name) - load config from given file
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{ss-exec.png}
+\caption{Execution example with given config file}
+\end{figure}
+\end{itemize} 
+
+Support for Linux systems and other development tools are some of the areas of improvement for the future. Porting, however, is not supposed to be an issue. But due to multiple dependencies between used libraries we decided not to focus on it in development phase as it is not the point of this research.
+
 \subsection{Configuration}
 Configuration of our project is provided by \textit{JSON} files. A path to configuration can be passed by command argument. If path is not provided the default configuration is used. Possible fields and values are defined by \textit{JSON Schema} and they are described in the table below.
 
