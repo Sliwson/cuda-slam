@@ -335,9 +335,29 @@ Not only the cloud sizes and execution times are surpassing other methods, but c
 \end{figure}
 The slim disparity between the two variants of implemented method are most likely caused by precision of CPU and GPU matrix operations which strengthens the hypotesis put forward while analyzing the ICP algorithm. However, in this case the differences are not so grand which can be caused by reduced number of matrix operation and therefore less error propagation.
 
-
-
 \subsubsection{Coherent point drift}
+Coherent point drift is another method parametrized by approximation type it uses. In this case, we decided to pick the hybrid variant, guided mainly by performance results and the fact that improvements done by implementing Fast Gauss Transform have no impact on convergance rate. All above make hybrid approximation the most competitive version out of all three implemented.
+
+However, the run times of CPD algorithm are still far lower than for other methods and for that reason cloud sizes chosen are significantly lower being in the range $[4000, 20000]$, still oferring the longest computation time. On the other hand, convergence rates are much more competitive comparing to the results of ICP for computations in comparable time.
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{ss-cpd-1.png}
+\caption{Convergance rates for a non-iterative closest point matching depending on cloud size}
+\end{figure}
+Nevertheless, the convergance rates of CPU algorithm reveal a trend towards a drastic decline for larger clouds. It is noticable that for objects of size above 16000 points, rate is even lower than 0.5 when the GPU implementation keeps the results perfectly matched.
+This seems to be the case also for increasing translation between clouds. This time the differenes are not so grand though.
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{ss-cpd-2.png}
+\caption{Convergance rates for a non-iterative closest point matching depending on translation}
+\end{figure}
+Modifing rotation of target cloud, the phenomenon described above seems to completely disapear. What is more, larger rotation results with higher convergance rate of tested algorithm but differences between them are significantly lower.
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{ss-cpd-3.png}
+\caption{Convergance rates for a non-iterative closest point matching depending on rotation}
+\end{figure}
+Summarizing the convergence of implemented CPD algorithms, we strongly encourage to use GPU version rather than CPU. Even tough computation times can be greater, convergance rate is then keeped on similar and very high level above 0.9. This method is also the only one that can match scaled clouds which makes it more universal. 
+
+Once again, CPU implementation gives far worse results than the GPU one. For this method that might be caused by using operations on large matrices not only for SVD but also for a multiplication.
+
 \subsubsection{Methods comparison}
 
 
