@@ -193,6 +193,13 @@ The non-iterative algorithm does not offer too many ways to benefit from paralle
 \item Using separate CPU threads for running decompositions using separate CUDA streams - this method combined the advantages of both approaches, giving truly parallel execution of device managed code, at the same time providing higher parallelization level due to limiting the number of concurrent operations by number of GPU streams instead of CPU threads.
 \end{enumerate}
 
+Apart from parallel and sequential variants of Non-iterative Closes Point algorithm, also three different approximation types have been implemented for this method:
+\begin{enumerate}
+\item \textbf{Full} - to avoid finding corresponding points in each algorithm run, this approximation type bases the error calculation on distance between two points with the same indexes in both clouds. It offers promising results with fast calculations for insufficiently permuted clouds but otherwise the error approximation might differ from actual one and for this reason returned result might not be the best.
+\item \textbf{None} - after each repetition, error is calculated by finding correspondences between subcloud of given size taken from first cloud and the entire second cloud. This method offers higher reliability but instead increases the execution time of one iteration noticeably, especially using CPU.
+\item \textbf{Hybrid} - error for each run is calculated the same way as using when using full approximation but 5 best results are stored and the error is recalculated for those in the same as when using none as approximation type (with finding correspondences). Then, the one with the smallest error is returned as an actual result.
+\end{enumerate}
+
 \subsection{Coherent point drift}
 
 CPU solution of coherent point drift is based on algorithm description described in \cite{cpd}. It also uses Matlab code provided by authors as an example how some technical details were handled. FGT algorithm implementation is based on Matlab implementation available here \cite{fgtmatlab}.
@@ -223,8 +230,20 @@ As we wanted to keep the input simple we decided to use .obj files as the point 
 %How can one replicate the experiments?
 %Any relevant information and runtime howtos.
 \subsection{Execution}
+Currently the only supported operating system is Windows and the Visual Studio environment as a development tool. All the requested libraries are included in the solution folder and the application should be able to run out of the box on supported environments with Cuda Toolkit 10.2 and common C++ libraries. Necessary configuration files and schemas for config files are attached as well. Each executable (for both CPU and GPU implementations) are supposed to handle 0 or 1 command line parameters with following results:
+\begin{itemize}
+\item No parameters - load config from default.json
+\item One parameter (config file name) - load config from given file
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{ss-exec.png}
+\caption{Execution example with given config file}
+\end{figure}
+\end{itemize} 
+
+Support for Linux systems and other development tools are some of the areas of improvement for the future. Porting, however, is not supposed to be an issue. But due to multiple dependencies between used libraries we decided not to focus on it in development phase as it is not the point of this research.
+
 \subsection{Configuration}
-Configuration of our project is provided by \textit{JSON} files. A path to configuration can be passed by command argument. If path is not provided the default configuration is used. Possible fields and values are defined by \textit{JSON Schema} and they are described in the table below.
+Possible fields and values for config files are defined by \textit{JSON Schema} and they are described in the table below.
 
 \begin{center}
 \def\arraystretch{1.5}
@@ -233,75 +252,75 @@ Configuration of our project is provided by \textit{JSON} files. A path to confi
  Field name & Type & Default Value & Description \\
  \hline
  \hline
- *before-path & String & -- & Path to cloud before transformation. In documentation the terminology first point set is used. \\
+ *before-path & String & -- & Path to the first point set (also called "cloud before") representing object before transformation. \\
  \hline
- *after-path & String & -- & Path to cloud that will be transformed by given parameters. In documentation the terminology second point set is used. Algorithms will try to match first to second point set. \\
+ *after-path & String & -- & Path to the second point set (also called "cloud after") representing object after transformation. This cloud is to be modified by applying scale, transformation and rotation values mentioned below. \\
  \hline
   & & & Selected algorithm. Possible values are: \\
   *method & Enum & -- & \tabitem icp - Iterative Closest Point \\
-  & & & \tabitem nicp - Noniterative Closest Point \\
+  & & & \tabitem nicp - Non-iterative Closest Point \\
   & & & \tabitem cpd - Coherent Point Drift \\
  \hline
   & & & Use sequential or parallel computations on CPU. Possible values are:\\
  policy & Enum & parallel & \tabitem sequential \\
   & & & \tabitem parallel \\
-  & & & Option works only with ICP and NICP. \\ 
+  & & & Used only for ICP and NICP. \\ 
  \hline
- scale & Number & $1.0$ & Scale of transformation. \\ 
+ scale & Number & $1.0$ & Transformation scale. Scales the second point set by given value. \\ 
  \hline
- translation & Array: Length $3$ & -- & Translation vector. \\ 
+ translation & Array: Length $3$ & -- & Translation vector. Translates the second point set by given value. \\ 
  \hline
- rotation & Array: Length $9$ & -- & Rotation Matrix in row-major order. \\ 
+ rotation & Array: Length $9$ & -- & Rotation matrix in row-major order. Represents the rotation which is to be applied to the second point set. \\ 
  \hline
- translation-range & Number & -- & \\ 
+ translation-range & Number & -- & Translation distance to be applied to the second point set. Translation direction is chosen randomly. \\ 
  \hline
- angle-range & Number & -- & \\ 
+ angle-range & Number & -- & Translation angle in radians to be applied to the second point set. Rotation axis is chosen randomly. \\ 
  \hline
- max-iterations & Integer & -- &  \\ 
+ max-iterations & Integer & -- & Maximum number of iterations for iterative algorithms - ICP and CPD. After reaching this value, algorithm stops returning the best match found so far. \\ 
  \hline
- cloud-before-resize & Integer & -- & If value is given the before cloud will be resized to this size omiting randomly selected points. If field is not present whole cloud will be used. \\ 
+ cloud-before-resize & Integer & -- & Desired number of points in the first point set. If value is given, the set will be resized to this size omitting randomly selected points. Otherwise, whole cloud will be used. \\ 
  \hline
- cloud-after-resize & Integer & -- & \\ 
+ cloud-after-resize & Integer & -- & Desired number of points in the second point set. If value is given, the set will be resized to this size omitting randomly selected points. Otherwise, whole cloud will be used. \\ 
  \hline
- cloud-spread & Number & -- & \\ 
+ cloud-spread & Number & -- & The maximum distance in a single dimension between the extreme points in second point set. Based on this value cloud can be stretched or shrunk. \\ 
  \hline
- random-seed & Integer & -- & \\ 
+ random-seed & Integer & -- & A seed for random number generator used in the program. If value is not given, the seed is random as well. \\ 
  \hline
- show-visualisation & Boolean & False & \\ 
+ show-visualisation & Boolean & False & Specifies if graphic visualisation of clouds should be displayed. \\ 
  \hline
- max-distance-squared & Number & $1000.0$ & \\ 
+ max-distance-squared & Number & $1000.0$ & Maximum distance to search for closest point in ICP algorithm implemented on CPU. If the squared distance between two points is larger than value of this parameter, then this pair is excluded from further analysis. \\ 
  \hline
- approximation-type & Enum & hybrid & \\ 
+ approximation-type & Enum & hybrid & Approximation variant used for CPD or Non-iterative Closest Point methods. More details about those types are covered in sections devoted to the methods. \\ 
  \hline
- nicp-batch-size & Number & $16$ & \\ 
+ nicp-batch-size & Number & $16$ & Number of Non-iterative Closest Point repetitions run simultaneously. Used only on GPU as the CPU always uses hardware concurrency (number of actual threads in CPU). \\ 
  \hline
- nicp-iterations & Number & $32$ & \\ 
+ nicp-iterations & Number & $32$ & Total number of repetitions for Non-iterative Closest Point algorithm. \\ 
  \hline
- nicp-subcloud-size & Number & $1000$ & \\ 
+ nicp-subcloud-size & Number & $1000$ & Number of points taken for error computation in Non-iterative Closest Point algorithm \\ 
  \hline 
- cpd-weight & Number & $0.3$ & \\ 
+ cpd-weight & Number & $0.3$ & Weight of the uniform distribution that accounts for noise and outliers in Coherent Point Drift algorithm. \\ 
  \hline
- cpd-const-scale & Boolean & False & \\ 
+ cpd-const-scale & Boolean & False & Coherent Point Drift parameter, its value indicate if both clouds are assumed to be in the same scale. \\ 
  \hline
- cpd-tolerance & Number & $1e-3$ & \\ 
+ cpd-tolerance & Number & $1e-3$ & Minimum relative error value between subsequent iterations for Coherent Point Drift algorithm, indicating if the algorithm should stop computations as if the match was found. \\ 
  \hline
- convergence-epsilon & Number & $1e-3$ & \\ 
+ convergence-epsilon & Number & $1e-3$ & Minimum error value for indicating if the point sets are treated as matched. Used in all methods. \\ 
  \hline
- noise-affected-points-before & Number & $0.0$ & \\ 
+ noise-affected-points-before & Number & $0.0$ & Ratio (in range $[0.0, 1.0]$) of points from the first point set which should be affected by noise. \\ 
  \hline
- noise-affected-points-after & Number & $0.0$ & \\ 
+ noise-affected-points-after & Number & $0.0$ & Ratio (in range $[0.0, 1.0]$) of points from the second point set which should be affected by noise. \\ 
  \hline
- noise-intensity-before & Number & $0.1$ & \\ 
+ noise-intensity-before & Number & $0.1$ & Noise intensity for first point set. Noise is then applied by translating each dimension of each point by random value limited by the value of this parameter multiplied by \textit{cloud-spread} value. \\ 
  \hline
- noise-intensity-after & Number & $0.1$ & \\ 
+ noise-intensity-after & Number & $0.1$ & Noise intensity for second point set. Noise is then applied by translating each dimension of each point by random value limited by the value of this parameter multiplied by \textit{cloud-spread} value. \\ 
  \hline
- additional-outliers-before & Integer & $0$ & \\ 
+ additional-outliers-before & Integer & $0$ & Number of randomly generated points added into the first point set. \\ 
  \hline
- additional-outliers-after & Integer & $0$ & \\ 
+ additional-outliers-after & Integer & $0$ & Number of randomly generated points added into the second point set. \\ 
  \hline
- fgt-ratio-of-far-field & Number & $10.0$ & \\ 
+ fgt-ratio-of-far-field & Number & $10.0$ & Ratio of far field used in Fast Gauss Transform. Applies only to Coherent Point Drift algorithm with hybrid or full approximation. \\ 
  \hline
- fgt-order-of-truncation & Integer & $8$ & \\ 
+ fgt-order-of-truncation & Integer & $8$ & Order of truncation used in Fast Gauss Transform. Applies only to Coherent Point Drift algorithm with hybrid or full approximation. \\ 
  \hline
  \caption{Configuration}
 \end{longtable}
@@ -309,10 +328,50 @@ Configuration of our project is provided by \textit{JSON} files. A path to confi
 \end{center}
 \textit{* - field is required}
 
-
-
-
 \subsection{GUI}
+Both GPU and CPU programs implement the possibility to display visualisation of point clouds using OpenGL. By default, the window display three cloud sizes of different color:
+\begin{itemize}
+\item Red - the first point set (also called "cloud before")
+\item Green - the second point set (also called "cloud after")
+\item Yellow - first point cloud transformed with result transformation
+\end{itemize}
+
+The visualisation window also supports some basic user control. All the possible actions are described in the table below.
+\begin{center}
+\def\arraystretch{1.5}
+\begin{longtable}{ | m{13em} | m{27em}| } 
+ \hline
+ Action & Result \\
+ \hline
+ \hline
+ Escape & Close the visualisation. \\
+ \hline
+ Mouse movement & Rotate the camera. \\
+ \hline
+ WSAD & Move the camera (front, back, left, right). \\
+ \hline
+ Spacebar & Move the camera up. \\
+ \hline
+ Left Shift & Move the camera down. \\
+ \hline
+ Scroll & Zoom. \\
+ \hline
+ 1 & Toggle visibility of the first point set. \\
+ \hline
+ 2 & Toggle visibility of the second point set. \\
+ \hline
+ 3 & Toggle visibility of the transformed point set. \\
+ \hline
+ 4 & Toggle visibility of the (0,0) point. \\
+ \hline
+ [ & Reduce the point size. \\
+ \hline
+ ] & Increase the point size. \\
+ \hline
+ \caption{Renderer controls}
+\end{longtable}
+\label{tab:controls}
+\end{center}
 
 \section{Description of the results}
 %Performance of the system for different input data/parameters.
@@ -417,10 +476,10 @@ To sum up the section describing execution times, we gathered all the methods be
 As we can see the execution times differ vastly depending on method and execution policy. We are satisfied with the results especially for Iterative Closest Point and Non-iterative Closest Point methods because we managed to significantly improve the performance by utilizing CUDA library. Therefore, these two methods would be the best choice if time is the most important factor while utilizing SLAM. Coherent Point Drift was expected to be the slowest of the all methods due to its sophistication. However its CPU implementation using Fast Gauss Transform occurred to be faster than ICP CPU variant and it is usable even for clouds with considerable sizes.
 
 \subsection{Noise and outliers tolerance}
-We tested our methods using the clouds and conditions that may be closer to reality. That is, we used clouds that are missing points or even entire part and we corrupted clouds by noise and outliers. For this purpose we have used CPU versions of algorithms. For ICP and NICP \textit{policy} was set to \textit{parallel} and \textit{approximation-type} to \textit{none}. For CPD \textit{approximation-type} was set to \textit{hybrid}, mainly to achieve faster computation times. Many tests were conducted and it turned out that results are highly dependent on configuration. Therefore, we will show the most interesting results and tests that have shown the most consistent characteristics. All results are available in spreadsheet kept on Github: \href{https://github.com/Sliwson/cuda-slam/tree/cpd-documentation/doc/noise}{https://github.com/Sliwson/cuda-slam/tree/cpd-documentation/doc/noise}. Also in directory \textit{config} there are all test configurations.\\
-After testing we came to several conclusions. Firstly, the ICP algorithm coped the worst with almost all test sets. The main reason can be cloud sizes used in tests, which occurred to be often too big for ICP capabilities. Algorithm had also trouble with noise. Even low level noise such as \textit{noise-affected-points-before}$=0.1$ and \textit{noise-intensity-before}$=0.05$ may cause convergence failure. Secondly, increasing $max-iterasions$ can help achieving more exact results. CPD algorithm mostly achieved correct results. Main key to CPD convergence is to select parameters value correctly. The most important one is \textit{cpd-weight} which describes how many points 
-are noise and outliers. Difference of $0.3$ can lead to significantly different result. Second CPD parameter is \textit{cpd-const-scale}. Setting it to \textit{true} may help achieving better results when we know that the scale did not change after transformation. Especially it helps when clouds contain a lot of noise and outliers. Also, decresing \textit{cpd-tolerance} and \textit{converge-epsilon} (the latter applies also to ICP and NICP) may result in increasing iterations count and lead to more exact result.\\
-All algorithms had tendency to match areas where the point density was the highest. An example of this behavior may be observed using \textit{Config21.json}. It uses two "airbus" clouds with decreased sizes and added noise and outliers. Result achieved by algorithms are presented below and vary among each other.
+We tested our methods using the clouds and conditions that may be closer to reality. That is, we used clouds that are missing points, even large part of them and we corrupted clouds by noise and outliers. For this purpose we have used CPU versions of algorithms. For ICP and NICP \textit{policy} was set to \textit{parallel} and \textit{approximation-type} to \textit{none}. For CPD \textit{approximation-type} was set to \textit{hybrid}, mainly to achieve faster computation times. Many tests were conducted and it turned out that results are highly dependent on configuration. Therefore, in the following sections you can find the most interesting results and tests that have shown the most consistent characteristics. All results are available in spreadsheet kept on Github: \href{https://github.com/Sliwson/cuda-slam/tree/cpd-documentation/doc/noise}{https://github.com/Sliwson/cuda-slam/tree/cpd-documentation/doc/noise}. All the test configurations are to be found in directory \textit{config} of the Github repository. \\
+After testing we came to several conclusions. Firstly, the ICP algorithm gave the worst result for almost all test sets. The main reason can be cloud sizes used in tests, which occurred to be often too big for ICP capabilities. Algorithm had also trouble with noise. Even low noise level such as \textit{noise-affected-points-before}$=0.1$ and \textit{noise-intensity-before}$=0.05$ may cause convergence failure. Secondly, increasing \textit{max-iterations} can help achieving more exact results.\\
+CPD algorithm mostly achieved correct results. Main key to CPD convergence is to select parameters value correctly. The most important one is \textit{cpd-weight} which describes how many points are noise and outliers. Difference of $0.3$ can lead to significantly different result. Second CPD parameter is \textit{cpd-const-scale}. Setting it to \textit{true} may help achieving better results when we know that the scale did not change after transformation. Especially it helps when clouds contain a lot of noise and outliers. Also, decresing \textit{cpd-tolerance} and \textit{converge-epsilon} (the latter applies also to ICP and NICP) may result in increasing iterations count and lead to more exact result.\\
+All algorithms had tendency to match areas where the points density was the highest. An example of this behavior may be observed using \textit{config21.json}. It uses two "airbus" clouds with decreased sizes and added noise and outliers. Result achieved by algorithms are presented below and vary among each other.
 
 \begin{figure}[H]
 	\centering
@@ -429,12 +488,12 @@ All algorithms had tendency to match areas where the point density was the highe
     \subfloat[\centering ICP]{{\includegraphics[width=5cm]{mr-icp-21.png} }}
     \hspace{0.5em}
     \subfloat[\centering NICP]{{\includegraphics[width=5cm]{mr-nicp-21.png} }}
-    \caption{Tests with \textit{Config21.json}}
+    \caption{Tests with \textit{config21.json}}
 \end{figure}
 
-The ICP did not manage to converge in this example but result achieved by CPD is interesting. Algorithm connected wheels and engines of both airplanes. Feasibly that is because those are areas with highest point density in entire cloud. NICP returned exact transformation.
+The ICP did not manage to converge in this example but result achieved by CPD is interesting. Algorithm connected wheels and engines of both airplanes. Feasibly that is because those are areas with the highest point density in the entire cloud. NICP returned exact transformation.
 
-Similar situation was met using \textit{Config11.json} and \textit{Config18.json}. Unfortunately in tests using the latter ICP returned identity matrix. The results are presented below.
+Similar situation was met using \textit{config11.json} and \textit{config18.json}. Unfortunately in tests using the latter one, ICP returned identity matrix. The results are presented below.
 
 \begin{figure}[H]
 	\centering
@@ -443,7 +502,7 @@ Similar situation was met using \textit{Config11.json} and \textit{Config18.json
     \subfloat[\centering ICP]{{\includegraphics[width=5cm]{mr-icp-11.png} }}
     \hspace{0.5em}
     \subfloat[\centering NICP]{{\includegraphics[width=5cm]{mr-nicp-11.png} }}
-    \caption{Tests with \textit{Config11.json}}
+    \caption{Tests with \textit{config11.json}}
 \end{figure}
 
 \begin{figure}[H]
@@ -451,12 +510,12 @@ Similar situation was met using \textit{Config11.json} and \textit{Config18.json
     \subfloat[\centering CPD]{{\includegraphics[width=6cm]{mr-cpd-18.png} }}
     \hspace{0.5em}
     \subfloat[\centering NICP]{{\includegraphics[width=6cm]{mr-nicp-18.png} }}
-    \caption{Tests with \textit{Config18.json}}
+    \caption{Tests with \textit{config18.json}}
 \end{figure}
 
-In contrary to \textit{Config18.json} and \textit{Config21.json}, using \textit{Config11.json} CPD almost found exact solution while this time NICP focused on matching areas with highest density.
+In contrary to \textit{config18.json} and \textit{config21.json}, using \textit{config11.json} CPD found almost exact solution while this time NICP focused on matching areas with highest density.
 
-Another example of CPD accuracy in tough conditions can be found when using \textit{Config26.json}. We used two "airbus" clouds where first had no wheels, engines and vertical stabilizer. The second one had wings and wheels cut. Also we have added noise and outliers to both clouds. Results are presented below.
+Another example of CPD accuracy in tough conditions can be found when using \textit{config26.json}. We used two "airbus" clouds where first had no wheels, engines and vertical stabilizer. The second one had wings and wheels cut. Also we have added noise and outliers to both clouds. Results are presented below.
 
 \begin{figure}[H]
 	\centering
@@ -465,12 +524,12 @@ Another example of CPD accuracy in tough conditions can be found when using \tex
     \subfloat[\centering ICP]{{\includegraphics[width=5cm]{mr-icp-26.png} }}
     \hspace{0.5em}
     \subfloat[\centering NICP]{{\includegraphics[width=5cm]{mr-nicp-26.png} }}
-    \caption{Tests with \textit{Config26.json}}
+    \caption{Tests with \textit{config26.json}}
 \end{figure}
 
-CPD found exact solution. As mentioned above ICP has trouble with incomplete clouds and it remains unchanged with this configuration. NICP was close to finding exact solution; however, it lacks of $90\degree$ rotation.
+CPD found the exact solution. As mentioned above, ICP has troubles with incomplete clouds and it remains unchanged with this configuration. NICP was close to finding exact solution; however, it lacks of $90\degree$ rotation.
 
-Finally we made test that only focus on situation where one cloud contains noise. We increased the \textit{noise-intensity} by small values and compared the results. The best method occurred to be NICP, CPD was the second and ICP was the third one. For tests, the configurations \textit{Config28.json} to \textit{Config38} were used. Results are presented below.
+Finally we made test that only focus on situation where one cloud contains noise. We increased the \textit{noise-intensity} by small values and compared the results. The best method occurred to be NICP, CPD was the second and ICP was the third one. For these tests, the configurations \textit{config28.json} to \textit{config38} were used. Results are presented below.
 
 \begin{figure}[H]
 	\centering
@@ -479,7 +538,7 @@ Finally we made test that only focus on situation where one cloud contains noise
     \subfloat[\centering ICP]{{\includegraphics[width=5cm]{mr-icp-29.png} }}
     \hspace{0.5em}
     \subfloat[\centering NICP]{{\includegraphics[width=5cm]{mr-nicp-29.png} }}
-    \caption{Tests with \textit{Config29.json}}
+    \caption{Tests with \textit{config29.json}}
 \end{figure}
 
 \begin{figure}[H]
@@ -489,7 +548,7 @@ Finally we made test that only focus on situation where one cloud contains noise
     \subfloat[\centering ICP]{{\includegraphics[width=5cm]{mr-icp-30.png} }}
     \hspace{0.5em}
     \subfloat[\centering NICP]{{\includegraphics[width=5cm]{mr-nicp-30.png} }}
-    \caption{Tests with \textit{Config30.json}}
+    \caption{Tests with \textit{config30.json}}
 \end{figure}
 
 \begin{figure}[H]
@@ -499,7 +558,7 @@ Finally we made test that only focus on situation where one cloud contains noise
     \subfloat[\centering ICP]{{\includegraphics[width=5cm]{mr-icp-34.png} }}
     \hspace{0.5em}
     \subfloat[\centering NICP]{{\includegraphics[width=5cm]{mr-nicp-34.png} }}
-    \caption{Tests with \textit{Config34.json}}
+    \caption{Tests with \textit{config34.json}}
 \end{figure}
 
 \begin{figure}[H]
@@ -509,13 +568,12 @@ Finally we made test that only focus on situation where one cloud contains noise
     \subfloat[\centering ICP]{{\includegraphics[width=5cm]{mr-icp-38.png} }}
     \hspace{0.5em}
     \subfloat[\centering NICP]{{\includegraphics[width=5cm]{mr-nicp-38.png} }}
-    \caption{Tests with \textit{Config38.json}}
+    \caption{Tests with \textit{config38.json}}
 \end{figure}
 
-NICP managed to find exact solution in all test cases. Results obtained by CPD were slightly worse and sometimes correction of \textit{cpd-weight} parameter was needed. ICP results started to differ even when \textit{noise-intensity} was still very small, thus its usage when conditions are not perfect is very limited.
+NICP managed to find the exact solution in all test cases. Results obtained by CPD were slightly worse and sometimes correction of \textit{cpd-weight} parameter was needed. ICP results started to differ even when \textit{noise-intensity} was still very small, thus its usage when conditions are not perfect is very limited.
 
-To sum up the best algorithms for clouds with noises and outliers are NICP and CPD. It is worth mentioning that NICP is significantly faster than CPD. 
-
+To sum up the best algorithms for clouds with noises and outliers are NICP and CPD. In this situation, it is also worth mentioning that NICP was significantly faster than CPD in all the tests covered in this section.
 
 \subsection{Convergence ranges}
 
