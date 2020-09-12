@@ -223,75 +223,75 @@ Configuration of our project is provided by \textit{JSON} files. A path to confi
  Field name & Type & Default Value & Description \\
  \hline
  \hline
- *before-path & String & -- & Path to cloud before transformation. In documentation the terminology first point set is used. \\
+ *before-path & String & -- & Path to the first point set (also called "cloud before") representing object before transformation. \\
  \hline
- *after-path & String & -- & Path to cloud that will be transformed by given parameters. In documentation the terminology second point set is used. Algorithms will try to match first to second point set. \\
+ *after-path & String & -- & Path to the second point set (also called "cloud after") representing object after transformation. This cloud is to be modified by applying scale, transformation and rotation values mentioned below. \\
  \hline
   & & & Selected algorithm. Possible values are: \\
   *method & Enum & -- & \tabitem icp - Iterative Closest Point \\
-  & & & \tabitem nicp - Noniterative Closest Point \\
+  & & & \tabitem nicp - Non-iterative Closest Point \\
   & & & \tabitem cpd - Coherent Point Drift \\
  \hline
-  & & & Use sequential or parallel computations on cpu. Possible values are:\\
+  & & & Use sequential or parallel computations on CPU. Possible values are:\\
  policy & Enum & parallel & \tabitem sequential \\
   & & & \tabitem parallel \\
-  & & & Option works only with ICP and NICP. \\ 
+  & & & Used only for ICP and NICP. \\ 
  \hline
- scale & Number & $1.0$ & Scale of transformation. \\ 
+ scale & Number & $1.0$ & Transformation scale. Scales second point set by given value. \\ 
  \hline
- translation & Array: Length $3$ & -- & Translation vector. \\ 
+ translation & Array: Length $3$ & -- & Translation vector. Moves second point set by given value. \\ 
  \hline
- rotation & Array: Length $9$ & -- & Rotation Matrix in row-major order. \\ 
+ rotation & Array: Length $9$ & -- & Rotation Matrix in row-major order. Represents the rotation which is to be applied to second point set. \\ 
  \hline
- translation-range & Number & -- & \\ 
+ translation-range & Number & -- & Translation distance to be applied to second point set. Translation direction is chosen randomly. \\ 
  \hline
- angle-range & Number & -- & \\ 
+ angle-range & Number & -- & Translation angle in radians to be applied to second point set. Rotation axis is chosen randomly. \\ 
  \hline
- max-iterations & Integer & -- &  \\ 
+ max-iterations & Integer & -- & Maximum number of iterations for iterative algorithms - ICP and CPD. After reaching this value, algorithm stops returning the best match so far. \\ 
  \hline
- cloud-before-resize & Integer & -- & If value is given the before cloud will be resized to this size omiting randomly selected points. If field is not present whole cloud will be used. \\ 
+ cloud-before-resize & Integer & -- & Desired number of points in the first point set. If value is given, the set will be resized to this size omitting randomly selected points. Otherwise, whole cloud will be used. \\ 
  \hline
- cloud-after-resize & Integer & -- & \\ 
+ cloud-after-resize & Integer & -- & Desired number of points in the second point set. If value is given, the set will be resized to this size omitting randomly selected points. Otherwise, whole cloud will be used. \\ 
  \hline
- cloud-spread & Number & -- & \\ 
+ cloud-spread & Number & -- & The maximum distance in single dimension between the extreme points in second point set. Based on the value cloud can be stretched or shrunk. \\ 
  \hline
- random-seed & Integer & -- & \\ 
+ random-seed & Integer & -- & Seed for random number generator used in the program. If value is not given, the seed is random as well. \\ 
  \hline
- show-visualisation & Boolean & False & \\ 
+ show-visualisation & Boolean & False & Specifies if graphic visualisation of clouds should be displayed. \\ 
  \hline
- max-distance-squared & Number & $1000.0$ & \\ 
+ max-distance-squared & Number & $1000.0$ & Maximum distance to search for closest point in ICP algorithm implemented on CPU. If the squared distance between two points is larger than value of this parameter, then this pair is excluded from further analysis \\ 
  \hline
- approximation-type & Enum & hybrid & \\ 
+ approximation-type & Enum & hybrid & Approximation variant used for CPD or Non-iterative Closest Point methods. More details about those types are covered in sections devoted to the methods. \\ 
  \hline
- nicp-batch-size & Number & $16$ & \\ 
+ nicp-batch-size & Number & $16$ & Number of Non-iterative Closest Point repetitions run simultaneously. Used only on GPU as the CPU always uses hardware concurrency (number of actual threads in CPU) \\ 
  \hline
- nicp-iterations & Number & $32$ & \\ 
+ nicp-iterations & Number & $32$ & Total number of repetitions for Non-iterative Closest Point algorithm. \\ 
  \hline
- nicp-subcloud-size & Number & $1000$ & \\ 
+ nicp-subcloud-size & Number & $1000$ & Number of points taken for error computation in Non-iterative Closest Point algorithm \\ 
  \hline 
- cpd-weight & Number & $0.3$ & \\ 
+ cpd-weight & Number & $0.3$ & Weight of the uniform distribution that accounts for noise and outliers in Coherent Point Drift algorithm. \\ 
  \hline
- cpd-const-scale & Boolean & False & \\ 
+ cpd-const-scale & Boolean & False & Coherent Point Drift parameter, its value indicate if cloud size are assumed to be in the same scale. \\ 
  \hline
- cpd-tolerance & Number & $1e-3$ & \\ 
+ cpd-tolerance & Number & $1e-3$ & Minimum relative error value between subsequent iterations for Coherent Point Drift algorithm, indicating if the algorithm should stop computations as if the match was found. \\ 
  \hline
- convergence-epsilon & Number & $1e-3$ & \\ 
+ convergence-epsilon & Number & $1e-3$ & Minimum error value for indicating if the point sets are treated as matched. Used in all methods. \\ 
  \hline
- noise-affected-points-before & Number & $0.0$ & \\ 
+ noise-affected-points-before & Number & $0.0$ & Ratio (in range $[0.0, 1.0]$) of points from first point set which should be affected by noise. \\ 
  \hline
- noise-affected-points-after & Number & $0.0$ & \\ 
+ noise-affected-points-after & Number & $0.0$ & Ratio (in range $[0.0, 1.0]$) of points from second point set which should be affected by noise. \\ 
  \hline
- noise-intensity-before & Number & $0.1$ & \\ 
+ noise-intensity-before & Number & $0.1$ & Noise intensity for first point set. Noise is then applied by translating each dimension of each point by random value limited by value of this parameter multiplied by \textit{cloud-spread} value. \\ 
  \hline
- noise-intensity-after & Number & $0.1$ & \\ 
+ noise-intensity-after & Number & $0.1$ & Noise intensity for second point set. Noise is then applied by translating each dimension of each point by random value limited by value of this parameter multiplied by \textit{cloud-spread} value. \\ 
  \hline
- additional-outliers-before & Integer & $0$ & \\ 
+ additional-outliers-before & Integer & $0$ & Number of randomly generated points added into the first point set. \\ 
  \hline
- additional-outliers-after & Integer & $0$ & \\ 
+ additional-outliers-after & Integer & $0$ & Number of randomly generated points added into the second point set. \\ 
  \hline
- fgt-ratio-of-far-field & Number & $10.0$ & \\ 
+ fgt-ratio-of-far-field & Number & $10.0$ & Ratio of far field used in Fast Gauss Transform. Applies only to Coherent Point Drift algorithm with hybrid or full approximation. \\ 
  \hline
- fgt-order-of-truncation & Integer & $8$ & \\ 
+ fgt-order-of-truncation & Integer & $8$ & Order of truncation used in Fast Gauss Transform. Applies only to Coherent Point Drift algorithm with hybrid or full approximation. \\ 
  \hline
  \caption{Configuration}
 \end{longtable}
