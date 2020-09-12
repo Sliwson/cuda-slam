@@ -72,5 +72,20 @@ namespace Common
 				error
 			);
 		}
+
+		if (configuration.ShowVisualisation)
+		{
+			const auto transformedCloud = Common::GetTransformedCloud(before, result.first, result.second);
+			auto renderer = Renderer(
+				ShaderType::SimpleModel,
+				"Test runner",
+				before,
+				after,
+				transformedCloud,
+				{ Point_f::Zero() }
+			);
+
+			renderer.Show();
+		}
 	}
 }

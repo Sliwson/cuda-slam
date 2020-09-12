@@ -12,6 +12,7 @@
 \usepackage{array}
 \usepackage{booktabs}
 \usepackage{longtable}
+\usepackage{gensymb}
 
 \newcommand{\tabitem}{~~\llap{\textbullet}~~}
 
@@ -401,14 +402,87 @@ To sum up the section describing execution times, we gathered all the methods be
 
 As we can see the execution times differ vastly depending on method and execution policy. We are satisfied with the results especially for Iterative Closest Point and Non-iterative Closest Point methods because we managed to significantly improve the performance by utilizing CUDA library. Therefore, these two methods would be the best choice if time is the most important factor while utilizing SLAM. Coherent Point Drift was expected to be the slowest of the all methods due to its sophistication. However its CPU implementation using Fast Gauss Transform occurred to be faster than ICP CPU variant and it is usable even for clouds with considerable sizes.
 
-\subsection{Stability}
-
 \subsection{Noise and outliers tolerance}
 
 \subsection{Convergence ranges}
 
-\section{Remarks}
-Any remarks to the results and methods.
+\subsubsection{Introduction}
+Another topic for discussion when it comes to methods' usability is a quality of their results. This section covers convergence rates for all the algorithms, depending on cloud sizes, rotation and translation. Another parameters are same for all the tests, including cloud spread equal to $10$. For all the methods, both GPU and CPU implementations, tests have covered three different translation ranges: 10, 20 and 30 units and three different rotation ranges: 0.2, 0.4 and 0.6 radians, which are equal to 11.5\degree, 22.9\degree and 34.4\degree respectively.
+
+Based on the performance results from previous sections, cloud sizes have been chosen separately for each method and they differ significantly from each other, but remain the same between GPU and CPU implementation of a specific method. It is also worth noting that for methods with multiple approximation types, only one type is chosen for tests and the decision is described in the section focusing on specific method.
+
+\subsubsection{Iterative closest point}
+In case of an ICP, convergence rates are deeply correlated with a maximum number of iterations the algorithm runs. And this turns out to be the main drawback of this method. In order to compare methods most fairly, we had to limit the iterations in a way that keeps computation times close to the other methods. At the same time, we needed to keep similar parameters for both CPU and GPU implementation and for this reason iterations have been limited by $100$. Cloud sizes have been chosen from range $[20000,100000]$ which positions ICP in the middle of the road between CPD and Non-iterative Closest Point.
+
+Unfortunately, it is noticeable from the chart below that for large clouds, convergence rate falls dramatically. It is caused mainly by limiting the iterations mentioned above. In most of the test cases, the error in consecutive iterations tended to fall down, but the dynamics of changes did not allow the algorithm to converge in acceptable time.
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{ss-icp-1.png}
+\caption{Convergance rates for ICP depending on cloud size}
+\end{figure}
+The situation is slightly different when it comes to comparing ICP efficiency based on translation between first and second point cloud. In this case, the differences are not so grand and only large translation cause the visible decrease of convergence rate. What is worth mentioning are the differences between GPU and CPU implementation. GPU turns out to be even more than 5 times better when it comes to matching clouds with large translation. This may indicate lower accuracy of math libraries used on CPU, especially for decomposition of matrices with larger values. 
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{ss-icp-2.png}
+\caption{Convergance rates for ICP depending on translation}
+\end{figure}
+The differences between GPU and CPU computations are not that evident if we compare the rotated clouds. In this situation, the CPU implementation tend to maintain similar convergence rate, despite the rotation value. The overall GPU dynamics in this case is the same as for the tests based on translation.
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{ss-icp-3.png}
+\caption{Convergance rates for ICP depending on rotation}
+\end{figure}
+Summarizing the convergence tests for an ICP algorithm, the method does not show great differences between convergence rate based on translation and rotation, but the rates are in all the cases rather low. The method's advantage is the possibility of significantly improving the results by increasing the number of allowed iterations. In most of the test cases, it was this limitation, not the maximum error what caused the computations to stop.
+
+\subsubsection{Non-iterative closest point}
+Non-iterative closest point method is the first one for which different approximation types have been implemented. However, the execution times proved that only one type is worth using in general cases. For this reason, the "None" type is used in all convergence tests, as it not only gives the most accurate results, but it also offers execution time unsurpassed by other methods.
+
+Performance tests for proposed implementation showed as well that substantial cloud sizes are not an obstacle for a Non-iterative Closest Point algorithm and because of that, the sizes used in the convergence tests vary between 250000 and 1250000. Nevertheless, execution times are still lower than for the other algorithms.
+
+Not only the cloud sizes and execution times are surpassing other methods, but convergence rates show similar tendency. The overall convergence rate for non-iterative method was equal to 1.0 for GPU implementation and 0.99 for CPU. The impact of specific parameters on the results is displayed on charts below.
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{ss-nicp-1.png}
+\caption{Convergance rates for a non-iterative closest point matching depending on cloud size}
+\end{figure}
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{ss-nicp-2.png}
+\caption{Convergance rates for a non-iterative closest point matching depending on translation}
+\end{figure}
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{ss-nicp-3.png}
+\caption{Convergance rates for a non-iterative closest point matching depending on rotation}
+\end{figure}
+The slim disparity between the two variants of implemented method are most likely caused by precision of CPU and GPU matrix operations which strengthens the hypothesis put forward while analysing the ICP algorithm. However, in this case the differences are not so grand which can be caused by reduced number of matrix operation and therefore less error propagation.
+
+\subsubsection{Coherent point drift}
+Coherent point drift is another method parametrized by approximation type it uses. In this case, we decided to pick the hybrid variant, guided mainly by performance results and the fact that improvements done by implementing Fast Gauss Transform have no impact on convergence rate. All above make hybrid approximation the most competitive version out of all three implemented.
+
+However, the run times of CPD algorithm are still far lower than for other methods and for that reason cloud sizes chosen are significantly lower being in the range $[4000, 20000]$, still offering the longest computation time. On the other hand, convergence rates are much more competitive comparing to the results of ICP for computations in comparable time.
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{ss-cpd-1.png}
+\caption{Convergence rates for a non-iterative closest point matching depending on cloud size}
+\end{figure}
+Nevertheless, the convergence rates of CPU algorithm reveal a trend towards a drastic decline for larger clouds. It is noticeable that for objects of size above 16000 points, rate is even lower than 0.5 when the GPU implementation keeps the results perfectly matched.
+This seems to be the case also for increasing translation between clouds. This time the differences are not so grand though.
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{ss-cpd-2.png}
+\caption{Convergence rates for a non-iterative closest point matching depending on translation}
+\end{figure}
+Modifying rotation of target cloud, the phenomenon described above seems to completely disappear. What is more, larger rotation results in higher convergence rate of tested algorithm but differences between them are significantly lower.
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{ss-cpd-3.png}
+\caption{Convergence rates for a non-iterative closest point matching depending on rotation}
+\end{figure}
+Summarizing the convergence of implemented CPD algorithms, we strongly encourage to use GPU version rather than CPU. Even tough computation times can be greater, convergence rate is then kept on similar and very high level above 0.9. This method is also the only one that can match scaled clouds which makes it more universal. 
+
+Once again, CPU implementation gives far worse results than the GPU one. For this method that might be caused by using operations on large matrices not only for SVD but also for a multiplication.
+
+\subsubsection{Methods comparison}
+To sum up the convergence tests, the average rate for all tests have been calculated for each method, with division to GPU and CPU implementation. Based on that, it is easier to visualise the results that were already mentioned in all the section. 
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{ss-all.png}
+\caption{Comparison of all algorithms convergence rates}
+\end{figure}
+And once again it is clear that CPD and Non-iterative closest point methods are a lot more accurate when it comes to finding transformation between two point sets.
+
+Another conclusion is that CPU implementation of complicated matrix operations is significantly inferior to the one accelerated by GPU. It might be the case only for the two libraries that were used in this project, however it is worth noting that the CPU library is known for its precision.
 
 \section{Future works}
 %What do we want to do in future, improvements.
