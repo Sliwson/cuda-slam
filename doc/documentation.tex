@@ -9,6 +9,11 @@
 \usepackage{hyperref} 
 \usepackage{float}
 \usepackage{enumitem}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{longtable}
+
+\newcommand{\tabitem}{~~\llap{\textbullet}~~}
 
 \graphicspath{{./images/}{./plots/}}
 
@@ -204,8 +209,95 @@ As we wanted to keep the input simple we decided to use .obj files as the point 
 \end{figure}
 
 \section{Execution, configuration and user guide}
-How can one replicate the experiments?
-Any relevant information and runtime howtos.
+%How can one replicate the experiments?
+%Any relevant information and runtime howtos.
+\subsection{Execution}
+\subsection{Configuration}
+Configuration of our project is provided by \textit{JSON} files. A path to configuration can be passed by command argument. If path is not provided the default configuration is used. Possible fields and values are defined by \textit{JSON Schema} and they are described in the table below.
+
+\begin{center}
+\def\arraystretch{1.5}
+\begin{longtable}{ | m{13em} | m{5em} | m{3em}| m{19em}| } 
+ \hline
+ Field name & Type & Default Value & Description \\
+ \hline
+ \hline
+ *before-path & String & -- & Path to cloud before transformation. In documentation the terminology first point set is used. \\
+ \hline
+ *after-path & String & -- & Path to cloud that will be transformed by given parameters. In documentation the terminology second point set is used. Algorithms will try to match first to second point set. \\
+ \hline
+  & & & Selected algorithm. Possible values are: \\
+  *method & Enum & -- & \tabitem icp - Iterative Closest Point \\
+  & & & \tabitem nicp - Noniterative Closest Point \\
+  & & & \tabitem cpd - Coherent Point Drift \\
+ \hline
+  & & & Use sequential or parallel computations on cpu. Possible values are:\\
+ policy & Enum & parallel & \tabitem sequential \\
+  & & & \tabitem parallel \\
+  & & & Option works only with ICP and NICP. \\ 
+ \hline
+ scale & Number & $1.0$ & Scale of transformation. \\ 
+ \hline
+ translation & Array: Length $3$ & -- & Translation vector. \\ 
+ \hline
+ rotation & Array: Length $9$ & -- & Rotation Matrix in row-major order. \\ 
+ \hline
+ translation-range & Number & -- & \\ 
+ \hline
+ angle-range & Number & -- & \\ 
+ \hline
+ max-iterations & Integer & -- &  \\ 
+ \hline
+ cloud-before-resize & Integer & -- & If value is given the before cloud will be resized to this size omiting randomly selected points. If field is not present whole cloud will be used. \\ 
+ \hline
+ cloud-after-resize & Integer & -- & \\ 
+ \hline
+ cloud-spread & Number & -- & \\ 
+ \hline
+ random-seed & Integer & -- & \\ 
+ \hline
+ show-visualisation & Boolean & False & \\ 
+ \hline
+ max-distance-squared & Number & $1000.0$ & \\ 
+ \hline
+ approximation-type & Enum & hybrid & \\ 
+ \hline
+ nicp-batch-size & Number & $16$ & \\ 
+ \hline
+ nicp-iterations & Number & $32$ & \\ 
+ \hline
+ nicp-subcloud-size & Number & $1000$ & \\ 
+ \hline 
+ cpd-weight & Number & $0.3$ & \\ 
+ \hline
+ cpd-const-scale & Boolean & False & \\ 
+ \hline
+ cpd-tolerance & Number & $1e-3$ & \\ 
+ \hline
+ convergence-epsilon & Number & $1e-3$ & \\ 
+ \hline
+ noise-affected-points-before & Number & $0.0$ & \\ 
+ \hline
+ noise-affected-points-after & Number & $0.0$ & \\ 
+ \hline
+ noise-intensity-before & Number & $0.1$ & \\ 
+ \hline
+ noise-intensity-after & Number & $0.1$ & \\ 
+ \hline
+ additional-outliers-before & Integer & $0$ & \\ 
+ \hline
+ additional-outliers-after & Integer & $0$ & \\ 
+ \hline
+ \caption{Configuration}
+\end{longtable}
+\label{tab:configuration}
+\end{center}
+\textit{* - field is required}
+
+
+
+
+\subsection{GUI}
 
 \section{Description of the results}
 %Performance of the system for different input data/parameters.
