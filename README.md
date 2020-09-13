@@ -10,7 +10,7 @@
 - Coherent Point Drift
 
 ## Documentation
-For detailed project description compile [LaTeX documentation](doc/documentation.tex).
+https://github.com/Sliwson/cuda-slam/blob/master/doc/documentation.pdf
 
 ## Requirements
 - Windows 10 x64
