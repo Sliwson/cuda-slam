@@ -59,7 +59,7 @@ The report is devoted to a research of SLAM methods using CUDA technology. We wa
 
 \subsection{Theoretical background}
 \label{sec:theory}
-\textbf{Simultaneous localization and mapping} (in short SLAM) is the computational problem of constructing or updating a map of an unknown environment while simultaneously keeping track of an agent's location within it \cite{ms-wiki1}. In theory the problem can be simplified to more mathematical definition - given two point sets $P_1 = \{x_1,\dots, x_n\}$ and $P_2=\{y_1, \dots, y_n\}$ find translation $t$ and rotation $R$ that minimizes the mean square error:
+\textbf{Simultaneous localization and mapping} (in short SLAM) is the computational problem of constructing or updating a map of an unknown environment while simultaneously keeping track of an agent's location within it \cite{ms-wiki1}. In theory the problem can be simplified to more mathematical definition - given two point sets $P_1 = \{x_1,\dots, x_n\}$ and $P_2=\{y_1, \dots, y_n\}$ find translation $t$ and rotation $R$ that minimizes the mean squared error:
 $$MSE(R, t) = \frac{1}{N}\sum_{i=1}{N}(x_i - Ry_i - t)^2$$
 
 The reality, unfortunately, is much more complicated. Sizes of point sets might differ, clouds are unordered and noise points can occur.
@@ -90,7 +90,7 @@ The most widely described and most popular method for solving SLAM problem is It
 \item Determine corresponding points.
 \item Calculate translation and rotation using Singular Value Decomposition (in short SVD).
 \item Apply calculated rotation and translation to the point cloud.
-\item Compute Mean Squared Error.
+\item Compute the mean squared error.
 \item If error decreased and it is greater than given threshold repeat all the steps.
 \end{enumerate}
 
@@ -109,14 +109,14 @@ The idea of this algorithm can be described in the following points:
 Unfortunately, for permuted clouds of different sizes this method does not always converge. That is why one more step is necessary for those conditions:
 \begin{enumerate}
 \setcounter{enumi}{5}
-\item To increase convergence ratio, repeat those steps for multiple scans of observed object and select the transformation minimizing the mean square error (see section \ref{sec:theory}).
+\item To increase convergence ratio, repeat those steps for multiple scans of observed object and select the transformation minimizing the mean squared error.
 \end{enumerate}
 This step is indeed a huge improvement but it can be used with promising results only when the item is observed from multiple angles.\\
-Implementation described in this paper covers different approach - the copies of source and target clouds are created, each copy with differently permuted points. Transformations received by using steps from 1. to 5. can differ for various permutations, so the result is chosen among them based on the minimal value of mean square error, similarly to what is proposed in the original idea.
+Implementation described in this paper covers different approach - the copies of source and target clouds are created, each copy with differently permuted points. Transformations received by using steps from 1. to 5. can differ for various permutations, so the result is chosen among them based on the minimal value of the mean squared error, similarly to what is proposed in the original idea.
 
 \subsection{Coherent Point Drift}
 
-In this method alignment of two point sets is considered as a probability density estimation problem. One point set represents the Gaussian mixture model (GMM) centroids. The second one represents the data points. At the optimum, two point sets become aligned. Method uses Expectation Maximization (EM) algorithm to find scale, rotation matrix and translation vector.\\
+In this method, alignment of two point sets is considered as a probability density estimation problem. One point set represents the Gaussian mixture model (GMM) centroids. The second one represents the data points. At the optimum, two point sets become aligned. Method uses Expectation Maximization (EM) algorithm to find scale, rotation matrix and translation vector.\\
 Main idea of a coherent point drift algorithm can be presented in several steps:
 \begin{itemize}[label={}]
 \item E-step:
@@ -132,19 +132,19 @@ Main idea of a coherent point drift algorithm can be presented in several steps:
 \end{enumerate}
 \item Repeat E-step and M-step until convergence.
 \end{itemize}
-In order not to impair readability we decided to skip mathematical formulas in this schema. Fully detailed description and more information about coherent point drift can be found in article written by Andriy Myronenko and Xubo Song \cite{cpd}.\\
+In order not to impair readability we decided to skip mathematical formulas in this schema. Fully detailed description and more information about Coherent Point Drift can be found in article written by Andriy Myronenko and Xubo Song \cite{cpd}.\\
 The base version of the algorithm has multiple vulnerabilities, especially when it comes to computation time.
-For this reason many improvements are known and some of them have been implemented in our solution. Firstly the size of P matrix is $N \times M$, where $N$ is size of first point set and $M$ is size of second point set. It requires a lot of memory to keep matrix of this size, so instead we can calculate vectors: $P1$, $P^T 1$ and matrix $PX$, where $1$ is vector of all ones and $X$ is first point set. Using these vectors and matrix we can achieve the same result even faster because in calculations we had to multiply P matrix with ones vector and we have already done it.\\
-Secondly the main bottleneck of algorithm is the calculation of matrix-vector products $P1$, $P^T1$ and $PX$. This is done with $O(MN)$ complexity. The fast Gauss transform, introduced by Greengard and Strain \cite{fgt}, reduces complexity to only $O(M+N)$.
+For this reason many improvements are known and some of them have been implemented in our solution. Firstly the size of P matrix is $N \times M$, where $N$ is size of first point set and $M$ is size of second point set. It requires a lot of memory to keep matrix of this size, so instead we can calculate vectors: $P1$, $P^T 1$ and matrix $PX$, where $1$ is vector of all ones and $X$ is first point set. Using these vectors and matrix we can achieve the same result even faster because in calculations we had to multiply P matrix by the vector of ones and we have already done it.\\
+Secondly the main bottleneck of the algorithm is the calculation of matrix-vector products $P1$, $P^T1$ and $PX$. This is done with $O(MN)$ complexity. The Fast Gauss Transform, introduced by Greengard and Strain \cite{fgt}, reduces complexity to only $O(M+N)$.
 
 \section{Program architecture}
 %Short description on the modules of the system, requirements, dependencies, etc.
 \subsection{Project structure}
 The solution consists of three projects:
 \begin{itemize}
-\item \textit{common} - static library project, contains all elements that are shared between cpu and gpu implementations.
-\item \textit{cpu-slam} - executable project, contains implementation of slam methods for cpu and cpu main.
-\item \textit{gpu-slam} - executable project, contains implementation of slam methods for gpu and gpu main.
+\item \textit{common} - static library project, contains all elements that are shared between CPU and GPU implementations.
+\item \textit{cpu-slam} - executable project, contains implementation of slam methods for CPU and CPU entry point.
+\item \textit{gpu-slam} - executable project, contains implementation of slam methods for GPU and GPU entry point.
 \end{itemize}
 
 \subsection{Modules}
@@ -154,17 +154,17 @@ The project is constructed using several modules:
 \item \textit{CloudLoader} - implemented in \textit{common} project. Module responsible for loading .obj point clouds.
 \item \textit{Configuration} - implemented in \textit{common} project. Module representing configuration, tightly coupled with \textit{ConfigParser} which allows loading configuration from .json files.
 \item \textit{TestRunner} - implemented in \textit{common} project. Module used to define and run benchmarks.
-\item \textit{Algorithms} - implemented in \textit{cuda-slam} as well as \textit{cpu-slam}. Each algorithm is implemented in separate file as a global function in appropriate namespace. Some operations that are common for cpu as well as gpu are implemented in \textit{common} project.
+\item \textit{Algorithms} - implemented in \textit{cuda-slam} as well as in \textit{cpu-slam}. Each algorithm is implemented in a separate file as a global function in appropriate namespace. Some operations that are common for CPU as well as GPU are implemented in \textit{common} project.
 \end{itemize}
 
 \subsection{Dependencies}
 \begin{itemize}
 \item \textit{Assimp} - for cloud loading.
-\item \textit{Eigen} - for cpu matrix operations.
+\item \textit{Eigen} - for CPU matrix operations.
 \item \textit{Glad} - wrapper for OpenGL.
 \item \textit{GLFW} - for window system.
 \item \textit{Nlohmann/json} - for configuration parsing.
-\item \textit{cuBLAS}, \textit{cuSOLVER} - for gpu matrix operations.
+\item \textit{cuBLAS}, \textit{cuSOLVER} - for GPU matrix operations.
 \end{itemize}
 
 \section{Implementation details}
@@ -174,36 +174,36 @@ The project is constructed using several modules:
 %What obstacles have we met when implementing?
 %Why have we chosen to use that libraries
 \subsection{Common elements}
-All of the methods implemented in the scope of this project base to a greater or lesser extent on matrix operations, which have significant impact on computation times and quality of the results. The most important operation is a singular value decomposition (SVD). Apart from that, also large number of less complicated operations, for instance multiplication or addition, are needed. Unfortunately, there is no solid library offering all those functionalities both for CPU and GPU accelerated computations at the same time. For this reason we decided to choose three libraries allowing to receive satisfying results no matter what method is used:
+All of the methods implemented in the scope of this project base to a greater or lesser extent on matrix operations, which have significant impact on computation times and quality of the results. The most important operation is a singular value decomposition (SVD). Apart from that, also large number of less complicated operations, for instance multiplication or addition, are needed. Unfortunately, there is no solid library offering all those functionalities both for CPU and GPU accelerated computations at the same time. For this reason we decided to choose three libraries allowing to receive satisfying results no matter which method is used:
 \begin{itemize}
-\item \textit{Eigen} - widely recommended, fast and open source library for CPU matrix operations
-\item \textit{cuBLAS} and \textit{cuSOLVER} - library created and natively supported by Nvidia for GPU accelerated matrix operations using CUDA technology
-\item \textit{glm} - OpenGL Mathematics library used mainly for storing common parts like point clouds, vectors, transformation matrices and basic operations on them. This library is available also for both host and device managed code what allows to reuse some parts of it for CPU and GPU computations and at the same time simplifies visualising the results
+\item \textit{Eigen} - widely recommended, fast and open source library for CPU matrix operations.
+\item \textit{cuBLAS} and \textit{cuSOLVER} - libraries created and natively supported by Nvidia for GPU accelerated matrix operations using CUDA technology.
+\item \textit{glm} - OpenGL Mathematics library used mainly for storing common parts like point clouds, vectors, transformation matrices and basic operations on them. This library is available also for both host and device managed code what allows to reuse some parts of it for CPU and GPU computations and at the same time simplifies visualising the results.
 \end{itemize}
-It is worth clarifying that Eigen has implemented the partial support for CUDA kernels but this feature is still experimental and there are multiple known issues (for example with support for gcc or MS Visual Studio). Adding that to potential problems with performance, we decided not to use this library for GPU accelerated operations in order to maintain higher scalability and stability of the project.
+It is worth clarifying that Eigen implements the partial support for CUDA kernels but this feature is still experimental and there are multiple known issues (for example with support for gcc or MS Visual Studio). Adding that to potential problems with performance, we decided not to use this library for GPU accelerated operations in order to maintain higher scalability and stability of the project.
 
 \subsection{Iterative Closest Point}
-Because of the fact that for our research we have chosen the simplest method of finding corresponding points across the point sets, the algorithm benefits greatly from using GPU accelerated computations. Each GPU thread is associated with one point from the first cloud and finds the nearest one from the second cloud. It results in almost $100\%$ GPU occupancy and major improvement over CPU computations. Furthermore we used cuSOLVER Singular Value Decomposition although it does not offer as big performance leap as correspondences step.  
+Because of the fact, that for our research we have chosen the simplest method of finding corresponding points across the point sets, the algorithm benefits greatly from using GPU accelerated computations. Each GPU thread is associated with one point from the first cloud and finds the nearest one from the second cloud. It results in almost $100\%$ GPU occupancy and major improvement over CPU computations. Furthermore we used cuSOLVER's singular value decomposition although it does not offer as big performance leap as correspondences step.  
 
-\subsection{Non-iterative closest point}
-The non-iterative algorithm does not offer too many ways to benefit from parallel CUDA operations. For that reason the most natural path for parallelizing the code is to run SVDs for multiple permutations of source and target clouds on parallel. Unfortunately, natively supported solution from cuSOLVER library - so called "batched SVD" is not an option due to limitations for decomposed matrices size (it cannot be greater than 32 x 32 which corresponds point clouds of 32 points). For that reason another solution has been developed - matrices are decomposed by separate threads in batches of configured size. Implementing this solution also brought multiple issues and the following attempts to obtain expected results can be broken down into several stages:
+\subsection{Non-iterative Closest Point}
+The non-iterative algorithm does not offer too many ways to benefit from parallel CUDA operations. For that reason the most natural path for parallelising the code is to run SVDs for multiple permutations of source and target clouds on parallel. Unfortunately, natively supported solution from cuSOLVER library - so called "batched SVD" is not an option due to limitations for decomposed matrices size (it cannot be greater than 32 x 32 which corresponds point clouds of 32 points). For that reason another solution has been developed - matrices are decomposed by separate threads in batches of configured size. Implementing this solution also brought multiple issues and attempts to obtain expected results can be broken down into several stages:
 \begin{enumerate}
 \item Running SVD from separate CPU threads - although the SVD methods from cuSOLVER are marked "thread-safe", running them in parallel as CPU threads leaded to memory access violation and program randomly crashed every few times.
 \item Running SVD from one CPU thread with separate CUDA streams used for each decomposition - by using this method problems with memory access have been solved, but profiling the application showed that streams run sequentially which is not the result expected.
 \item Using separate CPU threads for running decompositions using separate CUDA streams - this method combined the advantages of both approaches, giving truly parallel execution of device managed code, at the same time providing higher parallelization level due to limiting the number of concurrent operations by number of GPU streams instead of CPU threads.
 \end{enumerate}
 
-Apart from parallel and sequential variants of Non-iterative Closes Point algorithm, also three different approximation types have been implemented for this method:
+Apart from parallel and sequential variants of Non-iterative Closest Point algorithm, also three different approximation types have been implemented for this method:
 \begin{enumerate}
-\item \textbf{Full} - to avoid finding corresponding points in each algorithm run, this approximation type bases the error calculation on distance between two points with the same indexes in both clouds. It offers promising results with fast calculations for insufficiently permuted clouds but otherwise the error approximation might differ from actual one and for this reason returned result might not be the best.
-\item \textbf{None} - after each repetition, error is calculated by finding correspondences between subcloud of given size taken from first cloud and the entire second cloud. This method offers higher reliability but instead increases the execution time of one iteration noticeably, especially using CPU.
-\item \textbf{Hybrid} - error for each run is calculated the same way as using when using full approximation but 5 best results are stored and the error is recalculated for those in the same as when using none as approximation type (with finding correspondences). Then, the one with the smallest error is returned as an actual result.
+\item \textbf{Full} - to avoid finding corresponding points in each algorithm run, this approximation type bases the error calculation on distance between two points with the same indices in both clouds. It offers promising results with fast calculations for insufficiently permuted clouds but otherwise the error approximation might differ from actual one and for this reason returned result might not be the best.
+\item \textbf{None} - after each repetition, error is calculated by finding correspondences between subcloud of given size taken from the first cloud and the entire second cloud. This method offers higher reliability but instead increases the execution time of one iteration noticeably, especially using CPU.
+\item \textbf{Hybrid} - error for each run is calculated the same way as when using full approximation but five best results are stored and the error is recalculated for those in the same way as when using none as approximation type (with finding correspondences). Then, the one with the smallest error is returned as an actual result.
 \end{enumerate}
 
-\subsection{Coherent point drift}
+\subsection{Coherent Point Drift}
 
-CPU solution of coherent point drift is based on algorithm description described in \cite{cpd}. It also uses Matlab code provided by authors as an example how some technical details were handled. FGT algorithm implementation is based on Matlab implementation available here \cite{fgtmatlab}.
-Parallelized solution using GPU acceleration mainly focuses on matrices multiplication using cuBLAS and using thrust whenever possible. FGT algorithm was not implemented on GPU due to complexity of this solution and lack of reliable external implementation.
+CPU solution of a Coherent Point Drift is based on algorithm described in \cite{cpd}. It also uses Matlab code provided by authors as an example of how some technical details were handled. FGT algorithm implementation is based on Matlab sample available in \cite{fgtmatlab}.
+Parallelised solution using GPU acceleration mainly focuses on matrices multiplication using cuBLAS and utilizing thrust. FGT algorithm was not implemented on GPU due to complexity of this solution and lack of reliable external sources.
 
 Three different approximation types have been implemented for this method:
 \begin{enumerate}
@@ -212,14 +212,12 @@ Three different approximation types have been implemented for this method:
 \item \textbf{Hybrid} - FGT is used only when error is above certain level.
 \end{enumerate}
 
-\subsubsection{Parameters}
-
 \section{Input data description}
 %File formats, api used to read, dependencies, data sources, etc.
 %Is there any institution providing the input data?
 %References to public databases.
 
-As we wanted to keep the input simple we decided to use .obj files as the point clouds. It is easy to find multiple different models in this format which allowed us to test the algorithms on multiple distinctive samples. Furthermore, one can edit .obj files using for example \textit{Blender} to add noise or even cut off part of the cloud. We found that method most convenient to simulate real life conditions as 3D scanners data has to be processed using methods that are beyond the scope of our work.
+As we wanted to keep the input simple we decided to use .obj files as the point clouds. It is easy to find interesting models in this format which allowed us to test the algorithms on multiple distinctive samples. Furthermore, one can edit .obj files using tools (for example \textit{Blender}) to add noise or even cut off a part of the cloud. We found that method most convenient to simulate real life conditions as 3D scanners data has to be processed using methods that are beyond the scope of our work.
 
 \begin{figure}[H]
 \includegraphics[width=\textwidth]{ms-bunny.png}
@@ -230,17 +228,17 @@ As we wanted to keep the input simple we decided to use .obj files as the point 
 %How can one replicate the experiments?
 %Any relevant information and runtime howtos.
 \subsection{Execution}
-Currently the only supported operating system is Windows and the Visual Studio environment as a development tool. All the requested libraries are included in the solution folder and the application should be able to run out of the box on supported environments with Cuda Toolkit 10.2 and common C++ libraries. Necessary configuration files and schemas for config files are attached as well. Each executable (for both CPU and GPU implementations) are supposed to handle 0 or 1 command line parameters with following results:
+Currently the only supported operating system is Windows and the Visual Studio environment as a development tool. All the requested libraries are included in the solution folder and the application should be able to run out of the box on supported environments with Cuda Toolkit 10.2 and common C++ libraries. Necessary configuration files and schemas for config files are attached as well. Each executable (for both CPU and GPU implementations) is supposed to handle 0 or 1 command line parameters with following results:
 \begin{itemize}
-\item No parameters - load config from default.json
-\item One parameter (config file name) - load config from given file
+\item No parameters - load config from default.json.
+\item One parameter (config file name) - load config from the given file.
 \begin{figure}[H]
 \includegraphics[width=\textwidth]{ss-exec.png}
 \caption{Execution example with given config file}
 \end{figure}
 \end{itemize} 
 
-Support for Linux systems and other development tools are some of the areas of improvement for the future. Porting, however, is not supposed to be an issue. But due to multiple dependencies between used libraries we decided not to focus on it in development phase as it is not the point of this research.
+Support for Linux systems and other development tools are some of the areas of improvement for the future. Porting, however, is not supposed to be an issue. But due to multiple dependencies between used libraries we decided not to focus on it during development phase as it is not the point of this research.
 
 \subsection{Configuration}
 Possible fields and values for config files are defined by \textit{JSON Schema} and they are described in the table below.
@@ -252,12 +250,12 @@ Possible fields and values for config files are defined by \textit{JSON Schema} 
  Field name & Type & Default Value & Description \\
  \hline
  \hline
- *before-path & String & -- & Path to the first point set (also called "cloud before") representing object before transformation. \\
+ before-path$^{*}$ & String & -- & Path to the first point set (also called "cloud before") representing object before transformation. \\
  \hline
- *after-path & String & -- & Path to the second point set (also called "cloud after") representing object after transformation. This cloud is to be modified by applying scale, transformation and rotation values mentioned below. \\
+ after-path$^{*}$ & String & -- & Path to the second point set (also called "cloud after") representing object after transformation. This cloud is to be modified by applying scale, transformation and rotation values mentioned below. \\
  \hline
   & & & Selected algorithm. Possible values are: \\
-  *method & Enum & -- & \tabitem icp - Iterative Closest Point \\
+  method$^{*}$ & Enum & -- & \tabitem icp - Iterative Closest Point \\
   & & & \tabitem nicp - Non-iterative Closest Point \\
   & & & \tabitem cpd - Coherent Point Drift \\
  \hline
@@ -318,9 +316,9 @@ Possible fields and values for config files are defined by \textit{JSON Schema} 
  \hline
  additional-outliers-after & Integer & $0$ & Number of randomly generated points added into the second point set. \\ 
  \hline
- fgt-ratio-of-far-field & Number & $10.0$ & Ratio of far field used in Fast Gauss Transform. Applies only to Coherent Point Drift algorithm with hybrid or full approximation. \\ 
+ fgt-ratio-of-far-field & Number & $10.0$ & Ratio of far field used in Fast Gauss Transform. Applies only to a Coherent Point Drift algorithm with hybrid or full approximation. \\ 
  \hline
- fgt-order-of-truncation & Integer & $8$ & Order of truncation used in Fast Gauss Transform. Applies only to Coherent Point Drift algorithm with hybrid or full approximation. \\ 
+ fgt-order-of-truncation & Integer & $8$ & Order of truncation used in Fast Gauss Transform. Applies only to a Coherent Point Drift algorithm with hybrid or full approximation. \\ 
  \hline
  \caption{Configuration}
 \end{longtable}
@@ -329,7 +327,7 @@ Possible fields and values for config files are defined by \textit{JSON Schema} 
 \textit{* - field is required}
 
 \subsection{GUI}
-Both GPU and CPU programs implement the possibility to display visualisation of point clouds using OpenGL. By default, the window display three cloud sizes of different color:
+Both GPU and CPU programs implement the possibility to display visualisation of point clouds utilizing OpenGL. By default, the window display three cloud sizes of different colors:
 \begin{itemize}
 \item Red - the first point set (also called "cloud before")
 \item Green - the second point set (also called "cloud after")
@@ -362,7 +360,7 @@ The visualisation window also supports some basic user control. All the possible
  \hline
  3 & Toggle visibility of the transformed point set. \\
  \hline
- 4 & Toggle visibility of the (0,0) point. \\
+ 4 & Toggle visibility of the (0,0,0) point. \\
  \hline
  [ & Reduce the point size. \\
  \hline
@@ -396,27 +394,27 @@ Different point clouds were used depending on test size:
 \item $376402 - 1375028$ points - \textit{airbus.obj}
 \end{itemize}
 
-To achieve a reasonable rate of convergence we decided to test the clouds without any noise and outliers. We used transformation with $0.2\: rad$ rotation and translation with magnitude of $10$ units for clouds of size bounded by cube with an edge which length equals $10$ units. It is worth noting that the times presented on the charts contains resource allocation and release.
+To achieve a reasonable rate of convergence we decided to test the clouds without any noise and outliers. We used transformation with $0.2\: rad$ rotation and translation with magnitude of $10$ units for clouds with spread equal to $10$ units. It is worth noting, that the times presented on the charts contains resource allocation and release.
 
 \subsubsection{Iterative Closest Point}
-For Iterative Closest Point method we run benchmarks using one-threaded CPU solution, multi-threaded CPU solution and CUDA-accelerated solution. On the charts a single iteration time is presented because different runs result in different iterations count which makes the results hard to interpret. The results are presented using logarithmic scale as the differences between variants of the algorithm are significant.
+For Iterative Closest Point method we run benchmarks using one-threaded CPU solution, multi-threaded CPU solution and CUDA-accelerated solution. On the charts, a single iteration time is presented because different runs result in different iterations count which makes the results hard to interpret. The results are presented using logarithmic scale as the differences between variants of the algorithm are significant.
 
 \begin{figure}[H]
 \includegraphics[width=\textwidth]{ms-icp-1.png}
 \caption{Results of the benchmark for CPU Parallel, CPU Sequential and GPU implementations of the ICP method}
 \end{figure} 
 
-As we can see, the benchmarks prove the expectations and parallelization of the ICP algorithm results in big performance improvements. Having iteration time lower than 100ms for clouds with size of $100000$ points more tests could be run for the GPU implementation.
+As we can see, the benchmarks prove the expectations and parallelisation of the ICP algorithm results in big performance improvements. Having iteration time lower than $100\:ms$ for clouds with size of $100000$ points more tests could be run for the GPU implementation.
 
 \begin{figure}[H]
 \includegraphics[width=\textwidth]{ms-icp-2.png}
 \caption{Results of the benchmark for GPU implementation of the ICP method}
 \end{figure}
 
-Even for clouds with size over $1000000$ points one iteration lasts less than 10s which is a reasonable amount. The benchmarks show that the CUDA-accelerated solution is a perfect choice when utilizing the ICP algorithm.
+Even for clouds with size over $1000000$ points, one iteration lasts less than $10\:s$ which is a reasonable amount. The benchmarks show that the CUDA-accelerated solution is a perfect choice when utilizing the ICP algorithm.
 
-\subsubsection{Non-iterative closest point}
-Non-iterative closest point method is performance-wisely a truly interesting one. We expect it to be the fastest because it requires only matrix multiplication and singular matrix decomposition. To avoid an overwhelming amount of information on one chart we split comparisons to separate ones. Because only setting approximation mode to \textit{None} results in a different iteration count in each run we present benchmarks for the whole runs, not single iterations as in ICP section. The maximum iterations parameter is set to $64$, batch size to $16$ and subcloud size to $1000$. We found normal scale on y axis the most suitable to present the results.
+\subsubsection{Non-iterative Closest Point}
+Non-iterative Closest Point method is performance-wisely a truly interesting one. We expect it to be the fastest because it requires only matrix multiplication and singular matrix decomposition. To avoid an overwhelming amount of information on one chart we split comparisons to separate ones. Because only setting approximation mode to \textit{None} results in a different iteration count in each run we present benchmarks for the whole runs, not single iterations as in ICP section. The maximum iterations parameter is set to $64$, batch size to $16$ and subcloud size to $1000$. We found normal scale on y axis the most suitable to present the results.
 
 \begin{figure}[H]
 \includegraphics[width=\textwidth]{ms-nicp-1.png}
@@ -445,7 +443,7 @@ To the benchmark comparing the GPU and CPU implementations we chose the most per
 \subsubsection{Coherent Point Drift}
 Coherent Point Drift algorithm was the hardest to implement and it is certainly the most complicated considering the scope of our research. Therefore we do not expect CUDA solution to bring significant improvement in this case.
 
-For the performance tests \textit{weight} parameter was set to $0.1$ and \textit{const-scale} to $false$. The other parameters were the same as in other benchmarks. We present the results using logarithmic scale on y axis. Similarly to Non-iterative Closest Point benchmarks we compare three approximation types, this time approximations relying on using Fast Gauss Transform.
+For the performance tests \textit{cpd-weight} parameter was set to $0.1$ and \textit{const-scale} to $false$. The other parameters were the same as in the other benchmarks. We present the results using logarithmic scale on y axis. Similarly to Non-iterative Closest Point benchmarks we compare three approximation types, this time approximations relying on using Fast Gauss Transform.
 
 \begin{figure}[H]
 \includegraphics[width=\textwidth]{ms-cpd-1.png}
@@ -473,13 +471,13 @@ To sum up the section describing execution times, we gathered all the methods be
 \caption{Comparison of all methods execution times}
 \end{figure}
 
-As we can see the execution times differ vastly depending on method and execution policy. We are satisfied with the results especially for Iterative Closest Point and Non-iterative Closest Point methods because we managed to significantly improve the performance by utilizing CUDA library. Therefore, these two methods would be the best choice if time is the most important factor while utilizing SLAM. Coherent Point Drift was expected to be the slowest of the all methods due to its sophistication. However its CPU implementation using Fast Gauss Transform occurred to be faster than ICP CPU variant and it is usable even for clouds with considerable sizes.
+As we can see the execution times differ vastly depending on method and execution policy. We are satisfied with the results especially for Iterative Closest Point and Non-iterative Closest Point methods because we managed to significantly improve the performance by utilizing CUDA library. Therefore, these two methods would be the best choice if time is the most important factor while utilizing SLAM. Coherent Point Drift was expected to be the slowest of all the methods due to its sophistication. However its CPU implementation using Fast Gauss Transform occurred to be faster than ICP CPU variant and it is usable even for clouds with considerable sizes.
 
 \subsection{Noise and outliers tolerance}
-We tested our methods using the clouds and conditions that may be closer to reality. That is, we used clouds that are missing points, even large part of them, and we corrupted clouds by noise and outliers. For this purpose we have used CPU versions of algorithms. For ICP and NICP \textit{policy} was set to \textit{parallel} and \textit{approximation-type} to \textit{none}. For CPD \textit{approximation-type} was set to \textit{hybrid}, mainly to achieve faster computation times. Many tests were conducted and it turned out that results are highly dependent on configuration. Therefore, in this section you can find the most interesting results and tests that have shown the most consistent characteristics. All results are available in spreadsheet kept on Github: \href{https://github.com/Sliwson/cuda-slam/tree/cpd-documentation/doc/noise}{https://github.com/Sliwson/cuda-slam/tree/cpd-documentation/doc/noise}. All the test configurations are to be found in directory \textit{config} of the Github repository. \\
-After testing we came to several conclusions. Firstly, the ICP algorithm gave the worst results for almost all test sets. The main reason can be cloud sizes used in tests, which occurred to be often too big for ICP capabilities. Algorithm had also trouble with noise. Even low noise level such as \textit{noise-affected-points-before}$=0.1$ and \textit{noise-intensity-before}$=0.05$ may cause convergence failure. Secondly, increasing \textit{max-iterations} can help achieving more exact results.\\
-CPD algorithm mostly achieved correct results. Main key to CPD convergence is to select parameters value correctly. The most important one is \textit{cpd-weight} which describes how many points are noise and outliers. Difference of $0.3$ can lead to significantly different result. Second CPD parameter is \textit{cpd-const-scale}. Setting it to \textit{true} may help achieving better results when we know that the scale did not change after transformation. Especially it helps when clouds contain a lot of noise and outliers. Also, decresing \textit{cpd-tolerance} and \textit{converge-epsilon} (the latter applies also to ICP and NICP) may result in increasing iterations count and lead to more exact result.\\
-All algorithms had tendency to match areas where the points density was the highest. An example of this behavior may be observed using \textit{config21.json}. It uses two "airbus" clouds with decreased sizes and added noise and outliers. Result achieved by algorithms are presented below and vary among each other.
+We tested our methods using the clouds and conditions that may be closer to reality. That is, we used clouds that are missing points, even large part of them, and we corrupted clouds by noise and outliers. For this purpose we have used CPU versions of algorithms. For ICP and NICP \textit{policy} was set to \textit{parallel} and \textit{approximation-type} to \textit{None}. For CPD \textit{approximation-type} was set to \textit{Hybrid}, mainly to achieve lower computation times. Many tests were conducted and it turned out that the results are highly dependent on configuration. Therefore, in this section you can find the most interesting results and tests that have shown the most consistent characteristics. All the results are available in spreadsheet kept on Github: \href{https://github.com/Sliwson/cuda-slam/tree/master/doc/noise}{https://github.com/Sliwson/cuda-slam/tree/master/doc/noise}. All the test configurations are to be found in a subdirectory \textit{configs}. \\
+After testing, we came to several conclusions. Firstly, the ICP algorithm gave the worst results for almost all the test sets. The main reason could be cloud sizes used in tests, which occurred to be often too big for ICP capabilities. Algorithm had also trouble with noise. Even low noise level such as \textit{noise-affected-points-before} equal to $0.1$ and \textit{noise-intensity-before} equal to $0.05$ may cause convergence failure. Secondly, increasing \textit{max-iterations} can help achieving more exact results.\\
+CPD algorithm mostly achieved correct results. Main key to CPD convergence is to select parameters value correctly. The most important one is \textit{cpd-weight}. Difference of $0.3$ can lead to significantly different result. Second CPD parameter is \textit{cpd-const-scale}. Setting it to \textit{true} may help to achieve better results when we know that the scale did not change after transformation. Especially it helps when clouds contain a lot of noise and outliers. Also, decreasing \textit{cpd-tolerance} and \textit{converge-epsilon} may result in increasing iterations count and lead to more exact results.\\
+All the algorithms had tendency to match areas where the points density was the highest. An example of this behaviour may be observed using \textit{config21.json}. It uses two "airbus" clouds with decreased sizes and added noise and outliers. Result achieved by algorithms are presented below and vary among each other.
 
 \begin{figure}[H]
 	\centering
@@ -491,7 +489,7 @@ All algorithms had tendency to match areas where the points density was the high
     \caption{Tests with \textit{config21.json}}
 \end{figure}
 
-The ICP did not manage to converge in this example but result achieved by CPD is interesting. Algorithm connected wheels and engines of both airplanes. Feasibly that is because those are areas with the highest point density in the entire cloud. NICP returned exact transformation.
+The ICP did not manage to converge in this example but the result achieved by CPD is interesting. Algorithm connected wheels and engines of both the airplanes. Feasibly, that is because those are areas with the highest point density in the entire cloud. NICP returned the exact transformation.
 
 Similar situation was met using \textit{config11.json} and \textit{config18.json}. Unfortunately in tests using the latter one, ICP returned identity matrix. The results are presented below.
 
@@ -513,9 +511,9 @@ Similar situation was met using \textit{config11.json} and \textit{config18.json
     \caption{Tests with \textit{config18.json}}
 \end{figure}
 
-In contrary to \textit{config18.json} and \textit{config21.json}, using \textit{config11.json} CPD found almost exact solution while this time NICP focused on matching areas with highest density.
+In contrary to \textit{config18.json} and \textit{config21.json}, using \textit{config11.json} CPD found almost exact solution while this time NICP focused on matching areas with the highest density.
 
-Another example of CPD accuracy in tough conditions can be found when using \textit{config26.json}. We used two "airbus" clouds where first had no wheels, engines and vertical stabilizer. The second one had wings and wheels cut. Also we have added noise and outliers to both clouds. Results are presented below.
+Another example of CPD accuracy in tough conditions can be observed when using \textit{config26.json}. We used two "airbus" clouds where first had no wheels, engines and a vertical stabilizer. The second one had wings and wheels cut. Also we have added noise and outliers to both clouds. Results are presented below.
 
 \begin{figure}[H]
 	\centering
@@ -529,7 +527,7 @@ Another example of CPD accuracy in tough conditions can be found when using \tex
 
 CPD found the exact solution. As mentioned above, ICP has troubles with incomplete clouds and it remains unchanged with this configuration. NICP was close to finding exact solution; however, it lacks of $90\degree$ rotation.
 
-Finally we made test that only focus on situation where one cloud contains noise. We increased the \textit{noise-intensity} by small values and compared the results. The best method occurred to be NICP, CPD was the second and ICP was the third one. For these tests, the configurations \textit{config28.json} to \textit{config38} were used. Results are presented below.
+Finally, we prepared a test that focuses only on a situation where one cloud contains noise. We increased the \textit{noise-intensity} by small values and compared the results. The best method occurred to be NICP, CPD was the second and ICP was the third one. For those tests, the configurations \textit{config28.json} to \textit{config38.json} were used. Results are presented below.
 
 \begin{figure}[H]
 	\centering
@@ -571,18 +569,18 @@ Finally we made test that only focus on situation where one cloud contains noise
     \caption{Tests with \textit{config38.json}}
 \end{figure}
 
-NICP managed to find the exact solution in all test cases. Results obtained by CPD were slightly worse and sometimes correction of \textit{cpd-weight} parameter was needed. ICP results started to differ even when \textit{noise-intensity} was still very small, thus its usage when conditions are not perfect is very limited.
+NICP managed to find the exact solution in all the test cases. Results obtained by CPD were slightly worse and sometimes correction of \textit{cpd-weight} parameter was needed. ICP results started to differ even when \textit{noise-intensity} was still very small, thus its usage when conditions are not perfect is very limited.
 
-To sum up the best algorithms for clouds with noises and outliers are NICP and CPD. In this situation, it is also worth mentioning that NICP was significantly faster than CPD in all the tests covered in this section.
+To sum up, the best algorithms for clouds with noises and outliers are NICP and CPD. In this situation, it is also worth mentioning that NICP was significantly faster than CPD in all the tests covered in this section.
 
 \subsection{Convergence ranges}
 
 \subsubsection{Introduction}
-Another topic for discussion when it comes to methods' usability is a quality of their results. This section covers convergence rates for all the algorithms, depending on cloud sizes, rotation and translation. Another parameters are same for all the tests, including cloud spread equal to $10$. For all the methods, both GPU and CPU implementations, tests have covered three different translation ranges: 10, 20 and 30 units and three different rotation ranges: 0.2, 0.4 and 0.6 radians, which are equal to 11.5\degree, 22.9\degree and 34.4\degree respectively.
+Another topic for a discussion when it comes to methods' usability is a quality of their results. This section covers convergence rates for all the algorithms, depending on cloud sizes, rotation and translation. Another parameters are same for all the tests, including cloud spread equal to $10$. For all the methods, both GPU and CPU implementations, tests have covered three different translation ranges: 10, 20 and 30 units and three different rotation ranges: 0.2, 0.4 and 0.6 radians, which are equal to 11.5\degree, 22.9\degree and 34.4\degree respectively.
 
-Based on the performance results from previous sections, cloud sizes have been chosen separately for each method and they differ significantly from each other, but remain the same between GPU and CPU implementation of a specific method. It is also worth noting that for methods with multiple approximation types, only one type is chosen for tests and the decision is described in the section focusing on specific method.
+Based on the performance results from previous sections, cloud sizes have been chosen separately for each method and they differ significantly from each other, but remain the same between GPU and CPU implementation of a specific method. It is also worth noting that for methods with multiple approximation types, only one type is chosen for the tests and the decision is described in the section focusing on a specific method.
 
-\subsubsection{Iterative closest point}
+\subsubsection{Iterative Closest Point}
 In case of an ICP, convergence rates are deeply correlated with a maximum number of iterations the algorithm runs. And this turns out to be the main drawback of this method. In order to compare methods most fairly, we had to limit the iterations in a way that keeps computation times close to the other methods. At the same time, we needed to keep similar parameters for both CPU and GPU implementation and for this reason iterations have been limited by $100$. Cloud sizes have been chosen from range $[20000,100000]$ which positions ICP in the middle of the road between CPD and Non-iterative Closest Point.
 
 Unfortunately, it is noticeable from the chart below that for large clouds, convergence rate falls dramatically. It is caused mainly by limiting the iterations mentioned above. In most of the test cases, the error in consecutive iterations tended to fall down, but the dynamics of changes did not allow the algorithm to converge in acceptable time.
@@ -602,71 +600,71 @@ The differences between GPU and CPU computations are not that evident if we comp
 \end{figure}
 Summarizing the convergence tests for an ICP algorithm, the method does not show great differences between convergence rate based on translation and rotation, but the rates are in all the cases rather low. The method's advantage is the possibility of significantly improving the results by increasing the number of allowed iterations. In most of the test cases, it was this limitation, not the maximum error what caused the computations to stop.
 
-\subsubsection{Non-iterative closest point}
+\subsubsection{Non-iterative Closest Point}
 Non-iterative closest point method is the first one for which different approximation types have been implemented. However, the execution times proved that only one type is worth using in general cases. For this reason, the "None" type is used in all convergence tests, as it not only gives the most accurate results, but it also offers execution time unsurpassed by other methods.
 
-Performance tests for proposed implementation showed as well that substantial cloud sizes are not an obstacle for a Non-iterative Closest Point algorithm and because of that, the sizes used in the convergence tests vary between 250000 and 1250000. Nevertheless, execution times are still lower than for the other algorithms.
+Performance tests for proposed implementation showed as well that substantial cloud sizes are not an obstacle for a Non-iterative Closest Point algorithm and because of that, the sizes used in the convergence tests vary between $250000$ and $1250000$. Nevertheless, execution times are still lower than for the other algorithms.
 
-Not only the cloud sizes and execution times are surpassing other methods, but convergence rates show similar tendency. The overall convergence rate for non-iterative method was equal to 1.0 for GPU implementation and 0.99 for CPU. The impact of specific parameters on the results is displayed on charts below.
+Not only are the cloud sizes and execution times surpassing other methods, but also the convergence rates show similar tendency. The overall convergence rate for non-iterative method was equal to 1.0 for GPU implementation and 0.99 for CPU. The impact of specific parameters on the results is displayed on charts below.
 \begin{figure}[H]
 \includegraphics[width=\textwidth]{ss-nicp-1.png}
-\caption{Convergance rates for a non-iterative closest point matching depending on cloud size}
+\caption{Convergance rates for a Non-iterative Closest Point matching depending on cloud size}
 \end{figure}
 \begin{figure}[H]
 \includegraphics[width=\textwidth]{ss-nicp-2.png}
-\caption{Convergance rates for a non-iterative closest point matching depending on translation}
+\caption{Convergance rates for a Non-iterative Closest Point matching depending on translation}
 \end{figure}
 \begin{figure}[H]
 \includegraphics[width=\textwidth]{ss-nicp-3.png}
-\caption{Convergance rates for a non-iterative closest point matching depending on rotation}
+\caption{Convergance rates for a Non-iterative Closest Point matching depending on rotation}
 \end{figure}
-The slim disparity between the two variants of implemented method are most likely caused by precision of CPU and GPU matrix operations which strengthens the hypothesis put forward while analysing the ICP algorithm. However, in this case the differences are not so grand which can be caused by reduced number of matrix operation and therefore less error propagation.
+The slim disparity between the two variants of a implemented method are most likely caused by precision of CPU and GPU matrix operations which strengthens the hypothesis put forward while analysing the ICP algorithm. However, in this case the differences are not so grand which can be caused by reduced number of matrix operation and therefore less error propagation.
 
-\subsubsection{Coherent point drift}
-Coherent point drift is another method parametrized by approximation type it uses. In this case, we decided to pick the hybrid variant, guided mainly by performance results and the fact that improvements done by implementing Fast Gauss Transform have no impact on convergence rate. All above make hybrid approximation the most competitive version out of all three implemented.
+\subsubsection{Coherent Point Drift}
+Coherent Point Drift is another method parametrized by approximation type it uses. In this case, we decided to pick the hybrid variant, guided mainly by performance results and the fact that improvements done by implementing Fast Gauss Transform have no impact on convergence rate. All above make hybrid approximation the most competitive version out of all three implemented.
 
-However, the run times of CPD algorithm are still far lower than for other methods and for that reason cloud sizes chosen are significantly lower being in the range $[4000, 20000]$, still offering the longest computation time. On the other hand, convergence rates are much more competitive comparing to the results of ICP for computations in comparable time.
+However, the run times of CPD algorithm are still far higher than for the other methods and for that reason, cloud sizes chosen are significantly lower being in range $[4000, 20000]$, still offering the longest computation time. On the other hand, convergence rates are much more competitive comparing to the results of ICP for computations in comparable time.
 \begin{figure}[H]
 \includegraphics[width=\textwidth]{ss-cpd-1.png}
-\caption{Convergence rates for a non-iterative closest point matching depending on cloud size}
+\caption{Convergence rates for a Coherent Point Drift depending on cloud size}
 \end{figure}
 Nevertheless, the convergence rates of CPU algorithm reveal a trend towards a drastic decline for larger clouds. It is noticeable that for objects of size above 16000 points, rate is even lower than 0.5 when the GPU implementation keeps the results perfectly matched.
 This seems to be the case also for increasing translation between clouds. This time the differences are not so grand though.
 \begin{figure}[H]
 \includegraphics[width=\textwidth]{ss-cpd-2.png}
-\caption{Convergence rates for a non-iterative closest point matching depending on translation}
+\caption{Convergence rates for a Coherent Point Drift depending on translation}
 \end{figure}
-Modifying rotation of target cloud, the phenomenon described above seems to completely disappear. What is more, larger rotation results in higher convergence rate of tested algorithm but differences between them are significantly lower.
+Modifying a rotation of target cloud, the phenomenon described above seems to completely disappear. What is more, larger rotation results in higher convergence rate of tested algorithm but differences between them are significantly lower.
 \begin{figure}[H]
 \includegraphics[width=\textwidth]{ss-cpd-3.png}
-\caption{Convergence rates for a non-iterative closest point matching depending on rotation}
+\caption{Convergence rates for a Coherent Point Drift depending on rotation}
 \end{figure}
 Summarizing the convergence of implemented CPD algorithms, we strongly encourage to use GPU version rather than CPU. Even tough computation times can be greater, convergence rate is then kept on similar and very high level above 0.9. This method is also the only one that can match scaled clouds which makes it more universal. 
 
 Once again, CPU implementation gives far worse results than the GPU one. For this method that might be caused by using operations on large matrices not only for SVD but also for a multiplication.
 
 \subsubsection{Methods comparison}
-To sum up the convergence tests, the average rate for all tests have been calculated for each method, with division to GPU and CPU implementation. Based on that, it is easier to visualise the results that were already mentioned in all the section. 
+To sum up the convergence tests, the average rate for all tests have been calculated for each method, with division to GPU and CPU implementation. Based on that, it is easier to visualise the results that were already mentioned in all the sections. 
 \begin{figure}[H]
 \includegraphics[width=\textwidth]{ss-all.png}
 \caption{Comparison of all algorithms convergence rates}
 \end{figure}
 And once again it is clear that CPD and Non-iterative closest point methods are a lot more accurate when it comes to finding transformation between two point sets.
 
-Another conclusion is that CPU implementation of complicated matrix operations is significantly inferior to the one accelerated by GPU. It might be the case only for the two libraries that were used in this project, however it is worth noting that the CPU library is known for its precision.
+Another conclusion is that CPU implementation of complicated matrix operations is significantly inferior to the one accelerated by GPU. It might be the case only for the two libraries that were used in this project, however the CPU library we used is most widely recommended.
 
 \section{Future works}
 %What do we want to do in future, improvements.
 
 \subsection{Iterative Closest Point}
-We implemented a solid ground base for development of ICP algorithm. There are a lot of ways it can be improved but the most important would be enhancing performance of correspondences step as it is critical for the whole method execution time.
+We implemented a solid ground base for development of and ICP algorithm. There are a lot of ways it can be improved but the most important would be enhancing performance of correspondences step as it is crucial for the whole method execution time.
 
 \subsection{Coherent Point Drift}
-We implemented whole rigid part of the algorithm on cpu, including FGT. Unfortunately FGT was not implemented on GPU as mentioned in \textit{\ref{sec:ImplementationDetails}. \nameref{sec:ImplementationDetails}}. This is main area of future improvement for GPU solution. Coherent Point Drift also has affine and non-rigid versions that are worth mentioning. There were not implemented because it reaches beyond the scope of our project. Future works can mainly focus on improving GPU solution and moving to non-rigid transformations.
+We implemented whole rigid part of the algorithm on CPU, including FGT. Unfortunately FGT was not implemented on GPU as mentioned in \textit{\ref{sec:ImplementationDetails}. \nameref{sec:ImplementationDetails}}. This is main area of future improvement for GPU solution. Coherent Point Drift also has affine and non-rigid versions that are worth mentioning. There were not implemented because it reaches beyond the scope of our project. Future works can mainly focus on improving GPU solution and moving to non-rigid transformations.
 
 \subsection{Non-iterative Closest Point}
-This method is for sure the most narrowly documented among all three described in this report. On the other hand, the idea does not leave much space for improvements. The biggest obstacle to using it on greater scale is undetermined convergence ratio. Although the tests conducted showed that running the algorithm for 20 pseudo-random permutations gives convergence ratio of 100\%, but the actual correlation between computation precision and cloud properties such as size or density remains unknown.\\
-Other place for improvements is related closely to implementation issue. Different libraries and methods of computing SVD offers different accuracy. This can be seen for example by comparing results of CPU computations using Eigen library (recommended as one of the top when it comes to finding matrix decomposition) and GPU's cuSOLVER, where for the second one, error is smaller in majority of test cases. There are also multiple other, both closed and open source implementations for both CPU and GPU which might offer better results when it comes to convergence or computation time, especially for some specific cases.
+This method is for sure the most narrowly documented among all three described in this report. On the other hand, the idea does not leave much space for improvements. The biggest obstacle to using it on greater scale is its undetermined convergence ratio. Although the tests conducted showed that running the algorithm for a reasonable number of pseudo-random permutations gives convergence ratio of almost a 100\%.\\
+Other area of improvements is related closely to implementation issue. Different libraries and methods of computing SVD offers different accuracy. This can be seen for example by comparing results of CPU computations using Eigen library (recommended as one of the top when it comes to finding matrix decomposition) and GPU's cuSOLVER, where for the second one, error is smaller in majority of the test cases. There are also multiple other, both closed and open source implementations for both CPU and GPU which might offer better results when it comes to convergence or computation time, especially for some edge cases.
 
 \subsection{Common improvements}
 The key to performant SLAM for big clouds is sampling. We have not covered it in our work as it is a broad topic and mostly dependent of the specific application of the algorithm. Although, there is no contraindication to use sampled clouds as the input of our program so everybody can make their own experiments in that field.
